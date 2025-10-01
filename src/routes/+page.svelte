@@ -6,6 +6,7 @@
     type SortKey = 'name' | 'buyPrice' | 'sellPrice' | 'margin' | 'buyTime' | 'sellTime';
 
     let search = '';
+    let searchRaw = '';
     let sortKey: SortKey = 'margin';
     let sortDir: 'asc' | 'desc' = 'desc';
     let page = 1;
@@ -14,12 +15,14 @@
     let refreshSec = 60;
 
     let allRows: PriceRow[] = [];
+    let lastUpdated: number | null = null;
 
     async function loadRows() {
         const res = await fetch('/api/rows');
         if (!res.ok) return;
         const data = await res.json();
         allRows = data.rows as PriceRow[];
+        lastUpdated = Date.now();
     }
 
     function filteredSorted(): PriceRow[] {
@@ -54,6 +57,39 @@
         return () => clearInterval(timer);
     });
 
+    // Debounced search input -> search
+    let searchTimer: any;
+    $effect(() => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => {
+            search = searchRaw;
+            page = 1;
+        }, 200);
+        return () => clearTimeout(searchTimer);
+    });
+
+    // Persist preferences (sort + page size)
+    let prefsHydrated = false;
+    $effect(() => {
+        if (prefsHydrated) return;
+        prefsHydrated = true;
+        try {
+            const raw = localStorage.getItem('osrs:prefs');
+            if (raw) {
+                const prefs = JSON.parse(raw);
+                if (prefs.sortKey) sortKey = prefs.sortKey;
+                if (prefs.sortDir) sortDir = prefs.sortDir;
+                if (prefs.pageSize) pageSize = prefs.pageSize;
+            }
+        } catch {}
+    });
+
+    $effect(() => {
+        try {
+            localStorage.setItem('osrs:prefs', JSON.stringify({ sortKey, sortDir, pageSize }));
+        } catch {}
+    });
+
     function setSort(key: SortKey) {
         if (sortKey === key) {
             sortDir = sortDir === 'asc' ? 'desc' : 'asc';
@@ -75,6 +111,7 @@
         <div class="grow">
             <h1 class="text-2xl font-semibold">OSRS Price Tracker</h1>
             <p class="text-base opacity-80">Real-time GE prices with search, sort, pagination, and auto‑refresh.</p>
+            <p class="text-xs opacity-70">Last updated: {secondsAgoFromUnix(lastUpdated ? Math.floor(lastUpdated/1000) : null)}</p>
         </div>
         <div class="flex gap-3 items-center">
             <label class="text-sm">Auto‑refresh <input type="checkbox" bind:checked={auto} /></label>
@@ -86,24 +123,24 @@
     </section>
 
     <section class="px-4 pb-2">
-        <input class="border rounded p-2 w-full md:w-80" placeholder="Search for an item..." bind:value={search} />
+        <input class="border rounded p-2 w-full md:w-80" placeholder="Search for an item..." bind:value={searchRaw} />
     </section>
 
     {#key `${search}-${sortKey}-${sortDir}-${page}-${pageSize}-${allRows.length}`}
         <section class="px-4">
             <div class="flex items-center justify-between py-2">
                 <div class="flex gap-2 items-center text-sm">
-                    <label>Rows per page</label>
-                    <select class="border p-1" bind:value={pageSize} on:change={() => (page = 1)}>
+                    <label for="page-size">Rows per page</label>
+                    <select id="page-size" class="border p-1" bind:value={pageSize} on:change={() => (page = 1)}>
                         <option value={25}>25</option>
                         <option value={50}>50</option>
                         <option value={100}>100</option>
                         <option value={250}>250</option>
                     </select>
                 </div>
-                <div class="flex gap-2 items-center text-sm">
+                <div class="flex gap-3 items-center text-sm">
+                    <span class="opacity-70">Page {page} of {Math.max(1, Math.ceil(rows.length / pageSize))} ({rows.length} items)</span>
                     <button class="border px-2 py-1" on:click={() => (page = Math.max(1, page - 1))}>Prev</button>
-                    <span>Page {page}</span>
                     <button
                         class="border px-2 py-1"
                         on:click={() => (page = Math.min(Math.ceil(rows.length / pageSize) || 1, page + 1))}
