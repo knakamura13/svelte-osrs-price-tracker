@@ -1,17 +1,5 @@
 <script lang="ts">
-    type PriceRow = {
-        id: number;
-        name: string;
-        icon: string | null;
-        members: boolean;
-        buyLimit: number | null;
-        buyPrice: number | null;
-        buyTime: number | null;
-        sellPrice: number | null;
-        sellTime: number | null;
-        margin: number | null;
-        dailyVolume?: number | null;
-    };
+    import type { PriceRow } from '$lib/types';
     export let rows: PriceRow[] = [];
 </script>
 
