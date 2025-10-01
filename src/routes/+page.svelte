@@ -16,7 +16,6 @@
             <p class="text-sm opacity-70">Price table coming soon…</p>
         </div>
     </section>
-    
 </div>
 
 <style lang="scss">
