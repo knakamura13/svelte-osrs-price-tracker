@@ -1,9 +1,9 @@
 <script lang="ts">
     import '../app.postcss';
     import './styles.scss';
-    import Header from '$lib/components/Header.svelte';
+    import AppHeader from '$lib/components/AppHeader.svelte';
 </script>
 
-<Header></Header>
+<AppHeader title="OSRS Price Tracker"></AppHeader>
 
 <slot />

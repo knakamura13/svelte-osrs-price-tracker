@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test('home page renders and has title', async ({ page }) => {
     await page.goto('/');
-    await expect(page).toHaveTitle(/SvelteKit Base Template/);
+	await expect(page).toHaveTitle(/OSRS Price Tracker/);
 });
 
 test('header is visible and has site logo', async ({ page }) => {
