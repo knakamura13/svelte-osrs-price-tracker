@@ -1,0 +1,11 @@
+.page {
+    max-width: 50rem;
+    height: 100%;
+    margin: auto;
+    padding: 2rem 1rem 4rem;
+
+    // Lobotomized owl selector; adds reasonable vertical spacing between elements.
+    * + * {
+        margin-top: 1em;
+    }
+}
