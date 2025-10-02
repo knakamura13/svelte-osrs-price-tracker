@@ -459,9 +459,15 @@
                 on:click={() => (filtersExpanded = !filtersExpanded)}
             >
                 <span class="font-medium">
-                    Apply filters {activeFiltersCount > 0
-                        ? `(${activeFiltersCount} filters active)`
-                        : '(0 filters active)'}
+                    Apply filters
+                    <span
+                        class="font-normal"
+                        class:opacity-50={activeFiltersCount === 0}
+                        class:text-yellow-600={activeFiltersCount >= 1}
+                        class:dark:text-yellow-400={activeFiltersCount >= 1}
+                    >
+                        ({`${activeFiltersCount} ${activeFiltersCount === 1 ? 'filter' : 'filters'} active`})
+                    </span>
                 </span>
                 <span class="transform transition-transform {filtersExpanded ? 'rotate-180' : ''}">▼</span>
             </button>
