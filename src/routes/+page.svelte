@@ -162,7 +162,11 @@
 
         // Apply column filters
         rows = rows.filter((row) => {
-            // Buy limit filter
+            // Buy limit filter - special case when min === max === 0 (exact match for 0)
+            if (filterSet.buyLimit.min === 0 && filterSet.buyLimit.max === 0) {
+                return row.buyLimit === 0;
+            }
+            // Normal range filtering
             if (filterSet.buyLimit.min !== null && row.buyLimit !== null && row.buyLimit < filterSet.buyLimit.min)
                 return false;
             if (filterSet.buyLimit.max !== null && row.buyLimit !== null && row.buyLimit > filterSet.buyLimit.max)
@@ -276,6 +280,12 @@
             } else {
                 va = (a as any)[key];
                 vb = (b as any)[key];
+            }
+
+            // Special handling for buyLimit: treat null as infinity
+            if (key === 'buyLimit') {
+                va = va ?? Number.MAX_SAFE_INTEGER;
+                vb = vb ?? Number.MAX_SAFE_INTEGER;
             }
 
             if (va == null && vb == null) return 0;

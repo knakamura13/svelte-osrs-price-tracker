@@ -151,7 +151,7 @@
                         {#if r.buyLimit !== null}
                             {r.buyLimit}
                         {:else}
-                            <span title="This item has no buy limit" class="cursor-help">—</span>
+                            <span title="This item has no buy limit" class="cursor-help">∞</span>
                         {/if}
                     </td>
                     <td class="p-2 text-right">{formatInt(r.buyPrice)}</td>
