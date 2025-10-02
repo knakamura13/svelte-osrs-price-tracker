@@ -19,10 +19,10 @@ export const GET: RequestHandler = async ({ fetch }) => {
         return new Response(JSON.stringify(cached), { headers: { 'content-type': 'application/json' } });
     }
 
-    const [mapping, latest] = await Promise.all<[ItemMapping[], { data: LatestResponse }]>([
+    const [mapping, latest] = (await Promise.all([
         fetchJson(fetch, '/api/mapping'),
         fetchJson(fetch, '/api/latest')
-    ]);
+    ])) as [ItemMapping[], { data: LatestResponse }];
 
     const latestMap = latest.data;
     const rows: PriceRow[] = mapping.map((m) => {
@@ -40,10 +40,13 @@ export const GET: RequestHandler = async ({ fetch }) => {
             sellPrice: low,
             sellTime: l?.lowTime ?? null,
             margin: high != null && low != null ? high - low : null,
-            dailyVolume: null
+            dailyVolume: null,
+            examine: m.examine,
+            wikiUrl: `https://oldschool.runescape.wiki/w/${encodeURIComponent(m.name)}`
         };
     });
 
-    cache.set(cacheKey, rows);
-    return new Response(JSON.stringify({ rows }), { headers: { 'content-type': 'application/json' } });
+    const payload = { rows };
+    cache.set(cacheKey, payload);
+    return new Response(JSON.stringify(payload), { headers: { 'content-type': 'application/json' } });
 };

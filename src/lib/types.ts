@@ -28,4 +28,6 @@ export type PriceRow = {
     sellTime: number | null;
     margin: number | null;
     dailyVolume?: number | null;
+    examine?: string;
+    wikiUrl?: string;
 };

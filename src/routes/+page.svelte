@@ -1,9 +1,12 @@
 <script lang="ts">
     import PriceTable from '$lib/components/PriceTable.svelte';
+    import { onMount, onDestroy } from 'svelte';
     import { secondsAgoFromUnix } from '$lib/utils/time';
     import type { PriceRow } from '$lib/types';
 
     type SortKey = 'name' | 'buyPrice' | 'sellPrice' | 'margin' | 'buyTime' | 'sellTime';
+
+    export let data: { rows: PriceRow[] };
 
     let search = '';
     let searchRaw = '';
@@ -14,15 +17,33 @@
     let auto = false;
     let refreshSec = 60;
 
-    let allRows: PriceRow[] = [];
+    let allRows: PriceRow[] = data?.rows ?? [];
     let lastUpdated: number | null = null;
+    let errorMsg: string | null = null;
+    let failCount = 0;
+    let loading = false;
 
     async function loadRows() {
-        const res = await fetch('/api/rows');
-        if (!res.ok) return;
-        const data = await res.json();
-        allRows = data.rows as PriceRow[];
-        lastUpdated = Date.now();
+        try {
+            loading = true;
+            errorMsg = null;
+            const res = await fetch('/api/rows', { cache: 'no-store' });
+            if (!res.ok) throw new Error(`Failed /api/rows: ${res.status}`);
+            const json = await res.json();
+            const rows = Array.isArray(json?.rows) ? (json.rows as PriceRow[]) : [];
+            allRows = rows;
+            lastUpdated = Date.now();
+            failCount = 0;
+            page = 1;
+        } catch (err: any) {
+            failCount = failCount + 1;
+            errorMsg = err?.message ?? 'Failed to load prices';
+            if (failCount >= 3 && auto) {
+                auto = false;
+            }
+        } finally {
+            loading = false;
+        }
     }
 
     function filteredSorted(): PriceRow[] {
@@ -44,35 +65,13 @@
         return rows;
     }
 
-    $effect(() => {
-        loadRows();
-    });
-
-    let timer: any;
-    $effect(() => {
-        clearInterval(timer);
-        if (auto) {
-            timer = setInterval(loadRows, Math.max(5, refreshSec) * 1000);
+    onMount(() => {
+        if (!allRows?.length) {
+            loadRows();
+        } else {
+            lastUpdated = Date.now();
         }
-        return () => clearInterval(timer);
-    });
-
-    // Debounced search input -> search
-    let searchTimer: any;
-    $effect(() => {
-        clearTimeout(searchTimer);
-        searchTimer = setTimeout(() => {
-            search = searchRaw;
-            page = 1;
-        }, 200);
-        return () => clearTimeout(searchTimer);
-    });
-
-    // Persist preferences (sort + page size)
-    let prefsHydrated = false;
-    $effect(() => {
-        if (prefsHydrated) return;
-        prefsHydrated = true;
+        // Hydrate prefs once
         try {
             const raw = localStorage.getItem('osrs:prefs');
             if (raw) {
@@ -82,13 +81,39 @@
                 if (prefs.pageSize) pageSize = prefs.pageSize;
             }
         } catch {}
+        prefsHydrated = true;
     });
 
-    $effect(() => {
+    let timer: any;
+    $: {
+        clearInterval(timer);
+        if (auto) {
+            timer = setInterval(loadRows, Math.max(5, refreshSec) * 1000);
+        }
+    }
+
+    onDestroy(() => {
+        clearInterval(timer);
+        clearTimeout(searchTimer);
+    });
+
+    // Debounced search input -> search
+    let searchTimer: any;
+    $: {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => {
+            search = searchRaw;
+            page = 1;
+        }, 200);
+    }
+
+    // Persist preferences (sort + page size)
+    let prefsHydrated = false;
+    $: if (prefsHydrated) {
         try {
             localStorage.setItem('osrs:prefs', JSON.stringify({ sortKey, sortDir, pageSize }));
         } catch {}
-    });
+    }
 
     function setSort(key: SortKey) {
         if (sortKey === key) {
@@ -98,8 +123,12 @@
             sortDir = key === 'name' ? 'asc' : 'desc';
         }
     }
+    function handleSort(key: string) {
+        setSort(key as SortKey);
+    }
 
-    let rows: PriceRow[] = $derived(filteredSorted());
+    let visibleRows: PriceRow[] = [];
+    $: visibleRows = filteredSorted();
 </script>
 
 <svelte:head>
@@ -120,13 +149,25 @@
             <label class="text-sm"
                 >Every <input class="w-16 text-right border p-1" type="number" min="5" bind:value={refreshSec} /> s</label
             >
-            <button class="border px-3 py-1 rounded" on:click={loadRows}>Refresh</button>
+            <button class="border px-3 py-1 rounded" on:click={loadRows} disabled={loading}>
+                {#if loading}Loading...{:else}Refresh{/if}
+            </button>
         </div>
     </section>
 
     <section class="px-4 pb-2">
         <input class="border rounded p-2 w-full md:w-80" placeholder="Search for an item..." bind:value={searchRaw} />
     </section>
+
+    {#if errorMsg}
+        <section class="px-4 pb-2">
+            <div
+                class="border border-red-300 bg-red-50 text-red-800 dark:bg-red-900/20 dark:text-red-300 rounded p-2 text-sm"
+            >
+                Failed to refresh data{failCount > 1 ? ` (x${failCount})` : ''}: {errorMsg}
+            </div>
+        </section>
+    {/if}
 
     {#key `${search}-${sortKey}-${sortDir}-${page}-${pageSize}-${allRows.length}`}
         <section class="px-4">
@@ -141,13 +182,13 @@
                     </select>
                 </div>
                 <div class="flex gap-3 items-center text-sm">
-                    <span class="opacity-70"
-                        >Page {page} of {Math.max(1, Math.ceil(rows.length / pageSize))} ({rows.length} items)</span
-                    >
+                    <span class="opacity-70">
+                        Page {page} of {Math.max(1, Math.ceil(visibleRows.length / pageSize))} ({visibleRows.length} items)
+                    </span>
                     <button class="border px-2 py-1" on:click={() => (page = Math.max(1, page - 1))}>Prev</button>
                     <button
                         class="border px-2 py-1"
-                        on:click={() => (page = Math.min(Math.ceil(rows.length / pageSize) || 1, page + 1))}
+                        on:click={() => (page = Math.min(Math.ceil(visibleRows.length / pageSize) || 1, page + 1))}
                     >
                         Next
                     </button>
@@ -155,46 +196,11 @@
             </div>
 
             <div class="overflow-auto rounded border border-gray-300 dark:border-gray-700">
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-50 dark:bg-gray-800">
-                        <tr>
-                            <th class="text-left p-2 cursor-pointer" on:click={() => setSort('name')}>Name</th>
-                            <th class="text-right p-2">Buy limit</th>
-                            <th class="text-right p-2 cursor-pointer" on:click={() => setSort('buyPrice')}>Buy price</th
-                            >
-                            <th class="text-right p-2 cursor-pointer" on:click={() => setSort('buyTime')}
-                                >Most recent buy</th
-                            >
-                            <th class="text-right p-2 cursor-pointer" on:click={() => setSort('sellPrice')}
-                                >Sell price</th
-                            >
-                            <th class="text-right p-2 cursor-pointer" on:click={() => setSort('sellTime')}
-                                >Most recent sell</th
-                            >
-                            <th class="text-right p-2 cursor-pointer" on:click={() => setSort('margin')}>Margin</th>
-                            <th class="text-right p-2">Daily volume</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {#each rows.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize) as r (r.id)}
-                            <tr class="border-t border-gray-200 dark:border-gray-800">
-                                <td class="p-2 flex gap-2 items-center">
-                                    {#if r.icon}
-                                        <img src={r.icon} alt="" class="h-5 w-5" />
-                                    {/if}
-                                    <span>{r.name}</span>
-                                </td>
-                                <td class="p-2 text-right">{r.buyLimit ?? '—'}</td>
-                                <td class="p-2 text-right">{r.buyPrice ?? '—'}</td>
-                                <td class="p-2 text-right">{secondsAgoFromUnix(r.buyTime)}</td>
-                                <td class="p-2 text-right">{r.sellPrice ?? '—'}</td>
-                                <td class="p-2 text-right">{secondsAgoFromUnix(r.sellTime)}</td>
-                                <td class="p-2 text-right">{r.margin ?? '—'}</td>
-                                <td class="p-2 text-right">{r.dailyVolume ?? '—'}</td>
-                            </tr>
-                        {/each}
-                    </tbody>
-                </table>
+                <PriceTable
+                    rows={visibleRows.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize)}
+                    sortable
+                    sortBy={handleSort}
+                />
             </div>
         </section>
     {/key}
