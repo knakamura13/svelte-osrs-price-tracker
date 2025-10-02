@@ -40,3 +40,42 @@ export type Volume24hEntry = {
 };
 
 export type Volume24hResponse = Record<string, Volume24hEntry>;
+
+// Filters and sorting
+export type NumericFilter = { min: number | null; max: number | null };
+
+export type Filters = {
+    buyLimit: NumericFilter;
+    buyPrice: NumericFilter;
+    buyTime: NumericFilter; // durations in seconds
+    sellPrice: NumericFilter;
+    sellTime: NumericFilter; // durations in seconds
+    breakEvenPrice: NumericFilter;
+    margin: NumericFilter;
+    postTaxProfit: NumericFilter;
+    dailyVolume: NumericFilter;
+};
+
+export type SortKey =
+    | 'name'
+    | 'buyLimit'
+    | 'buyPrice'
+    | 'sellPrice'
+    | 'margin'
+    | 'breakEvenPrice'
+    | 'postTaxProfit'
+    | 'dailyVolume'
+    | 'buyTime'
+    | 'sellTime';
+
+export type NumericFilterKey = Exclude<keyof Filters, 'buyTime' | 'sellTime'>;
+
+export type FilterStats = {
+    buyLimit: NumericFilter;
+    buyPrice: NumericFilter;
+    sellPrice: NumericFilter;
+    margin: NumericFilter;
+    dailyVolume: NumericFilter;
+    breakEvenPrice: NumericFilter;
+    postTaxProfit: NumericFilter;
+};
