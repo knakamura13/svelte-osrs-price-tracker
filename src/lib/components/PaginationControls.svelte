@@ -7,6 +7,26 @@
 
     // Only show pagination if we have data and callbacks
     $: showPagination = onPageChange && onPageSizeChange && totalRows > 0;
+
+    // Calculate total pages
+    $: totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
+
+    // Navigation functions
+    function goToFirstPage() {
+        if (onPageChange) onPageChange(1);
+    }
+
+    function goToPreviousPage() {
+        if (onPageChange) onPageChange(Math.max(1, page - 1));
+    }
+
+    function goToNextPage() {
+        if (onPageChange) onPageChange(Math.min(totalPages, page + 1));
+    }
+
+    function goToLastPage() {
+        if (onPageChange) onPageChange(totalPages);
+    }
 </script>
 
 {#if showPagination}
@@ -27,17 +47,49 @@
         </div>
         <div class="flex gap-3 items-center text-sm">
             <span class="opacity-70">
-                Page {page} of {Math.max(1, Math.ceil(totalRows / pageSize))} ({totalRows} items)
+                Page {page} of {totalPages} ({totalRows} items)
             </span>
-            <button class="border px-2 py-1" on:click={() => onPageChange && onPageChange(Math.max(1, page - 1))}
-                >Prev</button
-            >
-            <button
-                class="border px-2 py-1"
-                on:click={() => onPageChange && onPageChange(Math.min(Math.ceil(totalRows / pageSize) || 1, page + 1))}
-            >
-                Next
-            </button>
+            <div class="flex gap-1">
+                <button
+                    class="border px-2 py-1"
+                    on:click={goToFirstPage}
+                    disabled={page === 1}
+                    title="First page"
+                >
+                    «
+                </button>
+                <button
+                    class="border px-2 py-1"
+                    on:click={goToPreviousPage}
+                    disabled={page === 1}
+                    title="Previous page"
+                >
+                    ‹
+                </button>
+                <button
+                    class="border px-2 py-1"
+                    on:click={goToNextPage}
+                    disabled={page === totalPages}
+                    title="Next page"
+                >
+                    ›
+                </button>
+                <button
+                    class="border px-2 py-1"
+                    on:click={goToLastPage}
+                    disabled={page === totalPages}
+                    title="Last page"
+                >
+                    »
+                </button>
+            </div>
         </div>
     </div>
 {/if}
+
+<style>
+    button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+</style>
