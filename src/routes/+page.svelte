@@ -10,9 +10,9 @@
 
     let search = '';
     let searchRaw = '';
-    let sortKey: SortKey | null = 'margin';
+    let sortKey: SortKey | null = 'name';
     let sortDir: 'asc' | 'desc' = 'desc';
-    let lastSortKey: SortKey | null = 'margin';
+    let lastSortKey: SortKey | null = 'name';
     let page = 1;
     let pageSize = 25;
     let auto = false;

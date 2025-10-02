@@ -23,19 +23,19 @@
                 <!-- Image column -->
             </th>
             <th
-                class="text-left p-2 select-none {sortable ? 'cursor-pointer' : ''}"
+                class="text-left p-2 select-none hover:text-white transition-colors {sortable ? 'cursor-pointer' : ''}"
                 on:click={() => sortable && sortBy && sortBy('name')}
             >
                 Name <span class="ml-1 opacity-60 select-none">{sortIcon('name')}</span>
             </th>
             <th
-                class="text-right p-2 select-none {sortable ? 'cursor-pointer' : ''}"
+                class="text-right p-2 select-none hover:text-white transition-colors {sortable ? 'cursor-pointer' : ''}"
                 on:click={() => sortable && sortBy && sortBy('buyLimit')}
             >
                 Buy limit <span class="ml-1 opacity-60 select-none">{sortIcon('buyLimit')}</span>
             </th>
             <th
-                class="text-right p-2 select-none {sortable ? 'cursor-pointer' : ''}"
+                class="text-right p-2 select-none hover:text-white transition-colors {sortable ? 'cursor-pointer' : ''}"
                 on:click={() => sortable && sortBy && sortBy('buyPrice')}
             >
                 Buy price <span class="ml-1 opacity-60 select-none">{sortIcon('buyPrice')}</span>
@@ -47,25 +47,25 @@
                 Most recent buy <span class="ml-1 opacity-60 select-none">{sortIcon('buyTime')}</span>
             </th>
             <th
-                class="text-right p-2 select-none{sortable ? 'cursor-pointer' : ''}"
+                class="text-right p-2 select-none hover:text-white transition-colors {sortable ? 'cursor-pointer' : ''}"
                 on:click={() => sortable && sortBy && sortBy('sellPrice')}
             >
                 Sell price <span class="ml-1 opacity-60 select-none">{sortIcon('sellPrice')}</span>
             </th>
             <th
-                class="text-right p-2 select-none{sortable ? 'cursor-pointer' : ''}"
+                class="text-right p-2 select-none hover:text-white transition-colors {sortable ? 'cursor-pointer' : ''}"
                 on:click={() => sortable && sortBy && sortBy('sellTime')}
             >
                 Most recent sell <span class="ml-1 opacity-60 select-none">{sortIcon('sellTime')}</span>
             </th>
             <th
-                class="text-right p-2 select-none {sortable ? 'cursor-pointer' : ''}"
+                class="text-right p-2 select-none hover:text-white transition-colors {sortable ? 'cursor-pointer' : ''}"
                 on:click={() => sortable && sortBy && sortBy('margin')}
             >
                 Margin <span class="ml-1 opacity-60 select-none">{sortIcon('margin')}</span>
             </th>
             <th
-                class="text-right p-2 select-none {sortable ? 'cursor-pointer' : ''}"
+                class="text-right p-2 select-none hover:text-white transition-colors {sortable ? 'cursor-pointer' : ''}"
                 on:click={() => sortable && sortBy && sortBy('dailyVolume')}
             >
                 Daily volume <span class="ml-1 opacity-60 select-none">{sortIcon('dailyVolume')}</span>
