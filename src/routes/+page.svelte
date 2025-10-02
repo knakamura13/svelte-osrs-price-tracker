@@ -109,6 +109,21 @@
         dailyVolume: { min: null as number | null, max: null as number | null }
     };
 
+    // Column visibility state
+    let columnsExpanded = false;
+    let columnVisibility = {
+        name: true,
+        buyLimit: true,
+        buyPrice: true,
+        buyTime: true,
+        sellPrice: true,
+        sellTime: true,
+        breakEvenPrice: true,
+        margin: true,
+        postTaxProfit: true,
+        dailyVolume: true
+    };
+
     // Normalized filters (convert NaN/undefined to null) to drive reactivity
     let filtersNormalized: Filters;
     $: filtersNormalized = normalizeFilters(filters);
@@ -451,6 +466,67 @@
     {/if}
 
     <section class="px-4 mt-2">
+        <!-- Columns Accordion -->
+        <div class="mb-4">
+            <button
+                class="accordion-trigger w-full text-left p-3 bg-gray-100 dark:bg-gray-800 rounded-t-lg border border-gray-300 dark:border-gray-600 flex items-center justify-between hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                class:rounded-b-lg={!columnsExpanded}
+                on:click={() => (columnsExpanded = !columnsExpanded)}
+            >
+                <span class="font-medium">Toggle columns</span>
+                <span class="transform transition-transform {columnsExpanded ? 'rotate-180' : ''}">▼</span>
+            </button>
+
+            {#if columnsExpanded}
+                <div
+                    class="accordion-content p-4 bg-gray-50 dark:bg-gray-900 rounded-b-lg border border-t-0 border-gray-300 dark:border-gray-600"
+                >
+                    <div class="flex flex-row flex-wrap gap-6">
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" bind:checked={columnVisibility.name} />
+                            <span class="text-sm">Name</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" bind:checked={columnVisibility.buyLimit} />
+                            <span class="text-sm">Buy limit</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" bind:checked={columnVisibility.buyPrice} />
+                            <span class="text-sm">Buy price</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" bind:checked={columnVisibility.buyTime} />
+                            <span class="text-sm">Last buy</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" bind:checked={columnVisibility.sellPrice} />
+                            <span class="text-sm">Sell price</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" bind:checked={columnVisibility.sellTime} />
+                            <span class="text-sm">Last sell</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" bind:checked={columnVisibility.breakEvenPrice} />
+                            <span class="text-sm">Break-even price</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" bind:checked={columnVisibility.margin} />
+                            <span class="text-sm">Margin</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" bind:checked={columnVisibility.postTaxProfit} />
+                            <span class="text-sm">Post-tax profit</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" bind:checked={columnVisibility.dailyVolume} />
+                            <span class="text-sm">Daily volume</span>
+                        </label>
+                    </div>
+                </div>
+            {/if}
+        </div>
+
         <!-- Filters Accordion -->
         <div class="mb-4">
             <button
@@ -757,6 +833,7 @@
             sortBy={handleSort}
             {sortKey}
             {sortDir}
+            {columnVisibility}
         />
     </section>
 </div>
