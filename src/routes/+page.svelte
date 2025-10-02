@@ -444,6 +444,99 @@
         nowSec;
         lastUpdatedLabel = secondsAgoFromUnix(lastUpdated ? Math.floor(lastUpdated / 1000) : null);
     }
+
+    // Computed min/max values for filter placeholders
+    $: filterStats = {
+        buyLimit: {
+            min:
+                allRows.length > 0
+                    ? Math.min(...allRows.map((r) => r.buyLimit).filter((v): v is number => v !== null))
+                    : null,
+            max:
+                allRows.length > 0
+                    ? Math.max(...allRows.map((r) => r.buyLimit).filter((v): v is number => v !== null))
+                    : null
+        },
+        buyPrice: {
+            min:
+                allRows.length > 0
+                    ? Math.min(...allRows.map((r) => r.buyPrice).filter((v): v is number => v !== null))
+                    : null,
+            max:
+                allRows.length > 0
+                    ? Math.max(...allRows.map((r) => r.buyPrice).filter((v): v is number => v !== null))
+                    : null
+        },
+        sellPrice: {
+            min:
+                allRows.length > 0
+                    ? Math.min(...allRows.map((r) => r.sellPrice).filter((v): v is number => v !== null))
+                    : null,
+            max:
+                allRows.length > 0
+                    ? Math.max(...allRows.map((r) => r.sellPrice).filter((v): v is number => v !== null))
+                    : null
+        },
+        margin: {
+            min:
+                allRows.length > 0
+                    ? Math.min(...allRows.map((r) => r.margin).filter((v): v is number => v !== null))
+                    : null,
+            max:
+                allRows.length > 0
+                    ? Math.max(...allRows.map((r) => r.margin).filter((v): v is number => v !== null))
+                    : null
+        },
+        dailyVolume: {
+            min:
+                allRows.length > 0
+                    ? Math.min(...allRows.map((r) => r.dailyVolume).filter((v): v is number => v !== null))
+                    : null,
+            max:
+                allRows.length > 0
+                    ? Math.max(...allRows.map((r) => r.dailyVolume).filter((v): v is number => v !== null))
+                    : null
+        },
+        breakEvenPrice: {
+            min: null as number | null,
+            max: null as number | null
+        },
+        postTaxProfit: {
+            min: null as number | null,
+            max: null as number | null
+        }
+    };
+
+    // Calculate break-even price and post-tax profit stats
+    $: {
+        if (allRows.length > 0) {
+            const taxRate = 0.02;
+            const breakEvenPrices: number[] = [];
+            const postTaxProfits: number[] = [];
+
+            for (const row of allRows) {
+                // Break-even price: ceil(sellPrice / (1 - taxRate))
+                if (row.sellPrice !== null) {
+                    breakEvenPrices.push(Math.ceil(row.sellPrice / (1 - taxRate)));
+                }
+
+                // Post-tax profit: floor(buyPrice * (1 - taxRate) - sellPrice)
+                if (row.buyPrice !== null && row.sellPrice !== null) {
+                    postTaxProfits.push(Math.floor(row.buyPrice * (1 - taxRate) - row.sellPrice));
+                }
+            }
+
+            if (breakEvenPrices.length > 0) {
+                filterStats.breakEvenPrice.min = Math.min(...breakEvenPrices);
+                filterStats.breakEvenPrice.max = Math.max(...breakEvenPrices);
+            }
+
+            if (postTaxProfits.length > 0) {
+                filterStats.postTaxProfit.min = Math.min(...postTaxProfits);
+                filterStats.postTaxProfit.max = Math.max(...postTaxProfits);
+            }
+        }
+    }
 </script>
 
 <svelte:head>
@@ -591,14 +684,18 @@
                             <div class="flex gap-2">
                                 <input
                                     type="number"
-                                    placeholder="Min (100)"
+                                    placeholder={filterStats.buyLimit.min !== null
+                                        ? `Min (${filterStats.buyLimit.min})`
+                                        : 'Min'}
                                     aria-labelledby="buy-limit-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.buyLimit.min}
                                 />
                                 <input
                                     type="number"
-                                    placeholder="Max (50000)"
+                                    placeholder={filterStats.buyLimit.max !== null
+                                        ? `Max (${filterStats.buyLimit.max})`
+                                        : 'Max'}
                                     aria-labelledby="buy-limit-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.buyLimit.max}
@@ -617,14 +714,18 @@
                             <div class="flex gap-2">
                                 <input
                                     type="number"
-                                    placeholder="Min (1)"
+                                    placeholder={filterStats.buyPrice.min !== null
+                                        ? `Min (${filterStats.buyPrice.min})`
+                                        : 'Min'}
                                     aria-labelledby="buy-price-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.buyPrice.min}
                                 />
                                 <input
                                     type="number"
-                                    placeholder="Max (50)"
+                                    placeholder={filterStats.buyPrice.max !== null
+                                        ? `Max (${filterStats.buyPrice.max})`
+                                        : 'Max'}
                                     aria-labelledby="buy-price-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.buyPrice.max}
@@ -669,14 +770,18 @@
                             <div class="flex gap-2">
                                 <input
                                     type="number"
-                                    placeholder="Min (1)"
+                                    placeholder={filterStats.sellPrice.min !== null
+                                        ? `Min (${filterStats.sellPrice.min})`
+                                        : 'Min'}
                                     aria-labelledby="sell-price-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.sellPrice.min}
                                 />
                                 <input
                                     type="number"
-                                    placeholder="Max (50)"
+                                    placeholder={filterStats.sellPrice.max !== null
+                                        ? `Max (${filterStats.sellPrice.max})`
+                                        : 'Max'}
                                     aria-labelledby="sell-price-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.sellPrice.max}
@@ -721,14 +826,18 @@
                             <div class="flex gap-2">
                                 <input
                                     type="number"
-                                    placeholder="Min price"
+                                    placeholder={filterStats.breakEvenPrice.min !== null
+                                        ? `Min (${filterStats.breakEvenPrice.min})`
+                                        : 'Min price'}
                                     aria-labelledby="break-even-price-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.breakEvenPrice.min}
                                 />
                                 <input
                                     type="number"
-                                    placeholder="Max price"
+                                    placeholder={filterStats.breakEvenPrice.max !== null
+                                        ? `Max (${filterStats.breakEvenPrice.max})`
+                                        : 'Max price'}
                                     aria-labelledby="break-even-price-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.breakEvenPrice.max}
@@ -747,14 +856,18 @@
                             <div class="flex gap-2">
                                 <input
                                     type="number"
-                                    placeholder="Min (1)"
+                                    placeholder={filterStats.margin.min !== null
+                                        ? `Min (${filterStats.margin.min})`
+                                        : 'Min'}
                                     aria-labelledby="margin-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.margin.min}
                                 />
                                 <input
                                     type="number"
-                                    placeholder="Max (23)"
+                                    placeholder={filterStats.margin.max !== null
+                                        ? `Max (${filterStats.margin.max})`
+                                        : 'Max'}
                                     aria-labelledby="margin-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.margin.max}
@@ -773,14 +886,18 @@
                             <div class="flex gap-2">
                                 <input
                                     type="number"
-                                    placeholder="Min (125)"
+                                    placeholder={filterStats.postTaxProfit.min !== null
+                                        ? `Min (${filterStats.postTaxProfit.min})`
+                                        : 'Min'}
                                     aria-labelledby="post-tax-profit-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.postTaxProfit.min}
                                 />
                                 <input
                                     type="number"
-                                    placeholder="Max (198000)"
+                                    placeholder={filterStats.postTaxProfit.max !== null
+                                        ? `Max (${filterStats.postTaxProfit.max})`
+                                        : 'Max'}
                                     aria-labelledby="post-tax-profit-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.postTaxProfit.max}
@@ -799,14 +916,18 @@
                             <div class="flex gap-2">
                                 <input
                                     type="number"
-                                    placeholder="Min (10000)"
+                                    placeholder={filterStats.dailyVolume.min !== null
+                                        ? `Min (${filterStats.dailyVolume.min})`
+                                        : 'Min'}
                                     aria-labelledby="daily-volume-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.dailyVolume.min}
                                 />
                                 <input
                                     type="number"
-                                    placeholder="Max (428130653)"
+                                    placeholder={filterStats.dailyVolume.max !== null
+                                        ? `Max (${filterStats.dailyVolume.max})`
+                                        : 'Max'}
                                     aria-labelledby="daily-volume-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.dailyVolume.max}
