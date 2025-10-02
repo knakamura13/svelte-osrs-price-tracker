@@ -31,3 +31,12 @@ export type PriceRow = {
     examine?: string;
     wikiUrl?: string;
 };
+
+export type Volume24hEntry = {
+    avgHighPrice: number | null;
+    highPriceVolume: number | null;
+    avgLowPrice: number | null;
+    lowPriceVolume: number | null;
+};
+
+export type Volume24hResponse = Record<string, Volume24hEntry>;

@@ -1,5 +1,5 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import type { ItemMapping, LatestResponse, PriceRow } from '$lib/types';
+import type { ItemMapping, LatestResponse, PriceRow, Volume24hResponse } from '$lib/types';
 import { TtlCache } from '$lib/server/cache';
 import { createHash } from 'node:crypto';
 
@@ -20,12 +20,14 @@ export const GET: RequestHandler = async ({ fetch }) => {
         return new Response(JSON.stringify(cached), { headers: { 'content-type': 'application/json' } });
     }
 
-    const [mapping, latest] = (await Promise.all([
+    const [mapping, latest, day24] = (await Promise.all([
         fetchJson(fetch, '/api/mapping'),
-        fetchJson(fetch, '/api/latest')
-    ])) as [ItemMapping[], { data: LatestResponse }];
+        fetchJson(fetch, '/api/latest'),
+        fetchJson(fetch, '/api/24h')
+    ])) as [ItemMapping[], { data: LatestResponse }, { data: Volume24hResponse }];
 
     const latestMap = latest.data;
+    const volumeMap = day24.data; // id -> { highPriceVolume, lowPriceVolume }
 
     function buildWikiImageUrl(fileName: string | undefined): string | undefined {
         if (!fileName) return undefined;
@@ -40,6 +42,10 @@ export const GET: RequestHandler = async ({ fetch }) => {
         const l = latestMap[String(m.id)];
         const high = l?.high ?? null;
         const low = l?.low ?? null;
+        const volEntry = volumeMap[String(m.id)];
+        const dailyVolume = volEntry
+            ? Math.max(0, (volEntry.highPriceVolume ?? 0) + (volEntry.lowPriceVolume ?? 0))
+            : null;
         return {
             id: m.id,
             name: m.name,
@@ -52,7 +58,7 @@ export const GET: RequestHandler = async ({ fetch }) => {
             sellPrice: low,
             sellTime: l?.lowTime ?? null,
             margin: high != null && low != null ? high - low : null,
-            dailyVolume: null,
+            dailyVolume,
             examine: m.examine,
             wikiUrl: `https://oldschool.runescape.wiki/w/${encodeURIComponent(m.name)}`
         };

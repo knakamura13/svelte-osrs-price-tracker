@@ -95,7 +95,7 @@
             >
                 Break-even Price
                 <span
-                    class="mr-1 opacity-70 cursor-help inline-block"
+                    class="mr-1 text-xs opacity-70 cursor-help inline-block"
                     title="The minimum sell price needed to recover your cost after the 2% GE tax."
                     aria-label="Break-even Price tooltip">?</span
                 >
@@ -107,7 +107,7 @@
             >
                 Post-tax Profit
                 <span
-                    class="mr-1 opacity-70 cursor-help inline-block"
+                    class="mr-1 text-xs opacity-70 cursor-help inline-block"
                     title="Your profit if you were to buy at 'Sell price' and sell at 'Buy price', after deducting the 2% GE tax."
                     aria-label="Post-tax Profit tooltip">?</span
                 >
@@ -157,14 +157,7 @@
                         class:red-text={r.margin !== null && r.margin < 0}
                         class:green-text={r.margin !== null && r.margin >= 0}>{formatInt(r.margin)}</td
                     >
-                    <td
-                        class="p-2 text-right"
-                        class:red-text={getBreakEvenPriceValue(r.buyPrice, r.sellPrice) !== null &&
-                            getBreakEvenPriceValue(r.buyPrice, r.sellPrice)! < 0}
-                        class:green-text={getBreakEvenPriceValue(r.buyPrice, r.sellPrice) !== null &&
-                            getBreakEvenPriceValue(r.buyPrice, r.sellPrice)! >= 0}
-                        >{formatInt(calculateBreakEvenPrice(r.buyPrice, r.sellPrice))}</td
-                    >
+                    <td class="p-2 text-right">{formatInt(calculateBreakEvenPrice(r.buyPrice, r.sellPrice))}</td>
                     <td
                         class="p-2 text-right"
                         class:red-text={getPostTaxProfitValue(r.buyPrice, r.sellPrice) !== null &&
@@ -173,7 +166,7 @@
                             getPostTaxProfitValue(r.buyPrice, r.sellPrice)! >= 0}
                         >{formatInt(calculatePostTaxProfit(r.buyPrice, r.sellPrice))}</td
                     >
-                    <td class="p-2 text-right">{r.dailyVolume ?? '—'}</td>
+                    <td class="p-2 text-right">{r.dailyVolume !== null ? formatInt(r.dailyVolume) : '—'}</td>
                 </tr>
             {/each}
         {/if}
