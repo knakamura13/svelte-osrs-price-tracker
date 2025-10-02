@@ -10,8 +10,8 @@
 
     let search = '';
     let searchRaw = '';
-    let sortKey: SortKey = 'margin';
-    let sortDir: 'asc' | 'desc' = 'desc';
+    let sortKey: SortKey | null = null;
+    let sortDir: 'asc' | 'desc' = 'asc';
     let page = 1;
     let pageSize = 25;
     let auto = false;
@@ -48,12 +48,18 @@
         }
     }
 
-    function filteredSorted(source: PriceRow[], qStr: string, key: SortKey, dirStr: 'asc' | 'desc'): PriceRow[] {
+    function filteredSorted(source: PriceRow[], qStr: string, key: SortKey | null, dirStr: 'asc' | 'desc'): PriceRow[] {
         let rows = source;
         if (qStr.trim()) {
             const q = qStr.toLowerCase();
             rows = rows.filter((r) => r.name.toLowerCase().includes(q));
         }
+
+        // If no sorting key is selected, return in original order
+        if (!key) {
+            return rows;
+        }
+
         const dir = dirStr === 'asc' ? 1 : -1;
         rows = [...rows].sort((a, b) => {
             const va = (a as any)[key];
@@ -78,7 +84,7 @@
             const raw = localStorage.getItem('osrs:prefs');
             if (raw) {
                 const prefs = JSON.parse(raw);
-                if (prefs.sortKey) sortKey = prefs.sortKey;
+                if (prefs.hasOwnProperty('sortKey')) sortKey = prefs.sortKey;
                 if (prefs.sortDir) sortDir = prefs.sortDir;
                 if (prefs.pageSize) pageSize = prefs.pageSize;
             }
@@ -124,7 +130,16 @@
 
     function setSort(key: SortKey) {
         if (sortKey === key) {
-            sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+            // Cycle through: asc -> desc -> unsorted (null) -> asc
+            if (sortDir === 'asc') {
+                sortDir = 'desc';
+            } else if (sortDir === 'desc') {
+                sortKey = null;
+                sortDir = 'asc';
+            } else {
+                sortKey = key;
+                sortDir = 'asc';
+            }
         } else {
             sortKey = key;
             sortDir = key === 'name' ? 'asc' : 'desc';
