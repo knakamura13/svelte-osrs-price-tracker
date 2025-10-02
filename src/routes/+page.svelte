@@ -41,10 +41,13 @@
     let filters = {
         buyLimit: { min: null as number | null, max: null as number | null },
         buyPrice: { min: null as number | null, max: null as number | null },
+        buyTime: { min: null as number | null, max: null as number | null },
         sellPrice: { min: null as number | null, max: null as number | null },
+        sellTime: { min: null as number | null, max: null as number | null },
+        breakEvenPrice: { min: null as number | null, max: null as number | null },
         margin: { min: null as number | null, max: null as number | null },
-        dailyVolume: { min: null as number | null, max: null as number | null },
-        potentialProfit: { min: null as number | null, max: null as number | null }
+        postTaxProfit: { min: null as number | null, max: null as number | null },
+        dailyVolume: { min: null as number | null, max: null as number | null }
     };
 
     // Computed active filters count
@@ -96,10 +99,35 @@
             if (filters.buyPrice.max !== null && row.buyPrice !== null && row.buyPrice > filters.buyPrice.max)
                 return false;
 
+            // Buy time filter (timestamp in seconds)
+            if (filters.buyTime.min !== null && row.buyTime !== null && row.buyTime < filters.buyTime.min) return false;
+            if (filters.buyTime.max !== null && row.buyTime !== null && row.buyTime > filters.buyTime.max) return false;
+
             // Sell price filter
             if (filters.sellPrice.min !== null && row.sellPrice !== null && row.sellPrice < filters.sellPrice.min)
                 return false;
             if (filters.sellPrice.max !== null && row.sellPrice !== null && row.sellPrice > filters.sellPrice.max)
+                return false;
+
+            // Sell time filter (timestamp in seconds)
+            if (filters.sellTime.min !== null && row.sellTime !== null && row.sellTime < filters.sellTime.min)
+                return false;
+            if (filters.sellTime.max !== null && row.sellTime !== null && row.sellTime > filters.sellTime.max)
+                return false;
+
+            // Break-even price filter
+            const breakEvenPrice = row.sellPrice !== null ? Math.ceil(row.sellPrice / (1 - 0.02)) : null;
+            if (
+                filters.breakEvenPrice.min !== null &&
+                breakEvenPrice !== null &&
+                breakEvenPrice < filters.breakEvenPrice.min
+            )
+                return false;
+            if (
+                filters.breakEvenPrice.max !== null &&
+                breakEvenPrice !== null &&
+                breakEvenPrice > filters.breakEvenPrice.max
+            )
                 return false;
 
             // Margin filter
@@ -120,22 +148,22 @@
             )
                 return false;
 
-            // Potential profit filter (post-tax profit)
+            // Post-tax profit filter
             const taxRate = 0.02;
             const postTaxProfit =
                 row.buyPrice !== null && row.sellPrice !== null
                     ? Math.floor(row.buyPrice * (1 - taxRate) - row.sellPrice)
                     : null;
             if (
-                filters.potentialProfit.min !== null &&
+                filters.postTaxProfit.min !== null &&
                 postTaxProfit !== null &&
-                postTaxProfit < filters.potentialProfit.min
+                postTaxProfit < filters.postTaxProfit.min
             )
                 return false;
             if (
-                filters.potentialProfit.max !== null &&
+                filters.postTaxProfit.max !== null &&
                 postTaxProfit !== null &&
-                postTaxProfit > filters.potentialProfit.max
+                postTaxProfit > filters.postTaxProfit.max
             )
                 return false;
 
@@ -270,10 +298,13 @@
         filters = {
             buyLimit: { min: null, max: null },
             buyPrice: { min: null, max: null },
+            buyTime: { min: null, max: null },
             sellPrice: { min: null, max: null },
+            sellTime: { min: null, max: null },
+            breakEvenPrice: { min: null, max: null },
             margin: { min: null, max: null },
-            dailyVolume: { min: null, max: null },
-            potentialProfit: { min: null, max: null }
+            postTaxProfit: { min: null, max: null },
+            dailyVolume: { min: null, max: null }
         };
     }
 
@@ -331,7 +362,7 @@
         </section>
     {/if}
 
-    <section class="px-4">
+    <section class="px-4 mt-2">
         <!-- Filters Accordion -->
         <div class="mb-4">
             <button
@@ -406,6 +437,32 @@
                             </div>
                         </div>
 
+                        <!-- Last buy filter -->
+                        <div class="filter-group">
+                            <div
+                                class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+                                id="buy-time-label"
+                            >
+                                Last buy
+                            </div>
+                            <div class="flex gap-2">
+                                <input
+                                    type="number"
+                                    placeholder="Min time"
+                                    aria-labelledby="buy-time-label"
+                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                    bind:value={filters.buyTime.min}
+                                />
+                                <input
+                                    type="number"
+                                    placeholder="Max time"
+                                    aria-labelledby="buy-time-label"
+                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                    bind:value={filters.buyTime.max}
+                                />
+                            </div>
+                        </div>
+
                         <!-- Sell price filter -->
                         <div class="filter-group">
                             <div
@@ -428,6 +485,58 @@
                                     aria-labelledby="sell-price-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.sellPrice.max}
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Last sell filter -->
+                        <div class="filter-group">
+                            <div
+                                class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+                                id="sell-time-label"
+                            >
+                                Last sell
+                            </div>
+                            <div class="flex gap-2">
+                                <input
+                                    type="number"
+                                    placeholder="Min time"
+                                    aria-labelledby="sell-time-label"
+                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                    bind:value={filters.sellTime.min}
+                                />
+                                <input
+                                    type="number"
+                                    placeholder="Max time"
+                                    aria-labelledby="sell-time-label"
+                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                    bind:value={filters.sellTime.max}
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Break-even price filter -->
+                        <div class="filter-group">
+                            <div
+                                class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+                                id="break-even-price-label"
+                            >
+                                Break-even price
+                            </div>
+                            <div class="flex gap-2">
+                                <input
+                                    type="number"
+                                    placeholder="Min price"
+                                    aria-labelledby="break-even-price-label"
+                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                    bind:value={filters.breakEvenPrice.min}
+                                />
+                                <input
+                                    type="number"
+                                    placeholder="Max price"
+                                    aria-labelledby="break-even-price-label"
+                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                    bind:value={filters.breakEvenPrice.max}
                                 />
                             </div>
                         </div>
@@ -458,6 +567,32 @@
                             </div>
                         </div>
 
+                        <!-- Post-tax profit filter -->
+                        <div class="filter-group">
+                            <div
+                                class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+                                id="post-tax-profit-label"
+                            >
+                                Post-tax profit
+                            </div>
+                            <div class="flex gap-2">
+                                <input
+                                    type="number"
+                                    placeholder="Min (125)"
+                                    aria-labelledby="post-tax-profit-label"
+                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                    bind:value={filters.postTaxProfit.min}
+                                />
+                                <input
+                                    type="number"
+                                    placeholder="Max (198000)"
+                                    aria-labelledby="post-tax-profit-label"
+                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                    bind:value={filters.postTaxProfit.max}
+                                />
+                            </div>
+                        </div>
+
                         <!-- Daily volume filter -->
                         <div class="filter-group">
                             <div
@@ -480,32 +615,6 @@
                                     aria-labelledby="daily-volume-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.dailyVolume.max}
-                                />
-                            </div>
-                        </div>
-
-                        <!-- Potential profit filter -->
-                        <div class="filter-group">
-                            <div
-                                class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
-                                id="potential-profit-label"
-                            >
-                                Potential profit
-                            </div>
-                            <div class="flex gap-2">
-                                <input
-                                    type="number"
-                                    placeholder="Min (125)"
-                                    aria-labelledby="potential-profit-label"
-                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-                                    bind:value={filters.potentialProfit.min}
-                                />
-                                <input
-                                    type="number"
-                                    placeholder="Max (198000)"
-                                    aria-labelledby="potential-profit-label"
-                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-                                    bind:value={filters.potentialProfit.max}
                                 />
                             </div>
                         </div>
