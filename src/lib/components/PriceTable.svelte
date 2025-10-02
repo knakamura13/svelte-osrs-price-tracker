@@ -2,6 +2,7 @@
     import type { PriceRow } from '$lib/types';
     import { secondsAgoFromUnix } from '$lib/utils/time';
     import { formatInt } from '$lib/utils/format';
+
     export let rows: PriceRow[] = [];
     export let sortable: boolean = false;
     export let sortBy: ((key: string) => void) | undefined;
@@ -154,30 +155,61 @@
                             <span title="This item has no buy limit" class="cursor-help">∞</span>
                         {/if}
                     </td>
-                    <td class="p-2 text-right">{formatInt(r.buyPrice)}</td>
+                    <td class="p-2 text-right">
+                        {#if r.buyPrice == null}
+                            <span title="No buy price data available for this item" class="cursor-help">—</span>
+                        {:else}
+                            {formatInt(r.buyPrice)}
+                        {/if}
+                    </td>
                     <td class="p-2 text-right opacity-70">{secondsAgoFromUnix(r.buyTime)}</td>
-                    <td class="p-2 text-right">{formatInt(r.sellPrice)}</td>
+                    <td class="p-2 text-right">
+                        {#if r.sellPrice == null}
+                            <span title="No sell price data available for this item" class="cursor-help">—</span>
+                        {:else}
+                            {formatInt(r.sellPrice)}
+                        {/if}
+                    </td>
                     <td class="p-2 text-right opacity-70">{secondsAgoFromUnix(r.sellTime)}</td>
-                    <td class="p-2 text-right">{formatInt(calculateBreakEvenPrice(r.buyPrice, r.sellPrice))}</td>
+                    <td class="p-2 text-right">
+                        {#if calculateBreakEvenPrice(r.buyPrice, r.sellPrice) == null}
+                            <span title="No break-even price data available for this item" class="cursor-help">—</span>
+                        {:else}
+                            {formatInt(calculateBreakEvenPrice(r.buyPrice, r.sellPrice))}
+                        {/if}
+                    </td>
                     <td
                         class="p-2 text-right"
                         class:red-text={r.margin !== null && r.margin < 0}
-                        class:green-text={r.margin !== null && r.margin >= 0}>{formatInt(r.margin)}</td
+                        class:green-text={r.margin !== null && r.margin >= 0}
                     >
+                        {#if r.margin == null}
+                            <span title="No margin data available for this item" class="cursor-help">—</span>
+                        {:else}
+                            {formatInt(r.margin)}
+                        {/if}
+                    </td>
                     <td
                         class="p-2 text-right"
                         class:red-text={getPostTaxProfitValue(r.buyPrice, r.sellPrice) !== null &&
                             getPostTaxProfitValue(r.buyPrice, r.sellPrice)! < 0}
                         class:green-text={getPostTaxProfitValue(r.buyPrice, r.sellPrice) !== null &&
                             getPostTaxProfitValue(r.buyPrice, r.sellPrice)! >= 0}
-                        >{formatInt(calculatePostTaxProfit(r.buyPrice, r.sellPrice))}</td
                     >
+                        {#if calculatePostTaxProfit(r.buyPrice, r.sellPrice) == null}
+                            <span title="No post-tax profit data available for this item" class="cursor-help">—</span>
+                        {:else}
+                            {formatInt(calculatePostTaxProfit(r.buyPrice, r.sellPrice))}
+                        {/if}
+                    </td>
                     <td class="p-2 text-right">
                         {#if r.dailyVolume !== null}
                             {formatInt(r.dailyVolume)}
                         {:else}
-                            <span title="No volume data available for this item" class="cursor-help text-red-500"
-                                >0</span
+                            <span
+                                title="No volume data available for this item"
+                                class="cursor-help"
+                                class:red-text={r.dailyVolume === null || r.dailyVolume <= 0}>0</span
                             >
                         {/if}
                     </td>
