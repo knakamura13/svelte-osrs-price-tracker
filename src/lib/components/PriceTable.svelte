@@ -85,15 +85,9 @@
             </th>
             <th
                 class="text-right p-2 select-none hover:text-white transition-colors {sortable ? 'cursor-pointer' : ''}"
-                on:click={() => sortable && sortBy && sortBy('margin')}
-            >
-                Margin <span class="ml-1 opacity-60 select-none">{sortIcon('margin')}</span>
-            </th>
-            <th
-                class="text-right p-2 select-none hover:text-white transition-colors {sortable ? 'cursor-pointer' : ''}"
                 on:click={() => sortable && sortBy && sortBy('breakEvenPrice')}
             >
-                Break-even Price
+                Break-even price
                 <span
                     class="mr-1 text-xs opacity-70 cursor-help inline-block"
                     title="The minimum sell price needed to recover your cost after the 2% GE tax."
@@ -103,9 +97,15 @@
             </th>
             <th
                 class="text-right p-2 select-none hover:text-white transition-colors {sortable ? 'cursor-pointer' : ''}"
+                on:click={() => sortable && sortBy && sortBy('margin')}
+            >
+                Margin <span class="ml-1 opacity-60 select-none">{sortIcon('margin')}</span>
+            </th>
+            <th
+                class="text-right p-2 select-none hover:text-white transition-colors {sortable ? 'cursor-pointer' : ''}"
                 on:click={() => sortable && sortBy && sortBy('postTaxProfit')}
             >
-                Post-tax Profit
+                Post-tax profit
                 <span
                     class="mr-1 text-xs opacity-70 cursor-help inline-block"
                     title="Your profit if you were to buy at 'Sell price' and sell at 'Buy price', after deducting the 2% GE tax."
@@ -158,12 +158,12 @@
                     <td class="p-2 text-right opacity-70">{secondsAgoFromUnix(r.buyTime)}</td>
                     <td class="p-2 text-right">{formatInt(r.sellPrice)}</td>
                     <td class="p-2 text-right opacity-70">{secondsAgoFromUnix(r.sellTime)}</td>
+                    <td class="p-2 text-right">{formatInt(calculateBreakEvenPrice(r.buyPrice, r.sellPrice))}</td>
                     <td
                         class="p-2 text-right"
                         class:red-text={r.margin !== null && r.margin < 0}
                         class:green-text={r.margin !== null && r.margin >= 0}>{formatInt(r.margin)}</td
                     >
-                    <td class="p-2 text-right">{formatInt(calculateBreakEvenPrice(r.buyPrice, r.sellPrice))}</td>
                     <td
                         class="p-2 text-right"
                         class:red-text={getPostTaxProfitValue(r.buyPrice, r.sellPrice) !== null &&

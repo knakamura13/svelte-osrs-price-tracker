@@ -36,6 +36,22 @@
     let failCount = 0;
     let loading = false;
 
+    // Filter state
+    let filtersExpanded = false;
+    let filters = {
+        buyLimit: { min: null as number | null, max: null as number | null },
+        buyPrice: { min: null as number | null, max: null as number | null },
+        sellPrice: { min: null as number | null, max: null as number | null },
+        margin: { min: null as number | null, max: null as number | null },
+        dailyVolume: { min: null as number | null, max: null as number | null },
+        potentialProfit: { min: null as number | null, max: null as number | null }
+    };
+
+    // Computed active filters count
+    $: activeFiltersCount = Object.values(filters).reduce((count, filter) => {
+        return count + (filter.min !== null ? 1 : 0) + (filter.max !== null ? 1 : 0);
+    }, 0);
+
     async function loadRows() {
         try {
             loading = true;
@@ -65,6 +81,66 @@
             const q = qStr.toLowerCase();
             rows = rows.filter((r) => r.name.toLowerCase().includes(q));
         }
+
+        // Apply column filters
+        rows = rows.filter((row) => {
+            // Buy limit filter
+            if (filters.buyLimit.min !== null && row.buyLimit !== null && row.buyLimit < filters.buyLimit.min)
+                return false;
+            if (filters.buyLimit.max !== null && row.buyLimit !== null && row.buyLimit > filters.buyLimit.max)
+                return false;
+
+            // Buy price filter
+            if (filters.buyPrice.min !== null && row.buyPrice !== null && row.buyPrice < filters.buyPrice.min)
+                return false;
+            if (filters.buyPrice.max !== null && row.buyPrice !== null && row.buyPrice > filters.buyPrice.max)
+                return false;
+
+            // Sell price filter
+            if (filters.sellPrice.min !== null && row.sellPrice !== null && row.sellPrice < filters.sellPrice.min)
+                return false;
+            if (filters.sellPrice.max !== null && row.sellPrice !== null && row.sellPrice > filters.sellPrice.max)
+                return false;
+
+            // Margin filter
+            if (filters.margin.min !== null && row.margin !== null && row.margin < filters.margin.min) return false;
+            if (filters.margin.max !== null && row.margin !== null && row.margin > filters.margin.max) return false;
+
+            // Daily volume filter
+            if (
+                filters.dailyVolume.min !== null &&
+                row.dailyVolume != null &&
+                row.dailyVolume < filters.dailyVolume.min
+            )
+                return false;
+            if (
+                filters.dailyVolume.max !== null &&
+                row.dailyVolume != null &&
+                row.dailyVolume > filters.dailyVolume.max
+            )
+                return false;
+
+            // Potential profit filter (post-tax profit)
+            const taxRate = 0.02;
+            const postTaxProfit =
+                row.buyPrice !== null && row.sellPrice !== null
+                    ? Math.floor(row.buyPrice * (1 - taxRate) - row.sellPrice)
+                    : null;
+            if (
+                filters.potentialProfit.min !== null &&
+                postTaxProfit !== null &&
+                postTaxProfit < filters.potentialProfit.min
+            )
+                return false;
+            if (
+                filters.potentialProfit.max !== null &&
+                postTaxProfit !== null &&
+                postTaxProfit > filters.potentialProfit.max
+            )
+                return false;
+
+            return true;
+        });
 
         // If no sorting key is selected, return in original order
         if (!key) {
@@ -190,6 +266,17 @@
         setSort(key as SortKey);
     }
 
+    function clearFilters() {
+        filters = {
+            buyLimit: { min: null, max: null },
+            buyPrice: { min: null, max: null },
+            sellPrice: { min: null, max: null },
+            margin: { min: null, max: null },
+            dailyVolume: { min: null, max: null },
+            potentialProfit: { min: null, max: null }
+        };
+    }
+
     let visibleRows: PriceRow[] = [];
     $: visibleRows = filteredSorted(allRows, search, sortKey, sortDir);
 
@@ -245,6 +332,198 @@
     {/if}
 
     <section class="px-4">
+        <!-- Filters Accordion -->
+        <div class="mb-4">
+            <button
+                class="accordion-trigger w-full text-left p-3 bg-gray-100 dark:bg-gray-800 rounded-t-lg border border-gray-300 dark:border-gray-600 flex items-center justify-between hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                class:rounded-b-lg={!filtersExpanded}
+                on:click={() => (filtersExpanded = !filtersExpanded)}
+            >
+                <span class="font-medium">
+                    Apply filters {activeFiltersCount > 0
+                        ? `(${activeFiltersCount} filters active)`
+                        : '(0 filters active)'}
+                </span>
+                <span class="transform transition-transform {filtersExpanded ? 'rotate-180' : ''}">▼</span>
+            </button>
+
+            {#if filtersExpanded}
+                <div
+                    class="accordion-content p-4 bg-gray-50 dark:bg-gray-900 rounded-b-lg border border-t-0 border-gray-300 dark:border-gray-600"
+                >
+                    <h3 class="text-sm font-medium mb-3 text-gray-700 dark:text-gray-300">Filters:</h3>
+
+                    <div class="grid grid-cols-1 gap-4">
+                        <!-- Buy limit filter -->
+                        <div class="filter-group">
+                            <div
+                                class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+                                id="buy-limit-label"
+                            >
+                                Buy limit
+                            </div>
+                            <div class="flex gap-2">
+                                <input
+                                    type="number"
+                                    placeholder="Min (100)"
+                                    aria-labelledby="buy-limit-label"
+                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                    bind:value={filters.buyLimit.min}
+                                />
+                                <input
+                                    type="number"
+                                    placeholder="Max (50000)"
+                                    aria-labelledby="buy-limit-label"
+                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                    bind:value={filters.buyLimit.max}
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Buy price filter -->
+                        <div class="filter-group">
+                            <div
+                                class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+                                id="buy-price-label"
+                            >
+                                Buy price
+                            </div>
+                            <div class="flex gap-2">
+                                <input
+                                    type="number"
+                                    placeholder="Min (1)"
+                                    aria-labelledby="buy-price-label"
+                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                    bind:value={filters.buyPrice.min}
+                                />
+                                <input
+                                    type="number"
+                                    placeholder="Max (50)"
+                                    aria-labelledby="buy-price-label"
+                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                    bind:value={filters.buyPrice.max}
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Sell price filter -->
+                        <div class="filter-group">
+                            <div
+                                class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+                                id="sell-price-label"
+                            >
+                                Sell price
+                            </div>
+                            <div class="flex gap-2">
+                                <input
+                                    type="number"
+                                    placeholder="Min (1)"
+                                    aria-labelledby="sell-price-label"
+                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                    bind:value={filters.sellPrice.min}
+                                />
+                                <input
+                                    type="number"
+                                    placeholder="Max (50)"
+                                    aria-labelledby="sell-price-label"
+                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                    bind:value={filters.sellPrice.max}
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Margin filter -->
+                        <div class="filter-group">
+                            <div
+                                class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+                                id="margin-label"
+                            >
+                                Margin
+                            </div>
+                            <div class="flex gap-2">
+                                <input
+                                    type="number"
+                                    placeholder="Min (1)"
+                                    aria-labelledby="margin-label"
+                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                    bind:value={filters.margin.min}
+                                />
+                                <input
+                                    type="number"
+                                    placeholder="Max (23)"
+                                    aria-labelledby="margin-label"
+                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                    bind:value={filters.margin.max}
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Daily volume filter -->
+                        <div class="filter-group">
+                            <div
+                                class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+                                id="daily-volume-label"
+                            >
+                                Daily volume
+                            </div>
+                            <div class="flex gap-2">
+                                <input
+                                    type="number"
+                                    placeholder="Min (10000)"
+                                    aria-labelledby="daily-volume-label"
+                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                    bind:value={filters.dailyVolume.min}
+                                />
+                                <input
+                                    type="number"
+                                    placeholder="Max (428130653)"
+                                    aria-labelledby="daily-volume-label"
+                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                    bind:value={filters.dailyVolume.max}
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Potential profit filter -->
+                        <div class="filter-group">
+                            <div
+                                class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+                                id="potential-profit-label"
+                            >
+                                Potential profit
+                            </div>
+                            <div class="flex gap-2">
+                                <input
+                                    type="number"
+                                    placeholder="Min (125)"
+                                    aria-labelledby="potential-profit-label"
+                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                    bind:value={filters.potentialProfit.min}
+                                />
+                                <input
+                                    type="number"
+                                    placeholder="Max (198000)"
+                                    aria-labelledby="potential-profit-label"
+                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                    bind:value={filters.potentialProfit.max}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Clear filters button -->
+                    <div class="mt-4 flex justify-end">
+                        <button
+                            class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors"
+                            on:click={clearFilters}
+                        >
+                            🗑️ Clear filters
+                        </button>
+                    </div>
+                </div>
+            {/if}
+        </div>
+
         <div class="flex items-center justify-between py-2">
             <div class="flex gap-2 items-center text-sm">
                 <label for="page-size">Rows per page</label>
