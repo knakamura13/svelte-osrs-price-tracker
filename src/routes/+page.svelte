@@ -36,9 +36,68 @@
     let failCount = 0;
     let loading = false;
 
+    // Types and helpers for filters
+    type NumericFilter = { min: number | null; max: number | null };
+    type Filters = {
+        buyLimit: NumericFilter;
+        buyPrice: NumericFilter;
+        buyTime: NumericFilter;
+        sellPrice: NumericFilter;
+        sellTime: NumericFilter;
+        breakEvenPrice: NumericFilter;
+        margin: NumericFilter;
+        postTaxProfit: NumericFilter;
+        dailyVolume: NumericFilter;
+    };
+
+    function isFiniteNumber(n: number | null): n is number {
+        return typeof n === 'number' && Number.isFinite(n);
+    }
+
+    function normalizeFilters(f: Filters): Filters {
+        return {
+            buyLimit: {
+                min: isFiniteNumber(f.buyLimit.min) ? f.buyLimit.min : null,
+                max: isFiniteNumber(f.buyLimit.max) ? f.buyLimit.max : null
+            },
+            buyPrice: {
+                min: isFiniteNumber(f.buyPrice.min) ? f.buyPrice.min : null,
+                max: isFiniteNumber(f.buyPrice.max) ? f.buyPrice.max : null
+            },
+            buyTime: {
+                min: isFiniteNumber(f.buyTime.min) ? f.buyTime.min : null,
+                max: isFiniteNumber(f.buyTime.max) ? f.buyTime.max : null
+            },
+            sellPrice: {
+                min: isFiniteNumber(f.sellPrice.min) ? f.sellPrice.min : null,
+                max: isFiniteNumber(f.sellPrice.max) ? f.sellPrice.max : null
+            },
+            sellTime: {
+                min: isFiniteNumber(f.sellTime.min) ? f.sellTime.min : null,
+                max: isFiniteNumber(f.sellTime.max) ? f.sellTime.max : null
+            },
+            breakEvenPrice: {
+                min: isFiniteNumber(f.breakEvenPrice.min) ? f.breakEvenPrice.min : null,
+                max: isFiniteNumber(f.breakEvenPrice.max) ? f.breakEvenPrice.max : null
+            },
+            margin: {
+                min: isFiniteNumber(f.margin.min) ? f.margin.min : null,
+                max: isFiniteNumber(f.margin.max) ? f.margin.max : null
+            },
+            postTaxProfit: {
+                min: isFiniteNumber(f.postTaxProfit.min) ? f.postTaxProfit.min : null,
+                max: isFiniteNumber(f.postTaxProfit.max) ? f.postTaxProfit.max : null
+            },
+            dailyVolume: {
+                min: isFiniteNumber(f.dailyVolume.min) ? f.dailyVolume.min : null,
+                max: isFiniteNumber(f.dailyVolume.max) ? f.dailyVolume.max : null
+            }
+        };
+    }
+
     // Filter state
     let filtersExpanded = false;
-    let filters = {
+    let filters: Filters = {
         buyLimit: { min: null as number | null, max: null as number | null },
         buyPrice: { min: null as number | null, max: null as number | null },
         buyTime: { min: null as number | null, max: null as number | null },
@@ -50,9 +109,19 @@
         dailyVolume: { min: null as number | null, max: null as number | null }
     };
 
+    // Normalized filters (convert NaN/undefined to null) to drive reactivity
+    let filtersNormalized: Filters;
+    $: filtersNormalized = normalizeFilters(filters);
+
+    // Whenever filters change, jump back to the first page for clarity
+    $: {
+        filtersNormalized;
+        page = 1;
+    }
+
     // Computed active filters count
-    $: activeFiltersCount = Object.values(filters).reduce((count, filter) => {
-        return count + (filter.min !== null ? 1 : 0) + (filter.max !== null ? 1 : 0);
+    $: activeFiltersCount = Object.values(filtersNormalized).reduce((count, filter) => {
+        return count + (isFiniteNumber(filter.min) ? 1 : 0) + (isFiniteNumber(filter.max) ? 1 : 0);
     }, 0);
 
     async function loadRows() {
@@ -78,7 +147,13 @@
         }
     }
 
-    function filteredSorted(source: PriceRow[], qStr: string, key: SortKey | null, dirStr: 'asc' | 'desc'): PriceRow[] {
+    function filteredSorted(
+        source: PriceRow[],
+        qStr: string,
+        key: SortKey | null,
+        dirStr: 'asc' | 'desc',
+        filterSet: Filters
+    ): PriceRow[] {
         let rows = source;
         if (qStr.trim()) {
             const q = qStr.toLowerCase();
@@ -88,63 +163,65 @@
         // Apply column filters
         rows = rows.filter((row) => {
             // Buy limit filter
-            if (filters.buyLimit.min !== null && row.buyLimit !== null && row.buyLimit < filters.buyLimit.min)
+            if (filterSet.buyLimit.min !== null && row.buyLimit !== null && row.buyLimit < filterSet.buyLimit.min)
                 return false;
-            if (filters.buyLimit.max !== null && row.buyLimit !== null && row.buyLimit > filters.buyLimit.max)
+            if (filterSet.buyLimit.max !== null && row.buyLimit !== null && row.buyLimit > filterSet.buyLimit.max)
                 return false;
 
             // Buy price filter
-            if (filters.buyPrice.min !== null && row.buyPrice !== null && row.buyPrice < filters.buyPrice.min)
+            if (filterSet.buyPrice.min !== null && row.buyPrice !== null && row.buyPrice < filterSet.buyPrice.min)
                 return false;
-            if (filters.buyPrice.max !== null && row.buyPrice !== null && row.buyPrice > filters.buyPrice.max)
+            if (filterSet.buyPrice.max !== null && row.buyPrice !== null && row.buyPrice > filterSet.buyPrice.max)
                 return false;
 
             // Buy time filter (timestamp in seconds)
-            if (filters.buyTime.min !== null && row.buyTime !== null && row.buyTime < filters.buyTime.min) return false;
-            if (filters.buyTime.max !== null && row.buyTime !== null && row.buyTime > filters.buyTime.max) return false;
+            if (filterSet.buyTime.min !== null && row.buyTime !== null && row.buyTime < filterSet.buyTime.min)
+                return false;
+            if (filterSet.buyTime.max !== null && row.buyTime !== null && row.buyTime > filterSet.buyTime.max)
+                return false;
 
             // Sell price filter
-            if (filters.sellPrice.min !== null && row.sellPrice !== null && row.sellPrice < filters.sellPrice.min)
+            if (filterSet.sellPrice.min !== null && row.sellPrice !== null && row.sellPrice < filterSet.sellPrice.min)
                 return false;
-            if (filters.sellPrice.max !== null && row.sellPrice !== null && row.sellPrice > filters.sellPrice.max)
+            if (filterSet.sellPrice.max !== null && row.sellPrice !== null && row.sellPrice > filterSet.sellPrice.max)
                 return false;
 
             // Sell time filter (timestamp in seconds)
-            if (filters.sellTime.min !== null && row.sellTime !== null && row.sellTime < filters.sellTime.min)
+            if (filterSet.sellTime.min !== null && row.sellTime !== null && row.sellTime < filterSet.sellTime.min)
                 return false;
-            if (filters.sellTime.max !== null && row.sellTime !== null && row.sellTime > filters.sellTime.max)
+            if (filterSet.sellTime.max !== null && row.sellTime !== null && row.sellTime > filterSet.sellTime.max)
                 return false;
 
             // Break-even price filter
             const breakEvenPrice = row.sellPrice !== null ? Math.ceil(row.sellPrice / (1 - 0.02)) : null;
             if (
-                filters.breakEvenPrice.min !== null &&
+                filterSet.breakEvenPrice.min !== null &&
                 breakEvenPrice !== null &&
-                breakEvenPrice < filters.breakEvenPrice.min
+                breakEvenPrice < filterSet.breakEvenPrice.min
             )
                 return false;
             if (
-                filters.breakEvenPrice.max !== null &&
+                filterSet.breakEvenPrice.max !== null &&
                 breakEvenPrice !== null &&
-                breakEvenPrice > filters.breakEvenPrice.max
+                breakEvenPrice > filterSet.breakEvenPrice.max
             )
                 return false;
 
             // Margin filter
-            if (filters.margin.min !== null && row.margin !== null && row.margin < filters.margin.min) return false;
-            if (filters.margin.max !== null && row.margin !== null && row.margin > filters.margin.max) return false;
+            if (filterSet.margin.min !== null && row.margin !== null && row.margin < filterSet.margin.min) return false;
+            if (filterSet.margin.max !== null && row.margin !== null && row.margin > filterSet.margin.max) return false;
 
             // Daily volume filter
             if (
-                filters.dailyVolume.min !== null &&
+                filterSet.dailyVolume.min !== null &&
                 row.dailyVolume != null &&
-                row.dailyVolume < filters.dailyVolume.min
+                row.dailyVolume < filterSet.dailyVolume.min
             )
                 return false;
             if (
-                filters.dailyVolume.max !== null &&
+                filterSet.dailyVolume.max !== null &&
                 row.dailyVolume != null &&
-                row.dailyVolume > filters.dailyVolume.max
+                row.dailyVolume > filterSet.dailyVolume.max
             )
                 return false;
 
@@ -155,15 +232,15 @@
                     ? Math.floor(row.buyPrice * (1 - taxRate) - row.sellPrice)
                     : null;
             if (
-                filters.postTaxProfit.min !== null &&
+                filterSet.postTaxProfit.min !== null &&
                 postTaxProfit !== null &&
-                postTaxProfit < filters.postTaxProfit.min
+                postTaxProfit < filterSet.postTaxProfit.min
             )
                 return false;
             if (
-                filters.postTaxProfit.max !== null &&
+                filterSet.postTaxProfit.max !== null &&
                 postTaxProfit !== null &&
-                postTaxProfit > filters.postTaxProfit.max
+                postTaxProfit > filterSet.postTaxProfit.max
             )
                 return false;
 
@@ -306,10 +383,11 @@
             postTaxProfit: { min: null, max: null },
             dailyVolume: { min: null, max: null }
         };
+        page = 1;
     }
 
     let visibleRows: PriceRow[] = [];
-    $: visibleRows = filteredSorted(allRows, search, sortKey, sortDir);
+    $: visibleRows = filteredSorted(allRows, search, sortKey, sortDir, filtersNormalized);
 
     // Recompute label once per second using nowSec as a dependency
     $: {
