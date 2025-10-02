@@ -111,7 +111,9 @@
         <div class="grow">
             <h1 class="text-2xl font-semibold">OSRS Price Tracker</h1>
             <p class="text-base opacity-80">Real-time GE prices with search, sort, pagination, and auto‑refresh.</p>
-            <p class="text-xs opacity-70">Last updated: {secondsAgoFromUnix(lastUpdated ? Math.floor(lastUpdated/1000) : null)}</p>
+            <p class="text-xs opacity-70">
+                Last updated: {secondsAgoFromUnix(lastUpdated ? Math.floor(lastUpdated / 1000) : null)}
+            </p>
         </div>
         <div class="flex gap-3 items-center">
             <label class="text-sm">Auto‑refresh <input type="checkbox" bind:checked={auto} /></label>
@@ -139,7 +141,9 @@
                     </select>
                 </div>
                 <div class="flex gap-3 items-center text-sm">
-                    <span class="opacity-70">Page {page} of {Math.max(1, Math.ceil(rows.length / pageSize))} ({rows.length} items)</span>
+                    <span class="opacity-70"
+                        >Page {page} of {Math.max(1, Math.ceil(rows.length / pageSize))} ({rows.length} items)</span
+                    >
                     <button class="border px-2 py-1" on:click={() => (page = Math.max(1, page - 1))}>Prev</button>
                     <button
                         class="border px-2 py-1"
