@@ -4,7 +4,17 @@
     import { secondsAgoFromUnix } from '$lib/utils/time';
     import type { PriceRow } from '$lib/types';
 
-    type SortKey = 'name' | 'buyLimit' | 'buyPrice' | 'sellPrice' | 'margin' | 'dailyVolume' | 'buyTime' | 'sellTime';
+    type SortKey =
+        | 'name'
+        | 'buyLimit'
+        | 'buyPrice'
+        | 'sellPrice'
+        | 'margin'
+        | 'breakEvenPrice'
+        | 'postTaxProfit'
+        | 'dailyVolume'
+        | 'buyTime'
+        | 'sellTime';
 
     export let data: { rows: PriceRow[] };
 
@@ -63,8 +73,30 @@
 
         const dir = dirStr === 'asc' ? 1 : -1;
         rows = [...rows].sort((a, b) => {
-            const va = (a as any)[key];
-            const vb = (b as any)[key];
+            let va: any;
+            let vb: any;
+
+            if (key === 'breakEvenPrice') {
+                // Break-even price for sorting: ceil(sellPrice / (1 - taxRate))
+                const taxRate = 0.02;
+                va = a.sellPrice !== null ? Math.ceil(a.sellPrice / (1 - taxRate)) : null;
+                vb = b.sellPrice !== null ? Math.ceil(b.sellPrice / (1 - taxRate)) : null;
+            } else if (key === 'postTaxProfit') {
+                // Post-tax profit for sorting: floor(buyPrice * (1 - taxRate) - sellPrice)
+                const taxRate = 0.02;
+                va =
+                    a.buyPrice !== null && a.sellPrice !== null
+                        ? Math.floor(a.buyPrice * (1 - taxRate) - a.sellPrice)
+                        : null;
+                vb =
+                    b.buyPrice !== null && b.sellPrice !== null
+                        ? Math.floor(b.buyPrice * (1 - taxRate) - b.sellPrice)
+                        : null;
+            } else {
+                va = (a as any)[key];
+                vb = (b as any)[key];
+            }
+
             if (va == null && vb == null) return 0;
             if (va == null) return 1;
             if (vb == null) return -1;

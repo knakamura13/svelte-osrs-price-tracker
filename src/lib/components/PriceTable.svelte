@@ -14,6 +14,31 @@
         if (sortKey === key) return sortDir === 'asc' ? '▲' : '▼';
         return '↕';
     };
+
+    // Calculate break-even sell price after 2% GE tax
+    // Formula: sellNeeded * (1 - taxRate) = cost => sellNeeded = ceil(cost / (1 - taxRate))
+    const calculateBreakEvenPrice = (_buyPrice: number | null, sellPrice: number | null): number | null => {
+        if (sellPrice === null) return null;
+        const taxRate = 0.02;
+        return Math.ceil(sellPrice / (1 - taxRate));
+    };
+
+    // Helper function to get break-even price value for conditional logic
+    const getBreakEvenPriceValue = (buyPrice: number | null, sellPrice: number | null): number | null => {
+        return calculateBreakEvenPrice(buyPrice, sellPrice);
+    };
+
+    // Calculate post-tax profit if buying at sellPrice and selling at buyPrice
+    // Formula: floor(buyPrice * (1 - taxRate) - sellPrice)
+    const calculatePostTaxProfit = (buyPrice: number | null, sellPrice: number | null): number | null => {
+        if (buyPrice === null || sellPrice === null) return null;
+        const taxRate = 0.02;
+        return Math.floor(buyPrice * (1 - taxRate) - sellPrice);
+    };
+
+    const getPostTaxProfitValue = (buyPrice: number | null, sellPrice: number | null): number | null => {
+        return calculatePostTaxProfit(buyPrice, sellPrice);
+    };
 </script>
 
 <table class="w-full text-sm">
@@ -66,6 +91,30 @@
             </th>
             <th
                 class="text-right p-2 select-none hover:text-white transition-colors {sortable ? 'cursor-pointer' : ''}"
+                on:click={() => sortable && sortBy && sortBy('breakEvenPrice')}
+            >
+                Break-even Price
+                <span
+                    class="mr-1 opacity-70 cursor-help inline-block"
+                    title="The minimum sell price needed to recover your cost after the 2% GE tax."
+                    aria-label="Break-even Price tooltip">?</span
+                >
+                <span class="ml-1 opacity-60 select-none">{sortIcon('breakEvenPrice')}</span>
+            </th>
+            <th
+                class="text-right p-2 select-none hover:text-white transition-colors {sortable ? 'cursor-pointer' : ''}"
+                on:click={() => sortable && sortBy && sortBy('postTaxProfit')}
+            >
+                Post-tax Profit
+                <span
+                    class="mr-1 opacity-70 cursor-help inline-block"
+                    title="Your profit if you were to buy at 'Sell price' and sell at 'Buy price', after deducting the 2% GE tax."
+                    aria-label="Post-tax Profit tooltip">?</span
+                >
+                <span class="ml-1 opacity-60 select-none">{sortIcon('postTaxProfit')}</span>
+            </th>
+            <th
+                class="text-right p-2 select-none hover:text-white transition-colors {sortable ? 'cursor-pointer' : ''}"
                 on:click={() => sortable && sortBy && sortBy('dailyVolume')}
             >
                 Daily volume <span class="ml-1 opacity-60 select-none">{sortIcon('dailyVolume')}</span>
@@ -75,7 +124,7 @@
     <tbody>
         {#if rows.length === 0}
             <tr>
-                <td class="p-3 text-center text-gray-500" colspan="8">No data yet</td>
+                <td class="p-3 text-center text-gray-500" colspan="10">No data yet</td>
             </tr>
         {:else}
             {#each rows as r (r.id)}
@@ -103,7 +152,27 @@
                     <td class="p-2 text-right">{secondsAgoFromUnix(r.buyTime)}</td>
                     <td class="p-2 text-right">{formatInt(r.sellPrice)}</td>
                     <td class="p-2 text-right">{secondsAgoFromUnix(r.sellTime)}</td>
-                    <td class="p-2 text-right">{formatInt(r.margin)}</td>
+                    <td
+                        class="p-2 text-right"
+                        class:red-text={r.margin !== null && r.margin < 0}
+                        class:green-text={r.margin !== null && r.margin >= 0}>{formatInt(r.margin)}</td
+                    >
+                    <td
+                        class="p-2 text-right"
+                        class:red-text={getBreakEvenPriceValue(r.buyPrice, r.sellPrice) !== null &&
+                            getBreakEvenPriceValue(r.buyPrice, r.sellPrice)! < 0}
+                        class:green-text={getBreakEvenPriceValue(r.buyPrice, r.sellPrice) !== null &&
+                            getBreakEvenPriceValue(r.buyPrice, r.sellPrice)! >= 0}
+                        >{formatInt(calculateBreakEvenPrice(r.buyPrice, r.sellPrice))}</td
+                    >
+                    <td
+                        class="p-2 text-right"
+                        class:red-text={getPostTaxProfitValue(r.buyPrice, r.sellPrice) !== null &&
+                            getPostTaxProfitValue(r.buyPrice, r.sellPrice)! < 0}
+                        class:green-text={getPostTaxProfitValue(r.buyPrice, r.sellPrice) !== null &&
+                            getPostTaxProfitValue(r.buyPrice, r.sellPrice)! >= 0}
+                        >{formatInt(calculatePostTaxProfit(r.buyPrice, r.sellPrice))}</td
+                    >
                     <td class="p-2 text-right">{r.dailyVolume ?? '—'}</td>
                 </tr>
             {/each}
@@ -112,4 +181,19 @@
 </table>
 
 <style lang="scss">
+    .red-text {
+        color: rgb(239 68 68); /* red-500 */
+    }
+
+    .green-text {
+        color: rgb(34 197 94); /* green-500 */
+    }
+
+    :global(.dark) .red-text {
+        color: rgb(252 165 165); /* red-300 for dark mode */
+    }
+
+    :global(.dark) .green-text {
+        color: rgb(134 239 172); /* green-300 for dark mode */
+    }
 </style>
