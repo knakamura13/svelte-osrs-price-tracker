@@ -423,8 +423,21 @@
         page = 1;
     }
 
+    // Pagination callbacks
+    function onPageChange(newPage: number) {
+        page = newPage;
+    }
+
+    function onPageSizeChange(newPageSize: number) {
+        pageSize = newPageSize;
+        page = 1; // Reset to first page when page size changes
+    }
+
     let visibleRows: PriceRow[] = [];
     $: visibleRows = filteredSorted(allRows, search, sortKey, sortDir, filtersNormalized);
+
+    // Total rows for pagination
+    $: totalRows = visibleRows.length;
 
     // Recompute label once per second using nowSec as a dependency
     $: {
@@ -815,30 +828,6 @@
             {/if}
         </div>
 
-        <div class="flex items-center justify-between py-2">
-            <div class="flex gap-2 items-center text-sm">
-                <label for="page-size">Rows per page</label>
-                <select id="page-size" class="border p-1" bind:value={pageSize} on:change={() => (page = 1)}>
-                    <option value={25}>25</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                    <option value={250}>250</option>
-                </select>
-            </div>
-            <div class="flex gap-3 items-center text-sm">
-                <span class="opacity-70">
-                    Page {page} of {Math.max(1, Math.ceil(visibleRows.length / pageSize))} ({visibleRows.length} items)
-                </span>
-                <button class="border px-2 py-1" on:click={() => (page = Math.max(1, page - 1))}>Prev</button>
-                <button
-                    class="border px-2 py-1"
-                    on:click={() => (page = Math.min(Math.ceil(visibleRows.length / pageSize) || 1, page + 1))}
-                >
-                    Next
-                </button>
-            </div>
-        </div>
-
         <PriceTable
             rows={visibleRows.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize)}
             sortable
@@ -846,6 +835,11 @@
             {sortKey}
             {sortDir}
             {columnVisibility}
+            {page}
+            {pageSize}
+            {totalRows}
+            {onPageChange}
+            {onPageSizeChange}
         />
     </section>
 </div>

@@ -2,6 +2,7 @@
     import type { PriceRow } from '$lib/types';
     import { secondsAgoFromUnix } from '$lib/utils/time';
     import { formatInt } from '$lib/utils/format';
+    import PaginationControls from './PaginationControls.svelte';
 
     export let rows: PriceRow[] = [];
     export let sortable: boolean = false;
@@ -20,6 +21,13 @@
         postTaxProfit: true,
         dailyVolume: true
     };
+
+    // Pagination props
+    export let page: number = 1;
+    export let pageSize: number = 25;
+    export let totalRows: number = 0;
+    export let onPageChange: ((page: number) => void) | undefined;
+    export let onPageSizeChange: ((pageSize: number) => void) | undefined;
 
     // Calculate visible column count for colspan
     $: visibleColumnCount = Object.values(columnVisibility).filter(Boolean).length + 1; // +1 for image column
@@ -51,6 +59,9 @@
         return calculatePostTaxProfit(buyPrice, sellPrice);
     };
 </script>
+
+<!-- Pagination Controls (Top) -->
+<PaginationControls {page} {pageSize} {totalRows} {onPageChange} {onPageSizeChange} />
 
 <table class="w-full text-sm">
     <thead class="bg-gray-50 dark:bg-[#2a3138] dark:text-gray-200 sticky top-0">
@@ -290,6 +301,9 @@
         {/if}
     </tbody>
 </table>
+
+<!-- Pagination Controls (Bottom) -->
+<PaginationControls {page} {pageSize} {totalRows} {onPageChange} {onPageSizeChange} />
 
 <style lang="scss">
     .red-text {
