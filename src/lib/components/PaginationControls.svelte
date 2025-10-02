@@ -51,36 +51,38 @@
             </span>
             <div class="flex gap-1">
                 <button
-                    class="border px-2 py-1"
+                    class="border px-2 py-1 w-9 h-9 transition-colors hover:bg-gray-600 focus:bg-gray-600 disabled:!cursor-default disabled:hover:!bg-transparent disabled:focus:!bg-transparent"
+                    class:!cursor-default={page === 1}
                     on:click={goToFirstPage}
                     disabled={page === 1}
                     title="First page"
                 >
-                    «
+                    {'<<'}
                 </button>
                 <button
-                    class="border px-2 py-1"
+                    class="border px-2 py-1 w-9 h-9 transition-colors hover:bg-gray-600 focus:bg-gray-600 disabled:!cursor-default disabled:hover:!bg-transparent disabled:focus:!bg-transparent"
+                    class:!cursor-default={page === 1}
                     on:click={goToPreviousPage}
                     disabled={page === 1}
                     title="Previous page"
                 >
-                    ‹
+                    {'<'}
                 </button>
                 <button
-                    class="border px-2 py-1"
+                    class="border px-2 py-1 w-9 h-9 transition-colors hover:bg-gray-600 focus:bg-gray-600 disabled:!cursor-default disabled:hover:!bg-transparent disabled:focus:!bg-transparent"
                     on:click={goToNextPage}
                     disabled={page === totalPages}
                     title="Next page"
                 >
-                    ›
+                    {'>'}
                 </button>
                 <button
-                    class="border px-2 py-1"
+                    class="border px-2 py-1 w-9 h-9 transition-colors hover:bg-gray-600 focus:bg-gray-600 disabled:!cursor-default disabled:hover:!bg-transparent disabled:focus:!bg-transparent"
                     on:click={goToLastPage}
                     disabled={page === totalPages}
                     title="Last page"
                 >
-                    »
+                    {'>>'}
                 </button>
             </div>
         </div>
