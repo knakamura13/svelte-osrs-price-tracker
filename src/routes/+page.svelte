@@ -10,8 +10,9 @@
 
     let search = '';
     let searchRaw = '';
-    let sortKey: SortKey | null = null;
-    let sortDir: 'asc' | 'desc' = 'asc';
+    let sortKey: SortKey | null = 'margin';
+    let sortDir: 'asc' | 'desc' = 'desc';
+    let lastSortKey: SortKey | null = 'margin';
     let page = 1;
     let pageSize = 25;
     let auto = false;
@@ -130,19 +131,27 @@
 
     function setSort(key: SortKey) {
         if (sortKey === key) {
-            // Cycle through: asc -> desc -> unsorted (null) -> asc
+            // Cycling through states for the same column
             if (sortDir === 'asc') {
                 sortDir = 'desc';
             } else if (sortDir === 'desc') {
-                sortKey = null;
+                sortKey = null; // Go to unsorted
                 sortDir = 'asc';
+                lastSortKey = key;
             } else {
+                // We're in unsorted state, clicking the same column - restart with asc
                 sortKey = key;
                 sortDir = 'asc';
             }
+        } else if (lastSortKey === key && sortKey === null) {
+            // Clicking the same column that was previously sorted but is now unsorted - restart cycle
+            sortKey = key;
+            sortDir = 'asc';
         } else {
+            // Clicking a different column - start fresh with default direction
             sortKey = key;
             sortDir = key === 'name' ? 'asc' : 'desc';
+            lastSortKey = key;
         }
     }
     function handleSort(key: string) {
@@ -167,7 +176,7 @@
     <section class="intro p-4 flex gap-4 items-end flex-wrap">
         <div class="grow">
             <h1 class="text-2xl font-semibold">OSRS Price Tracker</h1>
-            <p class="text-base opacity-80">Real-time GE prices with search, sort, pagination, and auto‑refresh.</p>
+            <p class="text-base opacity-80">Real-time OSRS GE prices</p>
             <p class="text-xs opacity-70">Last updated: {nowSec && lastUpdatedLabel}</p>
         </div>
         <div class="flex gap-3 items-center">
@@ -189,7 +198,7 @@
         </div>
     </section>
 
-    <section class="px-4 pb-2">
+    <section class="px-4 pb-2 mt-4">
         <input class="border rounded p-2 w-full md:w-80" placeholder="Search for an item..." bind:value={searchRaw} />
     </section>
 
