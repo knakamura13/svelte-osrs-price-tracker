@@ -69,7 +69,7 @@
                 class="text-right p-2 {sortable ? 'cursor-pointer' : ''}"
                 on:click={() => sortable && sortBy && sortBy('buyTime')}
             >
-                Most recent buy <span class="ml-1 opacity-60 select-none">{sortIcon('buyTime')}</span>
+                Last buy <span class="ml-1 opacity-60 select-none">{sortIcon('buyTime')}</span>
             </th>
             <th
                 class="text-right p-2 select-none hover:text-white transition-colors {sortable ? 'cursor-pointer' : ''}"
@@ -81,7 +81,7 @@
                 class="text-right p-2 select-none hover:text-white transition-colors {sortable ? 'cursor-pointer' : ''}"
                 on:click={() => sortable && sortBy && sortBy('sellTime')}
             >
-                Most recent sell <span class="ml-1 opacity-60 select-none">{sortIcon('sellTime')}</span>
+                Last sell <span class="ml-1 opacity-60 select-none">{sortIcon('sellTime')}</span>
             </th>
             <th
                 class="text-right p-2 select-none hover:text-white transition-colors {sortable ? 'cursor-pointer' : ''}"
@@ -147,11 +147,17 @@
                             <span title={r.examine ?? r.name}>{r.name}</span>
                         {/if}
                     </td>
-                    <td class="p-2 text-right">{r.buyLimit ?? '—'}</td>
+                    <td class="p-2 text-right">
+                        {#if r.buyLimit !== null}
+                            {r.buyLimit}
+                        {:else}
+                            <span title="This item has no buy limit" class="cursor-help">—</span>
+                        {/if}
+                    </td>
                     <td class="p-2 text-right">{formatInt(r.buyPrice)}</td>
-                    <td class="p-2 text-right">{secondsAgoFromUnix(r.buyTime)}</td>
+                    <td class="p-2 text-right opacity-70">{secondsAgoFromUnix(r.buyTime)}</td>
                     <td class="p-2 text-right">{formatInt(r.sellPrice)}</td>
-                    <td class="p-2 text-right">{secondsAgoFromUnix(r.sellTime)}</td>
+                    <td class="p-2 text-right opacity-70">{secondsAgoFromUnix(r.sellTime)}</td>
                     <td
                         class="p-2 text-right"
                         class:red-text={r.margin !== null && r.margin < 0}
@@ -166,7 +172,15 @@
                             getPostTaxProfitValue(r.buyPrice, r.sellPrice)! >= 0}
                         >{formatInt(calculatePostTaxProfit(r.buyPrice, r.sellPrice))}</td
                     >
-                    <td class="p-2 text-right">{r.dailyVolume !== null ? formatInt(r.dailyVolume) : '—'}</td>
+                    <td class="p-2 text-right">
+                        {#if r.dailyVolume !== null}
+                            {formatInt(r.dailyVolume)}
+                        {:else}
+                            <span title="No volume data available for this item" class="cursor-help text-red-500"
+                                >0</span
+                            >
+                        {/if}
+                    </td>
                 </tr>
             {/each}
         {/if}
