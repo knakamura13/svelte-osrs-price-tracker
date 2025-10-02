@@ -39,11 +39,6 @@
         return Math.ceil(sellPrice / (1 - taxRate));
     };
 
-    // Helper function to get break-even price value for conditional logic
-    const getBreakEvenPriceValue = (buyPrice: number | null, sellPrice: number | null): number | null => {
-        return calculateBreakEvenPrice(buyPrice, sellPrice);
-    };
-
     // Calculate post-tax profit if buying at sellPrice and selling at buyPrice
     // Formula: floor(buyPrice * (1 - taxRate) - sellPrice)
     const calculatePostTaxProfit = (buyPrice: number | null, sellPrice: number | null): number | null => {

@@ -128,9 +128,10 @@
     let filtersNormalized: Filters;
     $: filtersNormalized = normalizeFilters(filters);
 
-    // Whenever filters change, jump back to the first page for clarity
+    // Whenever filters or columns change, jump back to the first page for clarity
     $: {
         filtersNormalized;
+        columnVisibility;
         page = 1;
     }
 
@@ -326,6 +327,8 @@
                 if (prefs.hasOwnProperty('sortKey')) sortKey = prefs.sortKey;
                 if (prefs.sortDir) sortDir = prefs.sortDir;
                 if (prefs.pageSize) pageSize = prefs.pageSize;
+                if (prefs.columnVisibility) columnVisibility = { ...columnVisibility, ...prefs.columnVisibility };
+                if (prefs.filters) filters = { ...filters, ...prefs.filters };
             }
         } catch {}
         prefsHydrated = true;
@@ -359,11 +362,20 @@
         }, 200);
     }
 
-    // Persist preferences (sort + page size)
+    // Persist preferences (sort + page size + columns + filters)
     let prefsHydrated = false;
     $: if (prefsHydrated) {
         try {
-            localStorage.setItem('osrs:prefs', JSON.stringify({ sortKey, sortDir, pageSize }));
+            localStorage.setItem(
+                'osrs:prefs',
+                JSON.stringify({
+                    sortKey,
+                    sortDir,
+                    pageSize,
+                    columnVisibility,
+                    filters
+                })
+            );
         } catch {}
     }
 
