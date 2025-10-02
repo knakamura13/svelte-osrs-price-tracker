@@ -189,9 +189,9 @@
         {:else}
             {#each rows as r (r.id)}
                 <tr class="border-t border-gray-200 dark:border-gray-800">
-                    <td class="p-2">
+                    <td class="h-4 w-4">
                         {#if r.icon}
-                            <img class="h-5 w-5" src={r.icon} alt={r.name} />
+                            <img class="object-contain" src={r.icon} alt={r.name} />
                         {/if}
                     </td>
                     {#if columnVisibility.name}

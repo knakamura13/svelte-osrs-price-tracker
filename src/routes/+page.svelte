@@ -54,6 +54,10 @@
         return typeof n === 'number' && Number.isFinite(n);
     }
 
+    function isPositive(n: number | null): boolean {
+        return isFiniteNumber(n) && n > 0;
+    }
+
     function normalizeFilters(f: Filters): Filters {
         return {
             buyLimit: {
@@ -95,6 +99,52 @@
         };
     }
 
+    // Helpers for duration <-> seconds conversions
+    function partsFromSeconds(totalSeconds: number | null | undefined): {
+        days: number;
+        hours: number;
+        minutes: number;
+        seconds: number;
+    } {
+        const total =
+            typeof totalSeconds === 'number' && Number.isFinite(totalSeconds) && totalSeconds > 0 ? totalSeconds : 0;
+        const days = Math.floor(total / 86400);
+        const remainderAfterDays = total % 86400;
+        const hours = Math.floor(remainderAfterDays / 3600);
+        const remainderAfterHours = remainderAfterDays % 3600;
+        const minutes = Math.floor(remainderAfterHours / 60);
+        const seconds = remainderAfterHours % 60;
+        return { days, hours, minutes, seconds };
+    }
+
+    function secondsFromParts(
+        days: number | null | undefined,
+        hours: number | null | undefined,
+        minutes: number | null | undefined,
+        seconds: number | null | undefined
+    ): number {
+        const d = typeof days === 'number' && Number.isFinite(days) && days > 0 ? Math.floor(days) : 0;
+        const h = typeof hours === 'number' && Number.isFinite(hours) && hours > 0 ? Math.floor(hours) : 0;
+        const m = typeof minutes === 'number' && Number.isFinite(minutes) && minutes > 0 ? Math.floor(minutes) : 0;
+        const s = typeof seconds === 'number' && Number.isFinite(seconds) && seconds > 0 ? Math.floor(seconds) : 0;
+        return d * 86400 + h * 3600 + m * 60 + s;
+    }
+
+    // Generic change handler for numeric filter inputs: if value equals default, reset to null
+    type NumericFilterKey = Exclude<keyof Filters, 'buyTime' | 'sellTime'>;
+    function handleNumericFilterChange<K extends NumericFilterKey>(key: K, bound: 'min' | 'max', event: Event): void {
+        const input = event.currentTarget as HTMLInputElement;
+        const raw = input?.value ?? '';
+        const value = raw === '' ? null : Number(raw);
+
+        if (value === null || !Number.isFinite(value) || value === 0) {
+            (filters as any)[key][bound] = null;
+            return;
+        }
+
+        (filters as any)[key][bound] = value;
+    }
+
     // Filter state
     let filtersExpanded = false;
     let filters: Filters = {
@@ -108,6 +158,67 @@
         postTaxProfit: { min: null as number | null, max: null as number | null },
         dailyVolume: { min: null as number | null, max: null as number | null }
     };
+
+    // UI state for time duration inputs (dd:hh:mm:ss)
+    let buyMinDays = 0;
+    let buyMinHours = 0;
+    let buyMinMinutes = 0;
+    let buyMinSeconds = 0;
+    let buyMaxDays = 0;
+    let buyMaxHours = 0;
+    let buyMaxMinutes = 0;
+    let buyMaxSeconds = 0;
+
+    let sellMinDays = 0;
+    let sellMinHours = 0;
+    let sellMinMinutes = 0;
+    let sellMinSeconds = 0;
+    let sellMaxDays = 0;
+    let sellMaxHours = 0;
+    let sellMaxMinutes = 0;
+    let sellMaxSeconds = 0;
+
+    function hydrateTimePartsFromFilters() {
+        const bm = partsFromSeconds(filters.buyTime.min);
+        buyMinDays = bm.days;
+        buyMinHours = bm.hours;
+        buyMinMinutes = bm.minutes;
+        buyMinSeconds = bm.seconds;
+
+        const bx = partsFromSeconds(filters.buyTime.max);
+        buyMaxDays = bx.days;
+        buyMaxHours = bx.hours;
+        buyMaxMinutes = bx.minutes;
+        buyMaxSeconds = bx.seconds;
+
+        const sm = partsFromSeconds(filters.sellTime.min);
+        sellMinDays = sm.days;
+        sellMinHours = sm.hours;
+        sellMinMinutes = sm.minutes;
+        sellMinSeconds = sm.seconds;
+
+        const sx = partsFromSeconds(filters.sellTime.max);
+        sellMaxDays = sx.days;
+        sellMaxHours = sx.hours;
+        sellMaxMinutes = sx.minutes;
+        sellMaxSeconds = sx.seconds;
+    }
+
+    function migrateTimeFiltersToDurations(nowSeconds: number) {
+        // If values look like unix timestamps (very large), convert to ages (durations)
+        const THRESHOLD_SECONDS = 100_000_000; // ~3.17 years
+        const convert = (v: number | null): number | null => {
+            if (v == null || !Number.isFinite(v)) return null;
+            if (v > THRESHOLD_SECONDS) {
+                return Math.max(0, nowSeconds - v);
+            }
+            return v;
+        };
+        filters.buyTime.min = convert(filters.buyTime.min);
+        filters.buyTime.max = convert(filters.buyTime.max);
+        filters.sellTime.min = convert(filters.sellTime.min);
+        filters.sellTime.max = convert(filters.sellTime.max);
+    }
 
     // Column visibility state
     let columnsExpanded = false;
@@ -168,7 +279,8 @@
         qStr: string,
         key: SortKey | null,
         dirStr: 'asc' | 'desc',
-        filterSet: Filters
+        filterSet: Filters,
+        nowSeconds: number
     ): PriceRow[] {
         let rows = source;
         if (qStr.trim()) {
@@ -194,11 +306,12 @@
             if (filterSet.buyPrice.max !== null && row.buyPrice !== null && row.buyPrice > filterSet.buyPrice.max)
                 return false;
 
-            // Buy time filter (timestamp in seconds)
-            if (filterSet.buyTime.min !== null && row.buyTime !== null && row.buyTime < filterSet.buyTime.min)
-                return false;
-            if (filterSet.buyTime.max !== null && row.buyTime !== null && row.buyTime > filterSet.buyTime.max)
-                return false;
+            // Last buy age filter (durations in seconds)
+            if ((filterSet.buyTime.min !== null || filterSet.buyTime.max !== null) && row.buyTime !== null) {
+                const age = Math.max(0, nowSeconds - row.buyTime);
+                if (filterSet.buyTime.min !== null && age < filterSet.buyTime.min) return false;
+                if (filterSet.buyTime.max !== null && age > filterSet.buyTime.max) return false;
+            }
 
             // Sell price filter
             if (filterSet.sellPrice.min !== null && row.sellPrice !== null && row.sellPrice < filterSet.sellPrice.min)
@@ -206,11 +319,12 @@
             if (filterSet.sellPrice.max !== null && row.sellPrice !== null && row.sellPrice > filterSet.sellPrice.max)
                 return false;
 
-            // Sell time filter (timestamp in seconds)
-            if (filterSet.sellTime.min !== null && row.sellTime !== null && row.sellTime < filterSet.sellTime.min)
-                return false;
-            if (filterSet.sellTime.max !== null && row.sellTime !== null && row.sellTime > filterSet.sellTime.max)
-                return false;
+            // Last sell age filter (durations in seconds)
+            if ((filterSet.sellTime.min !== null || filterSet.sellTime.max !== null) && row.sellTime !== null) {
+                const age = Math.max(0, nowSeconds - row.sellTime);
+                if (filterSet.sellTime.min !== null && age < filterSet.sellTime.min) return false;
+                if (filterSet.sellTime.max !== null && age > filterSet.sellTime.max) return false;
+            }
 
             // Break-even price filter
             const breakEvenPrice = row.sellPrice !== null ? Math.ceil(row.sellPrice / (1 - 0.02)) : null;
@@ -331,6 +445,9 @@
                 if (prefs.filters) filters = { ...filters, ...prefs.filters };
             }
         } catch {}
+        // Migrate saved timestamps (if any) to durations and hydrate UI parts
+        migrateTimeFiltersToDurations(Math.floor(Date.now() / 1000));
+        hydrateTimePartsFromFilters();
         prefsHydrated = true;
         tickTimer = setInterval(() => {
             nowSec = Math.floor(Date.now() / 1000);
@@ -420,6 +537,11 @@
             postTaxProfit: { min: null, max: null },
             dailyVolume: { min: null, max: null }
         };
+        // Reset duration inputs
+        buyMinDays = buyMinHours = buyMinMinutes = buyMinSeconds = 0;
+        buyMaxDays = buyMaxHours = buyMaxMinutes = buyMaxSeconds = 0;
+        sellMinDays = sellMinHours = sellMinMinutes = sellMinSeconds = 0;
+        sellMaxDays = sellMaxHours = sellMaxMinutes = sellMaxSeconds = 0;
         page = 1;
     }
 
@@ -434,7 +556,7 @@
     }
 
     let visibleRows: PriceRow[] = [];
-    $: visibleRows = filteredSorted(allRows, search, sortKey, sortDir, filtersNormalized);
+    $: visibleRows = filteredSorted(allRows, search, sortKey, sortDir, filtersNormalized, nowSec);
 
     // Total rows for pagination
     $: totalRows = visibleRows.length;
@@ -443,6 +565,24 @@
     $: {
         nowSec;
         lastUpdatedLabel = secondsAgoFromUnix(lastUpdated ? Math.floor(lastUpdated / 1000) : null);
+    }
+
+    // Sync duration parts -> filter seconds (treat 0 as null to disable that bound)
+    $: {
+        const secs = secondsFromParts(buyMinDays, buyMinHours, buyMinMinutes, buyMinSeconds);
+        filters.buyTime.min = secs > 0 ? secs : null;
+    }
+    $: {
+        const secs = secondsFromParts(buyMaxDays, buyMaxHours, buyMaxMinutes, buyMaxSeconds);
+        filters.buyTime.max = secs > 0 ? secs : null;
+    }
+    $: {
+        const secs = secondsFromParts(sellMinDays, sellMinHours, sellMinMinutes, sellMinSeconds);
+        filters.sellTime.min = secs > 0 ? secs : null;
+    }
+    $: {
+        const secs = secondsFromParts(sellMaxDays, sellMaxHours, sellMaxMinutes, sellMaxSeconds);
+        filters.sellTime.max = secs > 0 ? secs : null;
     }
 
     // Computed min/max values for filter placeholders
@@ -677,6 +817,10 @@
                         <div class="filter-group">
                             <div
                                 class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+                                class:text-yellow-600={isPositive(filtersNormalized.buyLimit.min) ||
+                                    isPositive(filtersNormalized.buyLimit.max)}
+                                class:dark:text-yellow-400={isPositive(filtersNormalized.buyLimit.min) ||
+                                    isPositive(filtersNormalized.buyLimit.max)}
                                 id="buy-limit-label"
                             >
                                 Buy limit
@@ -690,6 +834,7 @@
                                     aria-labelledby="buy-limit-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.buyLimit.min}
+                                    on:change={(e) => handleNumericFilterChange('buyLimit', 'min', e)}
                                 />
                                 <input
                                     type="number"
@@ -699,6 +844,7 @@
                                     aria-labelledby="buy-limit-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.buyLimit.max}
+                                    on:change={(e) => handleNumericFilterChange('buyLimit', 'max', e)}
                                 />
                             </div>
                         </div>
@@ -707,6 +853,10 @@
                         <div class="filter-group">
                             <div
                                 class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+                                class:text-yellow-600={isPositive(filtersNormalized.buyPrice.min) ||
+                                    isPositive(filtersNormalized.buyPrice.max)}
+                                class:dark:text-yellow-400={isPositive(filtersNormalized.buyPrice.min) ||
+                                    isPositive(filtersNormalized.buyPrice.max)}
                                 id="buy-price-label"
                             >
                                 Buy price
@@ -720,6 +870,7 @@
                                     aria-labelledby="buy-price-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.buyPrice.min}
+                                    on:change={(e) => handleNumericFilterChange('buyPrice', 'min', e)}
                                 />
                                 <input
                                     type="number"
@@ -729,6 +880,7 @@
                                     aria-labelledby="buy-price-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.buyPrice.max}
+                                    on:change={(e) => handleNumericFilterChange('buyPrice', 'max', e)}
                                 />
                             </div>
                         </div>
@@ -737,25 +889,91 @@
                         <div class="filter-group">
                             <div
                                 class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+                                class:text-yellow-600={isPositive(filtersNormalized.buyTime.min) ||
+                                    isPositive(filtersNormalized.buyTime.max)}
+                                class:dark:text-yellow-400={isPositive(filtersNormalized.buyTime.min) ||
+                                    isPositive(filtersNormalized.buyTime.max)}
                                 id="buy-time-label"
                             >
                                 Last buy
                             </div>
-                            <div class="flex gap-2">
-                                <input
-                                    type="number"
-                                    placeholder="Min time"
-                                    aria-labelledby="buy-time-label"
-                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-                                    bind:value={filters.buyTime.min}
-                                />
-                                <input
-                                    type="number"
-                                    placeholder="Max time"
-                                    aria-labelledby="buy-time-label"
-                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-                                    bind:value={filters.buyTime.max}
-                                />
+                            <div class="flex flex-col gap-2" aria-labelledby="buy-time-label">
+                                <div class="flex items-center gap-1">
+                                    <span class="text-xs opacity-70 w-10">Min</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        placeholder="0"
+                                        class="w-14 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={buyMinDays}
+                                    />
+                                    <span class="opacity-60">d:</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="23"
+                                        placeholder="0"
+                                        class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={buyMinHours}
+                                    />
+                                    <span class="opacity-60">h:</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="59"
+                                        placeholder="0"
+                                        class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={buyMinMinutes}
+                                    />
+                                    <span class="opacity-60">m:</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="59"
+                                        placeholder="0"
+                                        class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={buyMinSeconds}
+                                    />
+                                    <span class="opacity-60">s</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <span class="text-xs opacity-70 w-10">Max</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        placeholder="0"
+                                        class="w-14 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={buyMaxDays}
+                                    />
+                                    <span class="opacity-60">d:</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="23"
+                                        placeholder="0"
+                                        class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={buyMaxHours}
+                                    />
+                                    <span class="opacity-60">h:</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="59"
+                                        placeholder="0"
+                                        class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={buyMaxMinutes}
+                                    />
+                                    <span class="opacity-60">m:</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="59"
+                                        placeholder="0"
+                                        class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={buyMaxSeconds}
+                                    />
+                                    <span class="opacity-60">s</span>
+                                </div>
                             </div>
                         </div>
 
@@ -763,6 +981,10 @@
                         <div class="filter-group">
                             <div
                                 class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+                                class:text-yellow-600={isPositive(filtersNormalized.sellPrice.min) ||
+                                    isPositive(filtersNormalized.sellPrice.max)}
+                                class:dark:text-yellow-400={isPositive(filtersNormalized.sellPrice.min) ||
+                                    isPositive(filtersNormalized.sellPrice.max)}
                                 id="sell-price-label"
                             >
                                 Sell price
@@ -776,6 +998,7 @@
                                     aria-labelledby="sell-price-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.sellPrice.min}
+                                    on:change={(e) => handleNumericFilterChange('sellPrice', 'min', e)}
                                 />
                                 <input
                                     type="number"
@@ -785,6 +1008,7 @@
                                     aria-labelledby="sell-price-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.sellPrice.max}
+                                    on:change={(e) => handleNumericFilterChange('sellPrice', 'max', e)}
                                 />
                             </div>
                         </div>
@@ -793,25 +1017,91 @@
                         <div class="filter-group">
                             <div
                                 class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+                                class:text-yellow-600={isPositive(filtersNormalized.sellTime.min) ||
+                                    isPositive(filtersNormalized.sellTime.max)}
+                                class:dark:text-yellow-400={isPositive(filtersNormalized.sellTime.min) ||
+                                    isPositive(filtersNormalized.sellTime.max)}
                                 id="sell-time-label"
                             >
                                 Last sell
                             </div>
-                            <div class="flex gap-2">
-                                <input
-                                    type="number"
-                                    placeholder="Min time"
-                                    aria-labelledby="sell-time-label"
-                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-                                    bind:value={filters.sellTime.min}
-                                />
-                                <input
-                                    type="number"
-                                    placeholder="Max time"
-                                    aria-labelledby="sell-time-label"
-                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-                                    bind:value={filters.sellTime.max}
-                                />
+                            <div class="flex flex-col gap-2" aria-labelledby="sell-time-label">
+                                <div class="flex items-center gap-1">
+                                    <span class="text-xs opacity-70 w-10">Min</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        placeholder="0"
+                                        class="w-14 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={sellMinDays}
+                                    />
+                                    <span class="opacity-60">d:</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="23"
+                                        placeholder="0"
+                                        class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={sellMinHours}
+                                    />
+                                    <span class="opacity-60">h:</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="59"
+                                        placeholder="0"
+                                        class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={sellMinMinutes}
+                                    />
+                                    <span class="opacity-60">m:</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="59"
+                                        placeholder="0"
+                                        class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={sellMinSeconds}
+                                    />
+                                    <span class="opacity-60">s</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <span class="text-xs opacity-70 w-10">Max</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        placeholder="0"
+                                        class="w-14 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={sellMaxDays}
+                                    />
+                                    <span class="opacity-60">d:</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="23"
+                                        placeholder="0"
+                                        class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={sellMaxHours}
+                                    />
+                                    <span class="opacity-60">h:</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="59"
+                                        placeholder="0"
+                                        class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={sellMaxMinutes}
+                                    />
+                                    <span class="opacity-60">m:</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="59"
+                                        placeholder="0"
+                                        class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={sellMaxSeconds}
+                                    />
+                                    <span class="opacity-60">s</span>
+                                </div>
                             </div>
                         </div>
 
@@ -819,6 +1109,10 @@
                         <div class="filter-group">
                             <div
                                 class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+                                class:text-yellow-600={isPositive(filtersNormalized.breakEvenPrice.min) ||
+                                    isPositive(filtersNormalized.breakEvenPrice.max)}
+                                class:dark:text-yellow-400={isPositive(filtersNormalized.breakEvenPrice.min) ||
+                                    isPositive(filtersNormalized.breakEvenPrice.max)}
                                 id="break-even-price-label"
                             >
                                 Break-even price
@@ -832,6 +1126,7 @@
                                     aria-labelledby="break-even-price-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.breakEvenPrice.min}
+                                    on:change={(e) => handleNumericFilterChange('breakEvenPrice', 'min', e)}
                                 />
                                 <input
                                     type="number"
@@ -841,6 +1136,7 @@
                                     aria-labelledby="break-even-price-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.breakEvenPrice.max}
+                                    on:change={(e) => handleNumericFilterChange('breakEvenPrice', 'max', e)}
                                 />
                             </div>
                         </div>
@@ -849,6 +1145,10 @@
                         <div class="filter-group">
                             <div
                                 class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+                                class:text-yellow-600={isPositive(filtersNormalized.margin.min) ||
+                                    isPositive(filtersNormalized.margin.max)}
+                                class:dark:text-yellow-400={isPositive(filtersNormalized.margin.min) ||
+                                    isPositive(filtersNormalized.margin.max)}
                                 id="margin-label"
                             >
                                 Margin
@@ -862,6 +1162,7 @@
                                     aria-labelledby="margin-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.margin.min}
+                                    on:change={(e) => handleNumericFilterChange('margin', 'min', e)}
                                 />
                                 <input
                                     type="number"
@@ -871,6 +1172,7 @@
                                     aria-labelledby="margin-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.margin.max}
+                                    on:change={(e) => handleNumericFilterChange('margin', 'max', e)}
                                 />
                             </div>
                         </div>
@@ -879,6 +1181,10 @@
                         <div class="filter-group">
                             <div
                                 class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+                                class:text-yellow-600={isPositive(filtersNormalized.postTaxProfit.min) ||
+                                    isPositive(filtersNormalized.postTaxProfit.max)}
+                                class:dark:text-yellow-400={isPositive(filtersNormalized.postTaxProfit.min) ||
+                                    isPositive(filtersNormalized.postTaxProfit.max)}
                                 id="post-tax-profit-label"
                             >
                                 Post-tax profit
@@ -892,6 +1198,7 @@
                                     aria-labelledby="post-tax-profit-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.postTaxProfit.min}
+                                    on:change={(e) => handleNumericFilterChange('postTaxProfit', 'min', e)}
                                 />
                                 <input
                                     type="number"
@@ -901,6 +1208,7 @@
                                     aria-labelledby="post-tax-profit-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.postTaxProfit.max}
+                                    on:change={(e) => handleNumericFilterChange('postTaxProfit', 'max', e)}
                                 />
                             </div>
                         </div>
@@ -909,6 +1217,10 @@
                         <div class="filter-group">
                             <div
                                 class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+                                class:text-yellow-600={isPositive(filtersNormalized.dailyVolume.min) ||
+                                    isPositive(filtersNormalized.dailyVolume.max)}
+                                class:dark:text-yellow-400={isPositive(filtersNormalized.dailyVolume.min) ||
+                                    isPositive(filtersNormalized.dailyVolume.max)}
                                 id="daily-volume-label"
                             >
                                 Daily volume
@@ -922,6 +1234,7 @@
                                     aria-labelledby="daily-volume-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.dailyVolume.min}
+                                    on:change={(e) => handleNumericFilterChange('dailyVolume', 'min', e)}
                                 />
                                 <input
                                     type="number"
@@ -931,6 +1244,7 @@
                                     aria-labelledby="daily-volume-label"
                                     class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                     bind:value={filters.dailyVolume.max}
+                                    on:change={(e) => handleNumericFilterChange('dailyVolume', 'max', e)}
                                 />
                             </div>
                         </div>
@@ -939,7 +1253,8 @@
                     <!-- Clear filters button -->
                     <div class="mt-4 flex justify-end">
                         <button
-                            class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors"
+                            class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors disabled:!cursor-default disabled:hover:!bg-red-600 disabled:focus:!bg-red-600 disabled:opacity-50"
+                            disabled={activeFiltersCount === 0}
                             on:click={clearFilters}
                         >
                             🗑️ Clear filters
