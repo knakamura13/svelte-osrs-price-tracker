@@ -1,6 +1,7 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import type { ItemMapping, LatestResponse, PriceRow } from '$lib/types';
 import { TtlCache } from '$lib/server/cache';
+import { createHash } from 'node:crypto';
 
 const cache = new TtlCache<any>(60_000); // 60s default TTL
 
@@ -25,6 +26,16 @@ export const GET: RequestHandler = async ({ fetch }) => {
     ])) as [ItemMapping[], { data: LatestResponse }];
 
     const latestMap = latest.data;
+
+    function buildWikiImageUrl(fileName: string | undefined): string | undefined {
+        if (!fileName) return undefined;
+        const normalized = fileName.replace(/ /g, '_');
+        const md5 = createHash('md5').update(normalized).digest('hex');
+        const d1 = md5[0];
+        const d2 = md5.slice(0, 2);
+        return `https://oldschool.runescape.wiki/images/${d1}/${d2}/${encodeURIComponent(normalized)}`;
+    }
+
     const rows: PriceRow[] = mapping.map((m) => {
         const l = latestMap[String(m.id)];
         const high = l?.high ?? null;
@@ -32,7 +43,8 @@ export const GET: RequestHandler = async ({ fetch }) => {
         return {
             id: m.id,
             name: m.name,
-            icon: m.icon ? `https://oldschool.runescape.wiki/images/${encodeURIComponent(m.icon)}` : undefined,
+            // Deterministic hashed upload path to avoid client-side redirects
+            icon: buildWikiImageUrl(m.icon),
             members: m.members,
             buyLimit: m.limit ?? null,
             buyPrice: high,

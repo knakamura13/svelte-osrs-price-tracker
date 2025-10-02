@@ -1,11 +1,43 @@
 .page {
-    max-width: 50rem;
-    height: 100%;
+    max-width: 80rem;
+    min-height: 100dvh;
     margin: auto;
-    padding: 2rem 1rem 4rem;
+    padding: 2rem 1rem 6rem;
+}
 
-    // Lobotomized owl selector; adds reasonable vertical spacing between elements.
-    * + * {
-        margin-top: 1em;
-    }
+/* Global dark theme approximating OSRS Wiki Prices UI */
+:root {
+    color-scheme: dark;
+}
+
+html,
+body {
+    background: #1f2428;
+    color: #e5e7eb;
+}
+
+.intro {
+    background: #23292e;
+    border: 1px solid #2f3740;
+    border-radius: 0.375rem;
+}
+
+table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+thead th {
+    position: sticky;
+    top: 0;
+    background: #2a3138;
+}
+
+tbody tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+tbody td,
+thead th {
+    border-bottom: 1px solid #2b3440;
 }

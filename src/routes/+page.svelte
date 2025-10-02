@@ -4,7 +4,7 @@
     import { secondsAgoFromUnix } from '$lib/utils/time';
     import type { PriceRow } from '$lib/types';
 
-    type SortKey = 'name' | 'buyPrice' | 'sellPrice' | 'margin' | 'buyTime' | 'sellTime';
+    type SortKey = 'name' | 'buyLimit' | 'buyPrice' | 'sellPrice' | 'margin' | 'dailyVolume' | 'buyTime' | 'sellTime';
 
     export let data: { rows: PriceRow[] };
 
@@ -19,6 +19,8 @@
 
     let allRows: PriceRow[] = data?.rows ?? [];
     let lastUpdated: number | null = null;
+    let nowSec: number = Math.floor(Date.now() / 1000);
+    let lastUpdatedLabel: string = '—';
     let errorMsg: string | null = null;
     let failCount = 0;
     let loading = false;
@@ -46,16 +48,16 @@
         }
     }
 
-    function filteredSorted(): PriceRow[] {
-        let rows = allRows;
-        if (search.trim()) {
-            const q = search.toLowerCase();
+    function filteredSorted(source: PriceRow[], qStr: string, key: SortKey, dirStr: 'asc' | 'desc'): PriceRow[] {
+        let rows = source;
+        if (qStr.trim()) {
+            const q = qStr.toLowerCase();
             rows = rows.filter((r) => r.name.toLowerCase().includes(q));
         }
+        const dir = dirStr === 'asc' ? 1 : -1;
         rows = [...rows].sort((a, b) => {
-            const dir = sortDir === 'asc' ? 1 : -1;
-            const va = (a as any)[sortKey];
-            const vb = (b as any)[sortKey];
+            const va = (a as any)[key];
+            const vb = (b as any)[key];
             if (va == null && vb == null) return 0;
             if (va == null) return 1;
             if (vb == null) return -1;
@@ -82,9 +84,13 @@
             }
         } catch {}
         prefsHydrated = true;
+        tickTimer = setInterval(() => {
+            nowSec = Math.floor(Date.now() / 1000);
+        }, 1000);
     });
 
     let timer: any;
+    let tickTimer: any;
     $: {
         clearInterval(timer);
         if (auto) {
@@ -94,6 +100,7 @@
 
     onDestroy(() => {
         clearInterval(timer);
+        clearInterval(tickTimer);
         clearTimeout(searchTimer);
     });
 
@@ -128,7 +135,13 @@
     }
 
     let visibleRows: PriceRow[] = [];
-    $: visibleRows = filteredSorted();
+    $: visibleRows = filteredSorted(allRows, search, sortKey, sortDir);
+
+    // Recompute label once per second using nowSec as a dependency
+    $: {
+        nowSec;
+        lastUpdatedLabel = secondsAgoFromUnix(lastUpdated ? Math.floor(lastUpdated / 1000) : null);
+    }
 </script>
 
 <svelte:head>
@@ -140,17 +153,23 @@
         <div class="grow">
             <h1 class="text-2xl font-semibold">OSRS Price Tracker</h1>
             <p class="text-base opacity-80">Real-time GE prices with search, sort, pagination, and auto‑refresh.</p>
-            <p class="text-xs opacity-70">
-                Last updated: {secondsAgoFromUnix(lastUpdated ? Math.floor(lastUpdated / 1000) : null)}
-            </p>
+            <p class="text-xs opacity-70">Last updated: {nowSec && lastUpdatedLabel}</p>
         </div>
         <div class="flex gap-3 items-center">
-            <label class="text-sm">Auto‑refresh <input type="checkbox" bind:checked={auto} /></label>
-            <label class="text-sm"
-                >Every <input class="w-16 text-right border p-1" type="number" min="5" bind:value={refreshSec} /> s</label
+            <label class="flex gap-1 text-sm items-center"
+                >Auto-refresh <input type="checkbox" bind:checked={auto} class="cursor-pointer" /></label
             >
-            <button class="border px-3 py-1 rounded" on:click={loadRows} disabled={loading}>
-                {#if loading}Loading...{:else}Refresh{/if}
+            <label class="flex gap-1 text-sm items-center">
+                <span>Every</span>
+                <input class="w-16 text-right border-none p-1" type="number" min="5" bind:value={refreshSec} />
+                <span>s</span>
+            </label>
+            <button
+                class="border px-3 py-1 rounded items-center transition-colors hover:bg-gray-600 focus:bg-gray-600"
+                on:click={loadRows}
+                disabled={loading}
+            >
+                Refresh
             </button>
         </div>
     </section>
@@ -169,41 +188,39 @@
         </section>
     {/if}
 
-    {#key `${search}-${sortKey}-${sortDir}-${page}-${pageSize}-${allRows.length}`}
-        <section class="px-4">
-            <div class="flex items-center justify-between py-2">
-                <div class="flex gap-2 items-center text-sm">
-                    <label for="page-size">Rows per page</label>
-                    <select id="page-size" class="border p-1" bind:value={pageSize} on:change={() => (page = 1)}>
-                        <option value={25}>25</option>
-                        <option value={50}>50</option>
-                        <option value={100}>100</option>
-                        <option value={250}>250</option>
-                    </select>
-                </div>
-                <div class="flex gap-3 items-center text-sm">
-                    <span class="opacity-70">
-                        Page {page} of {Math.max(1, Math.ceil(visibleRows.length / pageSize))} ({visibleRows.length} items)
-                    </span>
-                    <button class="border px-2 py-1" on:click={() => (page = Math.max(1, page - 1))}>Prev</button>
-                    <button
-                        class="border px-2 py-1"
-                        on:click={() => (page = Math.min(Math.ceil(visibleRows.length / pageSize) || 1, page + 1))}
-                    >
-                        Next
-                    </button>
-                </div>
+    <section class="px-4">
+        <div class="flex items-center justify-between py-2">
+            <div class="flex gap-2 items-center text-sm">
+                <label for="page-size">Rows per page</label>
+                <select id="page-size" class="border p-1" bind:value={pageSize} on:change={() => (page = 1)}>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                    <option value={250}>250</option>
+                </select>
             </div>
+            <div class="flex gap-3 items-center text-sm">
+                <span class="opacity-70">
+                    Page {page} of {Math.max(1, Math.ceil(visibleRows.length / pageSize))} ({visibleRows.length} items)
+                </span>
+                <button class="border px-2 py-1" on:click={() => (page = Math.max(1, page - 1))}>Prev</button>
+                <button
+                    class="border px-2 py-1"
+                    on:click={() => (page = Math.min(Math.ceil(visibleRows.length / pageSize) || 1, page + 1))}
+                >
+                    Next
+                </button>
+            </div>
+        </div>
 
-            <div class="overflow-auto rounded border border-gray-300 dark:border-gray-700">
-                <PriceTable
-                    rows={visibleRows.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize)}
-                    sortable
-                    sortBy={handleSort}
-                />
-            </div>
-        </section>
-    {/key}
+        <PriceTable
+            rows={visibleRows.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize)}
+            sortable
+            sortBy={handleSort}
+            {sortKey}
+            {sortDir}
+        />
+    </section>
 </div>
 
 <style lang="scss">
