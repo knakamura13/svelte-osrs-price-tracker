@@ -1,0 +1,38 @@
+{
+  "$schema": "https://cdn.statically.io/gh/nguyenngoclongdev/cdn/main/schema/v11/terminal-keeper.json",
+  "theme": "tribe",
+  "active": "default",
+  "activateOnStartup": true,
+  "keepExistingTerminals": false,
+  "sessions": {
+    "default": [
+      {
+        "name": "Run dev",
+        "autoExecuteCommands": true,
+        "icon": "debug-alt",
+        "color": "terminal.ansiGreen",
+        "commands": [
+          "yarn run dev"
+        ]
+      },
+      {
+        "name": "Aider",
+        "autoExecuteCommands": true,
+        "icon": "light-bulb",
+        "color": "terminal.ansiYellow",
+        "commands": [
+          "#aider --model openrouter/qwen/qwen3-coder:free"
+        ]
+      },
+      {
+        "name": "Terminal",
+        "autoExecuteCommands": false,
+        "icon": "terminal",
+        "color": "terminal.ansiMagenta",
+        "commands": [
+          ""
+        ]
+      }
+    ]
+  }
+}

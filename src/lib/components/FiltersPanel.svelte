@@ -11,6 +11,9 @@
     export let onToggle: (() => void) | undefined;
     export let onClear: (() => void) | undefined;
     export let onNumericChange: ((key: keyof Filters, bound: 'min' | 'max', value: string) => void) | undefined;
+    export let onTimeChange:
+        | ((key: 'buyTime' | 'sellTime', bound: 'min' | 'max', value: number | null) => void)
+        | undefined;
 
     type NumericFilterKey = Exclude<keyof Filters, 'buyTime' | 'sellTime'>;
     const numericFilterDefs: Array<{ key: NumericFilterKey; label: string }> = [
@@ -63,23 +66,27 @@
         sellMaxSeconds = sx.seconds;
     }
 
-    // Emit updates for duration fields to the parent by mutating filters directly via bindings
-    $: filters.buyTime.min = (() => {
+    // Emit updates for duration fields via callback; avoid mutating parent props directly
+    $: {
         const s = secondsFromParts(buyMinDays, buyMinHours, buyMinMinutes, buyMinSeconds);
-        return s > 0 ? s : null;
-    })();
-    $: filters.buyTime.max = (() => {
+        const next = s > 0 ? s : null;
+        if (onTimeChange && next !== filters.buyTime.min) onTimeChange('buyTime', 'min', next);
+    }
+    $: {
         const s = secondsFromParts(buyMaxDays, buyMaxHours, buyMaxMinutes, buyMaxSeconds);
-        return s > 0 ? s : null;
-    })();
-    $: filters.sellTime.min = (() => {
+        const next = s > 0 ? s : null;
+        if (onTimeChange && next !== filters.buyTime.max) onTimeChange('buyTime', 'max', next);
+    }
+    $: {
         const s = secondsFromParts(sellMinDays, sellMinHours, sellMinMinutes, sellMinSeconds);
-        return s > 0 ? s : null;
-    })();
-    $: filters.sellTime.max = (() => {
+        const next = s > 0 ? s : null;
+        if (onTimeChange && next !== filters.sellTime.min) onTimeChange('sellTime', 'min', next);
+    }
+    $: {
         const s = secondsFromParts(sellMaxDays, sellMaxHours, sellMaxMinutes, sellMaxSeconds);
-        return s > 0 ? s : null;
-    })();
+        const next = s > 0 ? s : null;
+        if (onTimeChange && next !== filters.sellTime.max) onTimeChange('sellTime', 'max', next);
+    }
 </script>
 
 <div class="mb-4">
@@ -106,7 +113,6 @@
         <div
             class="accordion-content p-4 bg-gray-50 dark:bg-gray-900 rounded-b-lg border border-t-0 border-gray-300 dark:border-gray-600"
         >
-            <h3 class="text-sm font-medium mb-3 text-gray-700 dark:text-gray-300">Filters:</h3>
             <div class="grid grid-cols-1 gap-4">
                 <!-- Numeric range filters -->
                 {#each numericFilterDefs as f}
@@ -154,10 +160,8 @@
                 <div class="filter-group">
                     <div
                         class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
-                        class:text-yellow-600={isPositive(filtersNormalized.buyTime.min) ||
-                            isPositive(filtersNormalized.buyTime.max)}
-                        class:dark:text-yellow-400={isPositive(filtersNormalized.buyTime.min) ||
-                            isPositive(filtersNormalized.buyTime.max)}
+                        class:text-yellow-600={isPositive(filters.buyTime.min) || isPositive(filters.buyTime.max)}
+                        class:dark:text-yellow-400={isPositive(filters.buyTime.min) || isPositive(filters.buyTime.max)}
                         id="buy-time-label"
                     >
                         Last buy
@@ -246,10 +250,9 @@
                 <div class="filter-group">
                     <div
                         class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
-                        class:text-yellow-600={isPositive(filtersNormalized.sellTime.min) ||
-                            isPositive(filtersNormalized.sellTime.max)}
-                        class:dark:text-yellow-400={isPositive(filtersNormalized.sellTime.min) ||
-                            isPositive(filtersNormalized.sellTime.max)}
+                        class:text-yellow-600={isPositive(filters.sellTime.min) || isPositive(filters.sellTime.max)}
+                        class:dark:text-yellow-400={isPositive(filters.sellTime.min) ||
+                            isPositive(filters.sellTime.max)}
                         id="sell-time-label"
                     >
                         Last sell

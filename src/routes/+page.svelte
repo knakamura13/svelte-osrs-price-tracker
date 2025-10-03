@@ -78,10 +78,27 @@
         page = 1;
     }
 
-    // Computed active filters count
-    $: activeFiltersCount = Object.values(filtersNormalized).reduce((count, filter) => {
-        return count + (isFiniteNumber(filter.min) ? 1 : 0) + (isFiniteNumber(filter.max) ? 1 : 0);
-    }, 0);
+    // Computed active filters count - explicitly list all filter values to ensure reactivity on nested changes
+    $: activeFiltersCount = [
+        filters.buyLimit.min,
+        filters.buyLimit.max,
+        filters.buyPrice.min,
+        filters.buyPrice.max,
+        filters.buyTime.min,
+        filters.buyTime.max,
+        filters.sellPrice.min,
+        filters.sellPrice.max,
+        filters.sellTime.min,
+        filters.sellTime.max,
+        filters.breakEvenPrice.min,
+        filters.breakEvenPrice.max,
+        filters.margin.min,
+        filters.margin.max,
+        filters.postTaxProfit.min,
+        filters.postTaxProfit.max,
+        filters.dailyVolume.min,
+        filters.dailyVolume.max
+    ].filter((v) => isFiniteNumber(v)).length;
 
     async function loadRows() {
         try {
@@ -154,6 +171,21 @@
     }
     function handleSort(key: string) {
         setSort(key as SortKey);
+    }
+
+    function handleTimeChange(key: 'buyTime' | 'sellTime', bound: 'min' | 'max', value: number | null) {
+        // Reassign filters immutably so Svelte tracks the change
+        if (key === 'buyTime') {
+            filters = {
+                ...filters,
+                buyTime: { ...filters.buyTime, [bound]: value }
+            } as Filters;
+        } else {
+            filters = {
+                ...filters,
+                sellTime: { ...filters.sellTime, [bound]: value }
+            } as Filters;
+        }
     }
 
     function clearFilters() {
@@ -246,6 +278,7 @@
                 const next = handleNumericChange(filters, key as any, bound as any, value);
                 filters = next;
             }}
+            onTimeChange={handleTimeChange}
         />
 
         <PriceTable
