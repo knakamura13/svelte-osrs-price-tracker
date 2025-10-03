@@ -40,6 +40,7 @@
 
     {#if expanded}
         <div
+            transition:slide={{ duration: 200 }}
             class="accordion-content p-4 bg-gray-50 dark:bg-gray-900 rounded-b-lg border border-t-0 border-gray-300 dark:border-gray-600"
         >
             <div class="flex flex-row flex-wrap gap-6">

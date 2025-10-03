@@ -5,6 +5,8 @@
     import SearchBar from '$lib/components/SearchBar.svelte';
     import FiltersPanel from '$lib/components/FiltersPanel.svelte';
     import HeaderControls from '$lib/components/HeaderControls.svelte';
+    import LoadingSkeleton from '$lib/components/LoadingSkeleton.svelte';
+    import Toast from '$lib/components/Toast.svelte';
     import { onMount, onDestroy } from 'svelte';
     import { secondsAgoFromUnix } from '$lib/utils/time';
     import {
@@ -40,6 +42,9 @@
     let loading = false;
     let nextRetryAt: number | null = null; // Unix timestamp in seconds
     let nextRetryIn: number | null = null; // Countdown in seconds
+    let toastVisible = false;
+    let toastMessage = '';
+    let toastType: 'success' | 'info' | 'warning' | 'error' = 'success';
 
     // Filter state
     let filtersExpanded = false;
@@ -117,6 +122,10 @@
             lastUpdated = Date.now();
             failCount = 0; // Reset fail count on success
             page = 1;
+            // Show success toast
+            toastMessage = `Updated ${rows.length} items`;
+            toastType = 'success';
+            toastVisible = true;
         } catch (err: any) {
             failCount = failCount + 1;
             errorMsg = err?.message ?? 'Failed to load prices';
@@ -220,6 +229,11 @@
     // Pagination callbacks
     function onPageChange(newPage: number) {
         page = newPage;
+        // Smooth scroll to top of table
+        const tableSection = document.querySelector('.px-4.mt-2');
+        if (tableSection) {
+            tableSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     }
 
     function onPageSizeChange(newPageSize: number) {
@@ -302,21 +316,27 @@
             onTimeChange={handleTimeChange}
         />
 
-        <PriceTable
-            rows={visibleRows.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize)}
-            sortable
-            sortBy={handleSort}
-            {sortKey}
-            {sortDir}
-            {columnVisibility}
-            {page}
-            {pageSize}
-            {totalRows}
-            {onPageChange}
-            {onPageSizeChange}
-        />
+        {#if loading && allRows.length === 0}
+            <LoadingSkeleton rows={pageSize} columns={Object.values(columnVisibility).filter(Boolean).length + 1} />
+        {:else}
+            <PriceTable
+                rows={visibleRows.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize)}
+                sortable
+                sortBy={handleSort}
+                {sortKey}
+                {sortDir}
+                {columnVisibility}
+                {page}
+                {pageSize}
+                {totalRows}
+                {onPageChange}
+                {onPageSizeChange}
+            />
+        {/if}
     </section>
 </div>
+
+<Toast bind:visible={toastVisible} message={toastMessage} type={toastType} duration={3000} />
 
 <style lang="scss">
 </style>

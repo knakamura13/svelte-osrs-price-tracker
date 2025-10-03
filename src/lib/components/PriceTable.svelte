@@ -194,11 +194,32 @@
     <tbody>
         {#if rows.length === 0}
             <tr>
-                <td class="p-3 text-center text-gray-500" colspan={visibleColumnCount}>No data yet</td>
+                <td colspan={visibleColumnCount} class="p-8 text-center">
+                    <div class="flex flex-col items-center gap-3 opacity-60">
+                        <svg
+                            class="w-12 h-12"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                        </svg>
+                        <div>
+                            <p class="font-medium text-base">No items match your filters</p>
+                            <p class="text-sm mt-1">Try adjusting your search or filter criteria</p>
+                        </div>
+                    </div>
+                </td>
             </tr>
         {:else}
             {#each rows as r (r.id)}
-                <tr class="border-t border-gray-200 dark:border-gray-800">
+                <tr class="border-t border-gray-200 dark:border-gray-800 even:bg-gray-50 dark:even:bg-gray-800/30 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors duration-150 animate-fade-in">
                     <td class="h-4 w-4">
                         {#if r.icon}
                             <img class="object-contain" src={r.icon} alt={r.name} />
@@ -330,5 +351,20 @@
 
     :global(.dark) .green-text {
         color: rgb(134 239 172); /* green-300 for dark mode */
+    }
+
+    @keyframes fade-in {
+        from {
+            opacity: 0;
+            transform: translateY(-4px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    :global(.animate-fade-in) {
+        animation: fade-in 0.3s ease-out;
     }
 </style>

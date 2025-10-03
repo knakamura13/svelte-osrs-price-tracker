@@ -2,18 +2,12 @@ import { describe, it, expect } from 'vitest';
 import type { ItemMapping, LatestResponse, PriceRow, Volume24hResponse } from '$lib/types';
 
 // Extract the row transformation logic for testing
-function transformToRow(
-    mapping: ItemMapping,
-    latestMap: LatestResponse,
-    volumeMap: Volume24hResponse
-): PriceRow {
+function transformToRow(mapping: ItemMapping, latestMap: LatestResponse, volumeMap: Volume24hResponse): PriceRow {
     const l = latestMap[String(mapping.id)];
     const high = l?.high ?? null;
     const low = l?.low ?? null;
     const volEntry = volumeMap[String(mapping.id)];
-    const dailyVolume = volEntry
-        ? Math.max(0, (volEntry.highPriceVolume ?? 0) + (volEntry.lowPriceVolume ?? 0))
-        : null;
+    const dailyVolume = volEntry ? Math.max(0, (volEntry.highPriceVolume ?? 0) + (volEntry.lowPriceVolume ?? 0)) : null;
 
     return {
         id: mapping.id,
@@ -208,7 +202,7 @@ describe('API rows join logic', () => {
         it('should handle special characters in item names for wiki URLs', () => {
             const mapping: ItemMapping = {
                 id: 1,
-                name: "3rd age platebody",
+                name: '3rd age platebody',
                 members: true
             };
 
@@ -218,4 +212,3 @@ describe('API rows join logic', () => {
         });
     });
 });
-
