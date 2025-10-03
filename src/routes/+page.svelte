@@ -16,7 +16,7 @@
         setSort as computeNextSort
     } from '$lib/utils/filters';
     import { loadPrefs, savePrefs } from '$lib/utils/preferences';
-    import { setupAutoRefresh } from '$lib/utils/autoRefresh';
+    import { setupAutoRefreshWithBackoff, calculateBackoff } from '$lib/utils/autoRefresh';
     import type { PriceRow, Filters, SortKey, FilterStats } from '$lib/types';
 
     export let data: { rows: PriceRow[] };
@@ -37,6 +37,8 @@
     let errorMsg: string | null = null;
     let failCount = 0;
     let loading = false;
+    let nextRetryAt: number | null = null; // Unix timestamp in seconds
+    let nextRetryIn: number | null = null; // Countdown in seconds
 
     // Filter state
     let filtersExpanded = false;
@@ -104,19 +106,30 @@
         try {
             loading = true;
             errorMsg = null;
+            nextRetryAt = null;
+            nextRetryIn = null;
             const res = await fetch('/api/rows', { cache: 'no-store' });
-            if (!res.ok) throw new Error(`Failed /api/rows: ${res.status}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
             const json = await res.json();
             const rows = Array.isArray(json?.rows) ? (json.rows as PriceRow[]) : [];
             allRows = rows;
             lastUpdated = Date.now();
-            failCount = 0;
+            failCount = 0; // Reset fail count on success
             page = 1;
         } catch (err: any) {
             failCount = failCount + 1;
             errorMsg = err?.message ?? 'Failed to load prices';
-            if (failCount >= 3 && auto) {
-                auto = false;
+            
+            // Schedule next retry with backoff if auto-refresh is enabled
+            if (auto) {
+                const backoffDelay = calculateBackoff(failCount, refreshSec);
+                nextRetryAt = Math.floor(Date.now() / 1000) + backoffDelay;
+                
+                // Disable auto-refresh after 5 consecutive failures
+                if (failCount >= 5) {
+                    auto = false;
+                    nextRetryAt = null;
+                }
             }
         } finally {
             loading = false;
@@ -148,7 +161,7 @@
 
     let timer: any;
     let tickTimer: any;
-    $: timer = setupAutoRefresh(timer, auto, refreshSec, loadRows);
+    $: timer = setupAutoRefreshWithBackoff(timer, auto, refreshSec, failCount, loadRows);
 
     onDestroy(() => {
         clearInterval(timer);
@@ -223,6 +236,13 @@
     $: {
         nowSec;
         lastUpdatedLabel = secondsAgoFromUnix(lastUpdated ? Math.floor(lastUpdated / 1000) : null);
+        // Update retry countdown
+        if (nextRetryAt !== null) {
+            const remaining = nextRetryAt - nowSec;
+            nextRetryIn = remaining > 0 ? remaining : 0;
+        } else {
+            nextRetryIn = null;
+        }
     }
 
     // Computed min/max values for filter placeholders
@@ -256,7 +276,7 @@
         />
     </section>
 
-    <ErrorAlert message={errorMsg} {failCount} />
+    <ErrorAlert message={errorMsg} {failCount} {nextRetryIn} autoDisabled={failCount >= 5} />
 
     <section class="px-4 mt-2">
         <ColumnsToggle

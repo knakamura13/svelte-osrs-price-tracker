@@ -79,3 +79,10 @@ export type FilterStats = {
     breakEvenPrice: NumericFilter;
     postTaxProfit: NumericFilter;
 };
+
+// Error handling types
+export type ErrorState = {
+    message: string;
+    count: number;
+    lastFailedAt: number | null;
+};
