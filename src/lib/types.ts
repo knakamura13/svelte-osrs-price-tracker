@@ -86,3 +86,16 @@ export type ErrorState = {
     count: number;
     lastFailedAt: number | null;
 };
+
+// Time-series types for price charts
+export type TimeseriesDataPoint = {
+    timestamp: number;
+    avgHighPrice: number | null;
+    avgLowPrice: number | null;
+    highPriceVolume: number | null;
+    lowPriceVolume: number | null;
+};
+
+export type TimeseriesResponse = {
+    data: TimeseriesDataPoint[];
+};

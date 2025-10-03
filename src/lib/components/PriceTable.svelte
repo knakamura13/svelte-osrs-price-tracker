@@ -196,13 +196,7 @@
             <tr>
                 <td colspan={visibleColumnCount} class="p-8 text-center">
                     <div class="flex flex-col items-center gap-3 opacity-60">
-                        <svg
-                            class="w-12 h-12"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            aria-hidden="true"
-                        >
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
@@ -219,25 +213,36 @@
             </tr>
         {:else}
             {#each rows as r (r.id)}
-                <tr class="border-t border-gray-200 dark:border-gray-800 even:bg-gray-50 dark:even:bg-gray-800/30 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors duration-150 animate-fade-in">
+                <tr
+                    class="border-t border-gray-200 dark:border-gray-800 even:bg-gray-50 dark:even:bg-gray-800/30 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors duration-150 animate-fade-in"
+                >
                     <td class="h-4 w-4">
                         {#if r.icon}
                             <img class="object-contain" src={r.icon} alt={r.name} />
                         {/if}
                     </td>
                     {#if columnVisibility.name}
-                        <td class="p-2 flex gap-2 items-center">
-                            {#if r.wikiUrl}
+                        <td class="p-2">
+                            <div class="flex gap-2 items-center">
                                 <a
-                                    class="hover:underline"
-                                    href={r.wikiUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    title={r.examine ?? r.name}>{r.name}</a
+                                    href="/item/{r.id}"
+                                    class="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                                    title={r.examine ?? r.name}
                                 >
-                            {:else}
-                                <span title={r.examine ?? r.name}>{r.name}</span>
-                            {/if}
+                                    {r.name}
+                                </a>
+                                {#if r.wikiUrl}
+                                    <a
+                                        href={r.wikiUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xs"
+                                        title="View on OSRS Wiki"
+                                    >
+                                        📖
+                                    </a>
+                                {/if}
+                            </div>
                         </td>
                     {/if}
                     {#if columnVisibility.buyLimit}
