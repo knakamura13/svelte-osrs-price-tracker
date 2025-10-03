@@ -33,9 +33,9 @@
 
 ### Phase 2
 
--   [ ] `/api/volume-1d` server aggregation using `/1h` (or `/5m`) endpoints
--   [ ] Margin × volume column when available
--   [ ] Item detail drawer with small 24h chart via `/timeseries`
+-   [x] ~~Item detail page with 24h price chart via `/timeseries`~~ ✅ **DONE**
+-   [x] ~~Margin × volume displayed on item detail page~~ ✅ **DONE**
+-   [ ] Add margin × volume as sortable column in main table
 
 ### DevOps
 
@@ -59,6 +59,19 @@ All core features and polish priorities completed!
 -   [x] Toast notification system (success/info/warning/error)
 -   [x] Smooth scroll to top on page change
 -   [x] Animated collapse/expand for filters and columns
+
+### Item Detail Page ✅
+
+-   [x] Dynamic route `/item/[id]` with server-side data loading
+-   [x] Time-series price chart (pure SVG, no library dependencies)
+-   [x] Buy/sell price visualization with 5-minute intervals
+-   [x] Item metadata panel (buy limit, examine text, members status)
+-   [x] Price statistics (margin, daily volume, ROI)
+-   [x] Profit analytics (post-tax profit, margin × volume)
+-   [x] Low volume warning banner
+-   [x] Clickable item names in main table
+-   [x] Navigation back to main table
+-   [x] Links to OSRS Wiki and GEDB
 
 ### Next Steps (Post-MVP Enhancement Priorities)
 
