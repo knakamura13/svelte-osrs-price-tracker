@@ -25,7 +25,9 @@
 
 -   [x] Manual refresh button
 -   [x] Auto‑refresh toggle with configurable delay (seconds)
--   [ ] Backoff on failures; show last updated time (partial: last updated shown, backoff TBD)
+-   [x] Backoff on failures; show last updated time
+-   [x] Exponential backoff with retry countdown display
+-   [x] Auto-disable after 5 consecutive failures
 
 ### Phase 2
 
@@ -42,8 +44,8 @@
 
 ### Next Steps (MVP polish priorities)
 
-1. Handle fetch failures with retry/backoff and user-facing error state on `/api/rows` load.
+1. ~~Handle fetch failures with retry/backoff and user-facing error state on `/api/rows` load.~~ ✅ **DONE**
 2. Expose `PUBLIC_REFRESH_MS` and wire default auto‑refresh period from env; document `.env`.
 3. Implement server aggregation for daily volume (optional for MVP) or hide column until available.
-4. Add minimal accessibility/ARIA on table controls and inputs.
+4. ~~Add minimal accessibility/ARIA on table controls and inputs.~~ ✅ **DONE** (partially - error alerts have ARIA, more can be added)
 5. Add basic unit tests for `secondsAgoFromUnix` and the `/api/rows` join logic.
