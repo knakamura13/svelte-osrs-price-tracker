@@ -74,6 +74,7 @@
                     class="text-left p-2 select-none hover:text-white transition-colors {sortable
                         ? 'cursor-pointer'
                         : ''}"
+                    title="The name of the item"
                     on:click={() => sortable && sortBy && sortBy('name')}
                 >
                     Name <span class="ml-1 opacity-60 select-none">{sortIcon('name')}</span>
@@ -84,6 +85,7 @@
                     class="text-right p-2 select-none hover:text-white transition-colors {sortable
                         ? 'cursor-pointer'
                         : ''}"
+                    title="The maximum number of items you can buy in 4 hours"
                     on:click={() => sortable && sortBy && sortBy('buyLimit')}
                 >
                     Buy limit <span class="ml-1 opacity-60 select-none">{sortIcon('buyLimit')}</span>
@@ -94,6 +96,7 @@
                     class="text-right p-2 select-none hover:text-white transition-colors {sortable
                         ? 'cursor-pointer'
                         : ''}"
+                    title="The current price to buy this item from the Grand Exchange"
                     on:click={() => sortable && sortBy && sortBy('buyPrice')}
                 >
                     Buy price <span class="ml-1 opacity-60 select-none">{sortIcon('buyPrice')}</span>
@@ -102,6 +105,7 @@
             {#if columnVisibility.buyTime}
                 <th
                     class="text-right p-2 {sortable ? 'cursor-pointer' : ''}"
+                    title="When the last buy transaction occurred"
                     on:click={() => sortable && sortBy && sortBy('buyTime')}
                 >
                     Last buy <span class="ml-1 opacity-60 select-none">{sortIcon('buyTime')}</span>
@@ -112,6 +116,7 @@
                     class="text-right p-2 select-none hover:text-white transition-colors {sortable
                         ? 'cursor-pointer'
                         : ''}"
+                    title="The current price to sell this item on the Grand Exchange"
                     on:click={() => sortable && sortBy && sortBy('sellPrice')}
                 >
                     Sell price <span class="ml-1 opacity-60 select-none">{sortIcon('sellPrice')}</span>
@@ -122,6 +127,7 @@
                     class="text-right p-2 select-none hover:text-white transition-colors {sortable
                         ? 'cursor-pointer'
                         : ''}"
+                    title="When the last sell transaction occurred"
                     on:click={() => sortable && sortBy && sortBy('sellTime')}
                 >
                     Last sell <span class="ml-1 opacity-60 select-none">{sortIcon('sellTime')}</span>
@@ -132,12 +138,13 @@
                     class="text-right p-2 select-none hover:text-white transition-colors {sortable
                         ? 'cursor-pointer'
                         : ''}"
+                    title="The minimum sell price needed to recover your cost after the 2% GE tax."
                     on:click={() => sortable && sortBy && sortBy('breakEvenPrice')}
                 >
                     Break-even price
                     <span
-                        class="mr-1 text-xs opacity-70 cursor-help inline-block"
-                        title="The minimum sell price needed to recover your cost after the 2% GE tax."
+                        class="mr-1 text-xs opacity-70 cursor-help inline-block align-top relative"
+                        style="font-size: 0.75em; vertical-align: super; top: -0.2em;"
                         aria-label="Break-even Price tooltip">?</span
                     >
                     <span class="ml-1 opacity-60 select-none">{sortIcon('breakEvenPrice')}</span>
@@ -148,6 +155,7 @@
                     class="text-right p-2 select-none hover:text-white transition-colors {sortable
                         ? 'cursor-pointer'
                         : ''}"
+                    title="The profit margin (sell price - buy price)"
                     on:click={() => sortable && sortBy && sortBy('margin')}
                 >
                     Margin <span class="ml-1 opacity-60 select-none">{sortIcon('margin')}</span>
@@ -158,12 +166,13 @@
                     class="text-right p-2 select-none hover:text-white transition-colors {sortable
                         ? 'cursor-pointer'
                         : ''}"
+                    title="Your profit if you were to buy at 'Sell price' and sell at 'Buy price', after deducting the 2% GE tax."
                     on:click={() => sortable && sortBy && sortBy('postTaxProfit')}
                 >
                     Post-tax profit
                     <span
-                        class="mr-1 text-xs opacity-70 cursor-help inline-block"
-                        title="Your profit if you were to buy at 'Sell price' and sell at 'Buy price', after deducting the 2% GE tax."
+                        class="mr-1 text-xs opacity-70 cursor-help inline-block align-top relative"
+                        style="font-size: 0.75em; vertical-align: super; top: -0.2em;"
                         aria-label="Post-tax Profit tooltip">?</span
                     >
                     <span class="ml-1 opacity-60 select-none">{sortIcon('postTaxProfit')}</span>
@@ -174,6 +183,7 @@
                     class="text-right p-2 select-none hover:text-white transition-colors {sortable
                         ? 'cursor-pointer'
                         : ''}"
+                    title="The number of items traded in the last 24 hours."
                     on:click={() => sortable && sortBy && sortBy('dailyVolume')}
                 >
                     Daily volume <span class="ml-1 opacity-60 select-none">{sortIcon('dailyVolume')}</span>

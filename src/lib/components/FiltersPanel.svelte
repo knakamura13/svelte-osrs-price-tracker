@@ -16,13 +16,19 @@
         | undefined;
 
     type NumericFilterKey = Exclude<keyof Filters, 'buyTime' | 'sellTime'>;
-    const numericFilterDefs: Array<{ key: NumericFilterKey; label: string }> = [
-        { key: 'buyLimit', label: 'Buy limit' },
-        { key: 'buyPrice', label: 'Buy price' },
-        { key: 'sellPrice', label: 'Sell price' },
-        { key: 'margin', label: 'Margin' },
-        { key: 'postTaxProfit', label: 'Post-tax profit' },
-        { key: 'dailyVolume', label: 'Daily volume' }
+    type FilterKey = keyof Filters;
+
+    // Define all filters in table column order
+    const allFilterDefs: Array<{ key: FilterKey; label: string; type: 'numeric' | 'time' }> = [
+        { key: 'buyLimit', label: 'Buy limit', type: 'numeric' },
+        { key: 'buyPrice', label: 'Buy price', type: 'numeric' },
+        { key: 'buyTime', label: 'Last buy', type: 'time' },
+        { key: 'sellPrice', label: 'Sell price', type: 'numeric' },
+        { key: 'sellTime', label: 'Last sell', type: 'time' },
+        { key: 'breakEvenPrice', label: 'Break-even price', type: 'numeric' },
+        { key: 'margin', label: 'Margin', type: 'numeric' },
+        { key: 'postTaxProfit', label: 'Post-tax profit', type: 'numeric' },
+        { key: 'dailyVolume', label: 'Daily volume', type: 'numeric' }
     ];
 
     // local time parts state for buy/sell durations
@@ -114,228 +120,221 @@
             class="accordion-content p-4 bg-gray-50 dark:bg-gray-900 rounded-b-lg border border-t-0 border-gray-300 dark:border-gray-600"
         >
             <div class="grid grid-cols-1 gap-4">
-                <!-- Numeric range filters -->
-                {#each numericFilterDefs as f}
+                <!-- All filters in table column order -->
+                {#each allFilterDefs as f}
                     <div class="filter-group">
                         <div
                             class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
-                            class:text-yellow-600={isPositive(filtersNormalized[f.key].min) ||
-                                isPositive(filtersNormalized[f.key].max)}
-                            class:dark:text-yellow-400={isPositive(filtersNormalized[f.key].min) ||
-                                isPositive(filtersNormalized[f.key].max)}
+                            class:text-yellow-600={f.type === 'numeric'
+                                ? isPositive(filtersNormalized[f.key].min) || isPositive(filtersNormalized[f.key].max)
+                                : isPositive(filters[f.key].min) || isPositive(filters[f.key].max)}
+                            class:dark:text-yellow-400={f.type === 'numeric'
+                                ? isPositive(filtersNormalized[f.key].min) || isPositive(filtersNormalized[f.key].max)
+                                : isPositive(filters[f.key].min) || isPositive(filters[f.key].max)}
                             id={`${f.key}-label`}
                         >
                             {f.label}
                         </div>
-                        <div class="flex gap-2">
-                            <input
-                                type="number"
-                                placeholder={filterStats[f.key as keyof FilterStats].min !== null
-                                    ? `Min (${filterStats[f.key as keyof FilterStats].min})`
-                                    : 'Min'}
-                                aria-labelledby={`${f.key}-label`}
-                                class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-                                bind:value={filters[f.key].min}
-                                on:change={(e) =>
-                                    onNumericChange &&
-                                    onNumericChange(f.key as any, 'min', (e.currentTarget as HTMLInputElement).value)}
-                            />
-                            <input
-                                type="number"
-                                placeholder={filterStats[f.key as keyof FilterStats].max !== null
-                                    ? `Max (${filterStats[f.key as keyof FilterStats].max})`
-                                    : 'Max'}
-                                aria-labelledby={`${f.key}-label`}
-                                class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-                                bind:value={filters[f.key].max}
-                                on:change={(e) =>
-                                    onNumericChange &&
-                                    onNumericChange(f.key as any, 'max', (e.currentTarget as HTMLInputElement).value)}
-                            />
-                        </div>
+
+                        {#if f.type === 'numeric'}
+                            <!-- Numeric range filter -->
+                            <div class="flex gap-2">
+                                <input
+                                    type="number"
+                                    placeholder={filterStats[f.key as keyof FilterStats].min !== null
+                                        ? `Min (${filterStats[f.key as keyof FilterStats].min})`
+                                        : 'Min'}
+                                    aria-labelledby={`${f.key}-label`}
+                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                    bind:value={filters[f.key].min}
+                                    on:change={(e) =>
+                                        onNumericChange &&
+                                        onNumericChange(
+                                            f.key as any,
+                                            'min',
+                                            (e.currentTarget as HTMLInputElement).value
+                                        )}
+                                />
+                                <input
+                                    type="number"
+                                    placeholder={filterStats[f.key as keyof FilterStats].max !== null
+                                        ? `Max (${filterStats[f.key as keyof FilterStats].max})`
+                                        : 'Max'}
+                                    aria-labelledby={`${f.key}-label`}
+                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                    bind:value={filters[f.key].max}
+                                    on:change={(e) =>
+                                        onNumericChange &&
+                                        onNumericChange(
+                                            f.key as any,
+                                            'max',
+                                            (e.currentTarget as HTMLInputElement).value
+                                        )}
+                                />
+                            </div>
+                        {:else if f.key === 'buyTime'}
+                            <!-- Duration filter: Last buy -->
+                            <div class="flex flex-col gap-2" aria-labelledby={`${f.key}-label`}>
+                                <div class="flex items-center gap-1">
+                                    <span class="text-xs opacity-70 w-10">Min</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        placeholder="0"
+                                        class="w-14 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={buyMinDays}
+                                    />
+                                    <span class="opacity-60">d:</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="23"
+                                        placeholder="0"
+                                        class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={buyMinHours}
+                                    />
+                                    <span class="opacity-60">h:</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="59"
+                                        placeholder="0"
+                                        class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={buyMinMinutes}
+                                    />
+                                    <span class="opacity-60">m:</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="59"
+                                        placeholder="0"
+                                        class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={buyMinSeconds}
+                                    />
+                                    <span class="opacity-60">s</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <span class="text-xs opacity-70 w-10">Max</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        placeholder="0"
+                                        class="w-14 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={buyMaxDays}
+                                    />
+                                    <span class="opacity-60">d:</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="23"
+                                        placeholder="0"
+                                        class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={buyMaxHours}
+                                    />
+                                    <span class="opacity-60">h:</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="59"
+                                        placeholder="0"
+                                        class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={buyMaxMinutes}
+                                    />
+                                    <span class="opacity-60">m:</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="59"
+                                        placeholder="0"
+                                        class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={buyMaxSeconds}
+                                    />
+                                    <span class="opacity-60">s</span>
+                                </div>
+                            </div>
+                        {:else if f.key === 'sellTime'}
+                            <!-- Duration filter: Last sell -->
+                            <div class="flex flex-col gap-2" aria-labelledby={`${f.key}-label`}>
+                                <div class="flex items-center gap-1">
+                                    <span class="text-xs opacity-70 w-10">Min</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        placeholder="0"
+                                        class="w-14 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={sellMinDays}
+                                    />
+                                    <span class="opacity-60">d:</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="23"
+                                        placeholder="0"
+                                        class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={sellMinHours}
+                                    />
+                                    <span class="opacity-60">h:</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="59"
+                                        placeholder="0"
+                                        class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={sellMinMinutes}
+                                    />
+                                    <span class="opacity-60">m:</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="59"
+                                        placeholder="0"
+                                        class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={sellMinSeconds}
+                                    />
+                                    <span class="opacity-60">s</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <span class="text-xs opacity-70 w-10">Max</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        placeholder="0"
+                                        class="w-14 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={sellMaxDays}
+                                    />
+                                    <span class="opacity-60">d:</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="23"
+                                        placeholder="0"
+                                        class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={sellMaxHours}
+                                    />
+                                    <span class="opacity-60">h:</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="59"
+                                        placeholder="0"
+                                        class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={sellMaxMinutes}
+                                    />
+                                    <span class="opacity-60">m:</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="59"
+                                        placeholder="0"
+                                        class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                                        bind:value={sellMaxSeconds}
+                                    />
+                                    <span class="opacity-60">s</span>
+                                </div>
+                            </div>
+                        {/if}
                     </div>
                 {/each}
-
-                <!-- Duration filters: Last buy -->
-                <div class="filter-group">
-                    <div
-                        class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
-                        class:text-yellow-600={isPositive(filters.buyTime.min) || isPositive(filters.buyTime.max)}
-                        class:dark:text-yellow-400={isPositive(filters.buyTime.min) || isPositive(filters.buyTime.max)}
-                        id="buy-time-label"
-                    >
-                        Last buy
-                    </div>
-                    <div class="flex flex-col gap-2" aria-labelledby="buy-time-label">
-                        <div class="flex items-center gap-1">
-                            <span class="text-xs opacity-70 w-10">Min</span>
-                            <input
-                                type="number"
-                                min="0"
-                                placeholder="0"
-                                class="w-14 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-                                bind:value={buyMinDays}
-                            />
-                            <span class="opacity-60">d:</span>
-                            <input
-                                type="number"
-                                min="0"
-                                max="23"
-                                placeholder="0"
-                                class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-                                bind:value={buyMinHours}
-                            />
-                            <span class="opacity-60">h:</span>
-                            <input
-                                type="number"
-                                min="0"
-                                max="59"
-                                placeholder="0"
-                                class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-                                bind:value={buyMinMinutes}
-                            />
-                            <span class="opacity-60">m:</span>
-                            <input
-                                type="number"
-                                min="0"
-                                max="59"
-                                placeholder="0"
-                                class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-                                bind:value={buyMinSeconds}
-                            />
-                            <span class="opacity-60">s</span>
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <span class="text-xs opacity-70 w-10">Max</span>
-                            <input
-                                type="number"
-                                min="0"
-                                placeholder="0"
-                                class="w-14 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-                                bind:value={buyMaxDays}
-                            />
-                            <span class="opacity-60">d:</span>
-                            <input
-                                type="number"
-                                min="0"
-                                max="23"
-                                placeholder="0"
-                                class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-                                bind:value={buyMaxHours}
-                            />
-                            <span class="opacity-60">h:</span>
-                            <input
-                                type="number"
-                                min="0"
-                                max="59"
-                                placeholder="0"
-                                class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-                                bind:value={buyMaxMinutes}
-                            />
-                            <span class="opacity-60">m:</span>
-                            <input
-                                type="number"
-                                min="0"
-                                max="59"
-                                placeholder="0"
-                                class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-                                bind:value={buyMaxSeconds}
-                            />
-                            <span class="opacity-60">s</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Duration filters: Last sell -->
-                <div class="filter-group">
-                    <div
-                        class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
-                        class:text-yellow-600={isPositive(filters.sellTime.min) || isPositive(filters.sellTime.max)}
-                        class:dark:text-yellow-400={isPositive(filters.sellTime.min) ||
-                            isPositive(filters.sellTime.max)}
-                        id="sell-time-label"
-                    >
-                        Last sell
-                    </div>
-                    <div class="flex flex-col gap-2" aria-labelledby="sell-time-label">
-                        <div class="flex items-center gap-1">
-                            <span class="text-xs opacity-70 w-10">Min</span>
-                            <input
-                                type="number"
-                                min="0"
-                                placeholder="0"
-                                class="w-14 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-                                bind:value={sellMinDays}
-                            />
-                            <span class="opacity-60">d:</span>
-                            <input
-                                type="number"
-                                min="0"
-                                max="23"
-                                placeholder="0"
-                                class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-                                bind:value={sellMinHours}
-                            />
-                            <span class="opacity-60">h:</span>
-                            <input
-                                type="number"
-                                min="0"
-                                max="59"
-                                placeholder="0"
-                                class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-                                bind:value={sellMinMinutes}
-                            />
-                            <span class="opacity-60">m:</span>
-                            <input
-                                type="number"
-                                min="0"
-                                max="59"
-                                placeholder="0"
-                                class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-                                bind:value={sellMinSeconds}
-                            />
-                            <span class="opacity-60">s</span>
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <span class="text-xs opacity-70 w-10">Max</span>
-                            <input
-                                type="number"
-                                min="0"
-                                placeholder="0"
-                                class="w-14 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-                                bind:value={sellMaxDays}
-                            />
-                            <span class="opacity-60">d:</span>
-                            <input
-                                type="number"
-                                min="0"
-                                max="23"
-                                placeholder="0"
-                                class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-                                bind:value={sellMaxHours}
-                            />
-                            <span class="opacity-60">h:</span>
-                            <input
-                                type="number"
-                                min="0"
-                                max="59"
-                                placeholder="0"
-                                class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-                                bind:value={sellMaxMinutes}
-                            />
-                            <span class="opacity-60">m:</span>
-                            <input
-                                type="number"
-                                min="0"
-                                max="59"
-                                placeholder="0"
-                                class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-                                bind:value={sellMaxSeconds}
-                            />
-                            <span class="opacity-60">s</span>
-                        </div>
-                    </div>
-                </div>
             </div>
             <div class="mt-4 flex justify-end">
                 <button
