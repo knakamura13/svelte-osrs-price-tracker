@@ -45,10 +45,33 @@
 
 ---
 
-### Next Steps (MVP polish priorities)
+## ✅ MVP Complete
 
-1. ~~Handle fetch failures with retry/backoff and user-facing error state on `/api/rows` load.~~ ✅ **DONE**
-2. ~~Expose `PUBLIC_REFRESH_MS` and wire default auto‑refresh period from env; document `.env`.~~ ✅ **DONE**
-3. ~~Implement server aggregation for daily volume (optional for MVP) or hide column until available.~~ ✅ **DONE** (using /api/24h)
-4. ~~Add minimal accessibility/ARIA on table controls and inputs.~~ ✅ **DONE** (error alerts, tooltips)
-5. ~~Add basic unit tests for `secondsAgoFromUnix` and the `/api/rows` join logic.~~ ✅ **DONE** (21 tests total)
+All core features and polish priorities completed!
+
+### Next Steps (Post-MVP Enhancement Priorities)
+
+**For Localhost Development:**
+
+1. **⭐ Favourites System** (High Value)
+   - Add star icon to each row for quick favoriting
+   - Store favourites in localStorage with Svelte store
+   - Create `/favourites` route showing only saved items
+   - Add badge showing favorite count in header
+
+2. **📊 Margin × Volume Column** (Quick Win)
+   - Calculate `(margin × dailyVolume)` to show profit potential
+   - Add to table with toggle visibility
+   - Helps identify high-opportunity items
+
+3. **📈 Item Detail Drawer** (Rich Feature)
+   - Click row → open slide-out drawer
+   - Show 24h price chart using existing `/api/24h` data
+   - Display item examine text, wiki link, history
+   - Close with overlay click or ESC key
+
+**For Production Later:**
+- CI/CD pipeline with GitHub Actions
+- Deploy to Vercel/Netlify
+- Environment variables in hosting platform
+- Monitoring/analytics
