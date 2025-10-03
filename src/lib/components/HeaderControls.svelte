@@ -13,13 +13,7 @@
         <h1 class="text-2xl font-semibold">OSRS Price Tracker</h1>
         <p class="text-base opacity-80">Real-time OSRS GE prices</p>
         <div class="mt-1 flex items-center gap-2">
-            <svg
-                class="w-4 h-4 opacity-60"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-            >
+            <svg class="w-4 h-4 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path
                     stroke-linecap="round"
                     stroke-linejoin="round"

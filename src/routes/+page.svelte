@@ -28,7 +28,8 @@
     let page = 1;
     let pageSize = 25;
     let auto = false;
-    let refreshSec = 60;
+    // Default refresh interval from env or fallback to 60 seconds
+    let refreshSec = import.meta.env.PUBLIC_REFRESH_MS ? Math.floor(import.meta.env.PUBLIC_REFRESH_MS / 1000) : 60;
 
     let allRows: PriceRow[] = data?.rows ?? [];
     let lastUpdated: number | null = null;
@@ -119,12 +120,12 @@
         } catch (err: any) {
             failCount = failCount + 1;
             errorMsg = err?.message ?? 'Failed to load prices';
-            
+
             // Schedule next retry with backoff if auto-refresh is enabled
             if (auto) {
                 const backoffDelay = calculateBackoff(failCount, refreshSec);
                 nextRetryAt = Math.floor(Date.now() / 1000) + backoffDelay;
-                
+
                 // Disable auto-refresh after 5 consecutive failures
                 if (failCount >= 5) {
                     auto = false;
