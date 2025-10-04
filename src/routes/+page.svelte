@@ -146,6 +146,9 @@
         }
     }
 
+    // Track previous auto state to detect when it changes from false to true
+    let prevAuto = false;
+
     // filteredSorted is imported from $lib/utils/filters
 
     onMount(() => {
@@ -278,7 +281,18 @@
 </svelte:head>
 
 <div class="page" id="home">
-    <HeaderControls {lastUpdatedLabel} {auto} onToggleAuto={(v) => (auto = v)} />
+    <HeaderControls
+        {lastUpdatedLabel}
+        {auto}
+        onToggleAuto={(v) => {
+            auto = v;
+            // If auto-refresh was just enabled and we're not currently loading, trigger immediate refresh
+            if (auto && !prevAuto && !loading) {
+                loadRows();
+            }
+            prevAuto = auto;
+        }}
+    />
 
     <section class="px-4 pb-2 mt-4">
         <SearchBar
