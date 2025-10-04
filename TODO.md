@@ -73,6 +73,18 @@ All core features and polish priorities completed!
 -   [x] Navigation back to main table
 -   [x] Links to OSRS Wiki and GEDB
 
+### Interactive Chart Features ✅
+
+-   [x] Time range selector (24h / 7d / 30d buttons)
+-   [x] Circular markers at each data point on both lines
+-   [x] Custom tooltip component (no ugly title attributes)
+-   [x] Hover tooltips showing both buy/sell prices at same timestamp
+-   [x] Crosshair lines (vertical + 2 horizontal dashed lines)
+-   [x] Nearest point detection with mouse tracking
+-   [x] Highlighted hover states with larger circles
+-   [x] Smooth animations and transitions
+-   [x] Dark mode support for all interactive elements
+
 ### Next Steps (Post-MVP Enhancement Priorities)
 
 **For Localhost Development:**
