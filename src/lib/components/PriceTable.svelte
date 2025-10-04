@@ -23,7 +23,11 @@
         breakEvenPrice: true,
         margin: true,
         postTaxProfit: true,
-        dailyVolume: true
+        dailyVolume: true,
+        dailyLow: true,
+        dailyHigh: true,
+        averageBuy: true,
+        averageSell: true
     };
 
     // Pagination props
@@ -105,10 +109,10 @@
                     class="text-right p-2 select-none hover:text-white transition-colors {sortable
                         ? 'cursor-pointer'
                         : ''}"
-                    title="The current price to buy this item from the Grand Exchange"
+                    title="The current insta-buy price for this item from the Grand Exchange"
                     on:click={() => sortable && sortBy && sortBy('buyPrice')}
                 >
-                    Buy price <span class="ml-1 opacity-60 select-none">{sortIcon('buyPrice')}</span>
+                    Insta-buy price <span class="ml-1 opacity-60 select-none">{sortIcon('buyPrice')}</span>
                 </th>
             {/if}
             {#if columnVisibility.buyTime}
@@ -125,10 +129,10 @@
                     class="text-right p-2 select-none hover:text-white transition-colors {sortable
                         ? 'cursor-pointer'
                         : ''}"
-                    title="The current price to sell this item on the Grand Exchange"
+                    title="The current insta-sell price for this item on the Grand Exchange"
                     on:click={() => sortable && sortBy && sortBy('sellPrice')}
                 >
-                    Sell price <span class="ml-1 opacity-60 select-none">{sortIcon('sellPrice')}</span>
+                    Insta-sell price <span class="ml-1 opacity-60 select-none">{sortIcon('sellPrice')}</span>
                 </th>
             {/if}
             {#if columnVisibility.sellTime}
@@ -175,7 +179,7 @@
                     class="text-right p-2 select-none hover:text-white transition-colors {sortable
                         ? 'cursor-pointer'
                         : ''}"
-                    title="Your profit if you buy at 'Sell price' and sell at 'Buy price', after GE tax (2% rounded down, capped at 5M gp)."
+                    title="Your profit if you insta-buy at 'Insta-sell price' and insta-sell at 'Insta-buy price', after GE tax (2% rounded down, capped at 5M gp)."
                     on:click={() => sortable && sortBy && sortBy('postTaxProfit')}
                 >
                     Post-tax profit
@@ -196,6 +200,50 @@
                     on:click={() => sortable && sortBy && sortBy('dailyVolume')}
                 >
                     Daily volume <span class="ml-1 opacity-60 select-none">{sortIcon('dailyVolume')}</span>
+                </th>
+            {/if}
+            {#if columnVisibility.dailyLow}
+                <th
+                    class="text-right p-2 select-none hover:text-white transition-colors {sortable
+                        ? 'cursor-pointer'
+                        : ''}"
+                    title="The lowest price the item was traded for in the past 24 hours."
+                    on:click={() => sortable && sortBy && sortBy('dailyLow')}
+                >
+                    Daily low <span class="ml-1 opacity-60 select-none">{sortIcon('dailyLow')}</span>
+                </th>
+            {/if}
+            {#if columnVisibility.dailyHigh}
+                <th
+                    class="text-right p-2 select-none hover:text-white transition-colors {sortable
+                        ? 'cursor-pointer'
+                        : ''}"
+                    title="The highest price the item was traded for in the past 24 hours."
+                    on:click={() => sortable && sortBy && sortBy('dailyHigh')}
+                >
+                    Daily high <span class="ml-1 opacity-60 select-none">{sortIcon('dailyHigh')}</span>
+                </th>
+            {/if}
+            {#if columnVisibility.averageBuy}
+                <th
+                    class="text-right p-2 select-none hover:text-white transition-colors {sortable
+                        ? 'cursor-pointer'
+                        : ''}"
+                    title="The mean of all insta-buy price values in the past 24 hours."
+                    on:click={() => sortable && sortBy && sortBy('averageBuy')}
+                >
+                    Avg buy <span class="ml-1 opacity-60 select-none">{sortIcon('averageBuy')}</span>
+                </th>
+            {/if}
+            {#if columnVisibility.averageSell}
+                <th
+                    class="text-right p-2 select-none hover:text-white transition-colors {sortable
+                        ? 'cursor-pointer'
+                        : ''}"
+                    title="The mean of all insta-sell price values in the past 24 hours."
+                    on:click={() => sortable && sortBy && sortBy('averageSell')}
+                >
+                    Avg sell <span class="ml-1 opacity-60 select-none">{sortIcon('averageSell')}</span>
                 </th>
             {/if}
         </tr>
@@ -266,7 +314,9 @@
                     {#if columnVisibility.buyPrice}
                         <td class="p-2 text-right">
                             {#if r.buyPrice == null}
-                                <span title="No buy price data available for this item" class="cursor-help">—</span>
+                                <span title="No insta-buy price data available for this item" class="cursor-help"
+                                    >—</span
+                                >
                             {:else}
                                 {formatInt(r.buyPrice)}
                             {/if}
@@ -278,7 +328,9 @@
                     {#if columnVisibility.sellPrice}
                         <td class="p-2 text-right">
                             {#if r.sellPrice == null}
-                                <span title="No sell price data available for this item" class="cursor-help">—</span>
+                                <span title="No insta-sell price data available for this item" class="cursor-help"
+                                    >—</span
+                                >
                             {:else}
                                 {formatInt(r.sellPrice)}
                             {/if}
@@ -338,6 +390,42 @@
                                     class="cursor-help"
                                     class:red-text={true}>—</span
                                 >
+                            {/if}
+                        </td>
+                    {/if}
+                    {#if columnVisibility.dailyLow}
+                        <td class="p-2 text-right">
+                            {#if r.dailyLow !== null && r.dailyLow !== undefined}
+                                {formatInt(r.dailyLow)}
+                            {:else}
+                                <span title="No daily low data available for this item" class="cursor-help">—</span>
+                            {/if}
+                        </td>
+                    {/if}
+                    {#if columnVisibility.dailyHigh}
+                        <td class="p-2 text-right">
+                            {#if r.dailyHigh !== null && r.dailyHigh !== undefined}
+                                {formatInt(r.dailyHigh)}
+                            {:else}
+                                <span title="No daily high data available for this item" class="cursor-help">—</span>
+                            {/if}
+                        </td>
+                    {/if}
+                    {#if columnVisibility.averageBuy}
+                        <td class="p-2 text-right">
+                            {#if r.averageBuy !== null && r.averageBuy !== undefined}
+                                {formatInt(r.averageBuy)}
+                            {:else}
+                                <span title="No average buy data available for this item" class="cursor-help">—</span>
+                            {/if}
+                        </td>
+                    {/if}
+                    {#if columnVisibility.averageSell}
+                        <td class="p-2 text-right">
+                            {#if r.averageSell !== null && r.averageSell !== undefined}
+                                {formatInt(r.averageSell)}
+                            {:else}
+                                <span title="No average sell data available for this item" class="cursor-help">—</span>
                             {/if}
                         </td>
                     {/if}

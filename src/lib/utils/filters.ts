@@ -46,6 +46,22 @@ export function normalizeFilters(f: Filters): Filters {
         dailyVolume: {
             min: isFiniteNumber(f.dailyVolume.min) ? f.dailyVolume.min : null,
             max: isFiniteNumber(f.dailyVolume.max) ? f.dailyVolume.max : null
+        },
+        dailyLow: {
+            min: isFiniteNumber(f.dailyLow.min) ? f.dailyLow.min : null,
+            max: isFiniteNumber(f.dailyLow.max) ? f.dailyLow.max : null
+        },
+        dailyHigh: {
+            min: isFiniteNumber(f.dailyHigh.min) ? f.dailyHigh.min : null,
+            max: isFiniteNumber(f.dailyHigh.max) ? f.dailyHigh.max : null
+        },
+        averageBuy: {
+            min: isFiniteNumber(f.averageBuy.min) ? f.averageBuy.min : null,
+            max: isFiniteNumber(f.averageBuy.max) ? f.averageBuy.max : null
+        },
+        averageSell: {
+            min: isFiniteNumber(f.averageSell.min) ? f.averageSell.min : null,
+            max: isFiniteNumber(f.averageSell.max) ? f.averageSell.max : null
         }
     };
 }
@@ -234,6 +250,10 @@ export function computeFilterStats(allRows: PriceRow[]): FilterStats {
         sellPrice: { min: null, max: null },
         margin: { min: null, max: null },
         dailyVolume: { min: null, max: null },
+        dailyLow: { min: null, max: null },
+        dailyHigh: { min: null, max: null },
+        averageBuy: { min: null, max: null },
+        averageSell: { min: null, max: null },
         breakEvenPrice: { min: null, max: null },
         postTaxProfit: { min: null, max: null }
     };
@@ -245,6 +265,10 @@ export function computeFilterStats(allRows: PriceRow[]): FilterStats {
     const sellPrices = pickNumbers(allRows.map((r) => r.sellPrice));
     const margins = pickNumbers(allRows.map((r) => r.margin));
     const volumes = pickNumbers(allRows.map((r) => r.dailyVolume ?? null));
+    const dailyLows = pickNumbers(allRows.map((r) => r.dailyLow ?? null));
+    const dailyHighs = pickNumbers(allRows.map((r) => r.dailyHigh ?? null));
+    const averageBuys = pickNumbers(allRows.map((r) => r.averageBuy ?? null));
+    const averageSells = pickNumbers(allRows.map((r) => r.averageSell ?? null));
 
     if (buyLimits.length) {
         stats.buyLimit.min = Math.min(...buyLimits);
@@ -265,6 +289,22 @@ export function computeFilterStats(allRows: PriceRow[]): FilterStats {
     if (volumes.length) {
         stats.dailyVolume.min = Math.min(...volumes);
         stats.dailyVolume.max = Math.max(...volumes);
+    }
+    if (dailyLows.length) {
+        stats.dailyLow.min = Math.min(...dailyLows);
+        stats.dailyLow.max = Math.max(...dailyLows);
+    }
+    if (dailyHighs.length) {
+        stats.dailyHigh.min = Math.min(...dailyHighs);
+        stats.dailyHigh.max = Math.max(...dailyHighs);
+    }
+    if (averageBuys.length) {
+        stats.averageBuy.min = Math.min(...averageBuys);
+        stats.averageBuy.max = Math.max(...averageBuys);
+    }
+    if (averageSells.length) {
+        stats.averageSell.min = Math.min(...averageSells);
+        stats.averageSell.max = Math.max(...averageSells);
     }
 
     const breakEvenPrices: number[] = [];

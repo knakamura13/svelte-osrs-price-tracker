@@ -22,14 +22,18 @@
     // Define all filters in table column order
     const allFilterDefs: Array<{ key: FilterKey; label: string; type: 'numeric' | 'time' }> = [
         { key: 'buyLimit', label: 'Buy limit', type: 'numeric' },
-        { key: 'buyPrice', label: 'Buy price', type: 'numeric' },
+        { key: 'buyPrice', label: 'Insta-buy price', type: 'numeric' },
         { key: 'buyTime', label: 'Last buy', type: 'time' },
-        { key: 'sellPrice', label: 'Sell price', type: 'numeric' },
+        { key: 'sellPrice', label: 'Insta-sell price', type: 'numeric' },
         { key: 'sellTime', label: 'Last sell', type: 'time' },
         { key: 'breakEvenPrice', label: 'Break-even price', type: 'numeric' },
         { key: 'margin', label: 'Margin', type: 'numeric' },
         { key: 'postTaxProfit', label: 'Post-tax profit', type: 'numeric' },
-        { key: 'dailyVolume', label: 'Daily volume', type: 'numeric' }
+        { key: 'dailyVolume', label: 'Daily volume', type: 'numeric' },
+        { key: 'dailyLow', label: 'Daily low', type: 'numeric' },
+        { key: 'dailyHigh', label: 'Daily high', type: 'numeric' },
+        { key: 'averageBuy', label: 'Avg buy', type: 'numeric' },
+        { key: 'averageSell', label: 'Avg sell', type: 'numeric' }
     ];
 
     // local time parts state for buy/sell durations

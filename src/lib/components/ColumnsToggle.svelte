@@ -13,6 +13,10 @@
         margin: boolean;
         postTaxProfit: boolean;
         dailyVolume: boolean;
+        dailyLow: boolean;
+        dailyHigh: boolean;
+        averageBuy: boolean;
+        averageSell: boolean;
     } = {
         name: true,
         buyLimit: true,
@@ -23,7 +27,11 @@
         breakEvenPrice: true,
         margin: true,
         postTaxProfit: true,
-        dailyVolume: true
+        dailyVolume: true,
+        dailyLow: true,
+        dailyHigh: true,
+        averageBuy: true,
+        averageSell: true
     };
 
     export let onToggle: (() => void) | undefined;
@@ -70,7 +78,7 @@
                         on:change={(e) =>
                             onChange && onChange('buyPrice', (e.currentTarget as HTMLInputElement).checked)}
                     />
-                    <span class="text-sm">Buy price</span>
+                    <span class="text-sm">Insta-buy price</span>
                 </label>
                 <label class="flex items-center gap-2">
                     <input
@@ -88,7 +96,7 @@
                         on:change={(e) =>
                             onChange && onChange('sellPrice', (e.currentTarget as HTMLInputElement).checked)}
                     />
-                    <span class="text-sm">Sell price</span>
+                    <span class="text-sm">Insta-sell price</span>
                 </label>
                 <label class="flex items-center gap-2">
                     <input
@@ -133,6 +141,42 @@
                             onChange && onChange('dailyVolume', (e.currentTarget as HTMLInputElement).checked)}
                     />
                     <span class="text-sm">Daily volume</span>
+                </label>
+                <label class="flex items-center gap-2">
+                    <input
+                        type="checkbox"
+                        checked={columnVisibility.dailyLow}
+                        on:change={(e) =>
+                            onChange && onChange('dailyLow', (e.currentTarget as HTMLInputElement).checked)}
+                    />
+                    <span class="text-sm">Daily low</span>
+                </label>
+                <label class="flex items-center gap-2">
+                    <input
+                        type="checkbox"
+                        checked={columnVisibility.dailyHigh}
+                        on:change={(e) =>
+                            onChange && onChange('dailyHigh', (e.currentTarget as HTMLInputElement).checked)}
+                    />
+                    <span class="text-sm">Daily high</span>
+                </label>
+                <label class="flex items-center gap-2">
+                    <input
+                        type="checkbox"
+                        checked={columnVisibility.averageBuy}
+                        on:change={(e) =>
+                            onChange && onChange('averageBuy', (e.currentTarget as HTMLInputElement).checked)}
+                    />
+                    <span class="text-sm">Avg buy</span>
+                </label>
+                <label class="flex items-center gap-2">
+                    <input
+                        type="checkbox"
+                        checked={columnVisibility.averageSell}
+                        on:change={(e) =>
+                            onChange && onChange('averageSell', (e.currentTarget as HTMLInputElement).checked)}
+                    />
+                    <span class="text-sm">Avg sell</span>
                 </label>
             </div>
         </div>

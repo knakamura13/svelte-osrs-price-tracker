@@ -25,7 +25,10 @@ export const GET: RequestHandler = async ({ fetch }) => {
     ])) as [ItemMapping[], { data: LatestResponse }, { data: Volume24hResponse }];
 
     const latestMap = latest.data;
-    const volumeMap = day24.data; // id -> { highPriceVolume, lowPriceVolume }
+    const basicVolumeMap = day24.data; // id -> { highPriceVolume, lowPriceVolume }
+
+    // For now, just use basic volume data - enhanced metrics will be calculated per-item as needed
+    const volumeMap = basicVolumeMap;
 
     function buildWikiImageUrl(fileName: string | undefined): string | undefined {
         if (!fileName) return undefined;
@@ -80,6 +83,45 @@ export const GET: RequestHandler = async ({ fetch }) => {
                 dailyVolume = await getVolumeFromTimeseries(m.id);
             }
 
+            // Calculate daily metrics from timeseries data
+            let dailyMetrics = null;
+            try {
+                const timeseriesRes = await fetch(`/api/timeseries?id=${m.id}&timestep=5m`);
+                if (timeseriesRes.ok) {
+                    const timeseriesData = await timeseriesRes.json();
+                    const dataPoints = timeseriesData.data || [];
+
+                    if (dataPoints.length > 0) {
+                        const buyPrices: number[] = [];
+                        const sellPrices: number[] = [];
+
+                        for (const point of dataPoints) {
+                            if (point.avgHighPrice !== null && point.avgHighPrice !== undefined) {
+                                buyPrices.push(point.avgHighPrice);
+                            }
+                            if (point.avgLowPrice !== null && point.avgLowPrice !== undefined) {
+                                sellPrices.push(point.avgLowPrice);
+                            }
+                        }
+
+                        dailyMetrics = {
+                            dailyLow: sellPrices.length > 0 ? Math.min(...sellPrices) : null,
+                            dailyHigh: buyPrices.length > 0 ? Math.max(...buyPrices) : null,
+                            averageBuy:
+                                buyPrices.length > 0
+                                    ? Math.round(buyPrices.reduce((sum, price) => sum + price, 0) / buyPrices.length)
+                                    : null,
+                            averageSell:
+                                sellPrices.length > 0
+                                    ? Math.round(sellPrices.reduce((sum, price) => sum + price, 0) / sellPrices.length)
+                                    : null
+                        };
+                    }
+                }
+            } catch (error) {
+                console.error(`Failed to calculate daily metrics for item ${m.id}:`, error);
+            }
+
             return {
                 id: m.id,
                 name: m.name,
@@ -93,6 +135,10 @@ export const GET: RequestHandler = async ({ fetch }) => {
                 sellTime: l?.lowTime ?? null,
                 margin: high != null && low != null ? high - low : null,
                 dailyVolume,
+                dailyLow: dailyMetrics?.dailyLow ?? null,
+                dailyHigh: dailyMetrics?.dailyHigh ?? null,
+                averageBuy: dailyMetrics?.averageBuy ?? null,
+                averageSell: dailyMetrics?.averageSell ?? null,
                 examine: m.examine,
                 wikiUrl: `https://oldschool.runescape.wiki/w/${encodeURIComponent(m.name)}`,
                 highalch: m.highalch ?? null,

@@ -60,7 +60,11 @@
         breakEvenPrice: { min: null as number | null, max: null as number | null },
         margin: { min: null as number | null, max: null as number | null },
         postTaxProfit: { min: null as number | null, max: null as number | null },
-        dailyVolume: { min: null as number | null, max: null as number | null }
+        dailyVolume: { min: null as number | null, max: null as number | null },
+        dailyLow: { min: null as number | null, max: null as number | null },
+        dailyHigh: { min: null as number | null, max: null as number | null },
+        averageBuy: { min: null as number | null, max: null as number | null },
+        averageSell: { min: null as number | null, max: null as number | null }
     };
 
     // Column visibility state
@@ -75,7 +79,11 @@
         breakEvenPrice: true,
         margin: true,
         postTaxProfit: true,
-        dailyVolume: true
+        dailyVolume: true,
+        dailyLow: true,
+        dailyHigh: true,
+        averageBuy: true,
+        averageSell: true
     };
 
     // Normalized filters (convert NaN/undefined to null) to drive reactivity
@@ -108,7 +116,15 @@
         filters.postTaxProfit.min,
         filters.postTaxProfit.max,
         filters.dailyVolume.min,
-        filters.dailyVolume.max
+        filters.dailyVolume.max,
+        filters.dailyLow.min,
+        filters.dailyLow.max,
+        filters.dailyHigh.min,
+        filters.dailyHigh.max,
+        filters.averageBuy.min,
+        filters.averageBuy.max,
+        filters.averageSell.min,
+        filters.averageSell.max
     ].filter((v) => isFiniteNumber(v)).length;
 
     async function loadRows() {
@@ -222,7 +238,11 @@
             breakEvenPrice: { min: null, max: null },
             margin: { min: null, max: null },
             postTaxProfit: { min: null, max: null },
-            dailyVolume: { min: null, max: null }
+            dailyVolume: { min: null, max: null },
+            dailyLow: { min: null, max: null },
+            dailyHigh: { min: null, max: null },
+            averageBuy: { min: null, max: null },
+            averageSell: { min: null, max: null }
         };
         page = 1;
     }

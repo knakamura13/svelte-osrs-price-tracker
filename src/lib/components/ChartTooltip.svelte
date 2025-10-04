@@ -22,23 +22,20 @@
 </script>
 
 {#if visible}
-    <div
-        class="tooltip-container"
-        style="left: {tooltipX}px; top: {tooltipY}px;"
-    >
+    <div class="tooltip-container" style="left: {tooltipX}px; top: {tooltipY}px;">
         <div class="tooltip-content">
             <div class="tooltip-time">{formattedTime}</div>
             {#if buyPrice !== null}
                 <div class="tooltip-row buy">
                     <span class="tooltip-dot buy-dot"></span>
-                    <span class="tooltip-label">Buy price:</span>
+                    <span class="tooltip-label">Insta-buy price:</span>
                     <span class="tooltip-value">{formatInt(buyPrice)} gp</span>
                 </div>
             {/if}
             {#if sellPrice !== null}
                 <div class="tooltip-row sell">
                     <span class="tooltip-dot sell-dot"></span>
-                    <span class="tooltip-label">Sell price:</span>
+                    <span class="tooltip-label">Insta-sell price:</span>
                     <span class="tooltip-value">{formatInt(sellPrice)} gp</span>
                 </div>
             {/if}
@@ -120,4 +117,3 @@
         border: 1px solid rgba(75, 85, 99, 0.5);
     }
 </style>
-

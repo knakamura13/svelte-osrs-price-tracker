@@ -10,12 +10,7 @@ export type ItemMapping = {
     value?: number | null;
 };
 
-export type LatestEntry = {
-    high: number | null;
-    highTime: number | null;
-    low: number | null;
-    lowTime: number | null;
-};
+export type LatestEntry = { high: number | null; highTime: number | null; low: number | null; lowTime: number | null };
 
 export type LatestResponse = Record<string, LatestEntry>;
 
@@ -31,6 +26,10 @@ export type PriceRow = {
     sellTime: number | null;
     margin: number | null;
     dailyVolume?: number | null;
+    dailyLow?: number | null;
+    dailyHigh?: number | null;
+    averageBuy?: number | null;
+    averageSell?: number | null;
     examine?: string;
     wikiUrl?: string;
     highalch?: number | null;
@@ -43,6 +42,10 @@ export type Volume24hEntry = {
     highPriceVolume: number | null;
     avgLowPrice: number | null;
     lowPriceVolume: number | null;
+    dailyLow?: number | null;
+    dailyHigh?: number | null;
+    averageBuy?: number | null;
+    averageSell?: number | null;
 };
 
 export type Volume24hResponse = Record<string, Volume24hEntry>;
@@ -60,6 +63,10 @@ export type Filters = {
     margin: NumericFilter;
     postTaxProfit: NumericFilter;
     dailyVolume: NumericFilter;
+    dailyLow: NumericFilter;
+    dailyHigh: NumericFilter;
+    averageBuy: NumericFilter;
+    averageSell: NumericFilter;
 };
 
 export type SortKey =
@@ -71,6 +78,10 @@ export type SortKey =
     | 'breakEvenPrice'
     | 'postTaxProfit'
     | 'dailyVolume'
+    | 'dailyLow'
+    | 'dailyHigh'
+    | 'averageBuy'
+    | 'averageSell'
     | 'buyTime'
     | 'sellTime';
 
@@ -82,16 +93,16 @@ export type FilterStats = {
     sellPrice: NumericFilter;
     margin: NumericFilter;
     dailyVolume: NumericFilter;
+    dailyLow: NumericFilter;
+    dailyHigh: NumericFilter;
+    averageBuy: NumericFilter;
+    averageSell: NumericFilter;
     breakEvenPrice: NumericFilter;
     postTaxProfit: NumericFilter;
 };
 
 // Error handling types
-export type ErrorState = {
-    message: string;
-    count: number;
-    lastFailedAt: number | null;
-};
+export type ErrorState = { message: string; count: number; lastFailedAt: number | null };
 
 // Time-series types for price charts
 export type TimeseriesDataPoint = {
@@ -102,6 +113,4 @@ export type TimeseriesDataPoint = {
     lowPriceVolume: number | null;
 };
 
-export type TimeseriesResponse = {
-    data: TimeseriesDataPoint[];
-};
+export type TimeseriesResponse = { data: TimeseriesDataPoint[] };

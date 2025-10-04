@@ -54,6 +54,13 @@
     $: maxPrice = prices.length > 0 ? Math.max(...prices) : 100;
     $: priceRange = maxPrice - minPrice || 1;
 
+    // Calculate averages for horizontal reference lines
+    $: buyPrices = validData.map((d) => d.avgHighPrice).filter((p) => p !== null) as number[];
+    $: sellPrices = validData.map((d) => d.avgLowPrice).filter((p) => p !== null) as number[];
+    $: avgBuyPrice = buyPrices.length > 0 ? buyPrices.reduce((sum, price) => sum + price, 0) / buyPrices.length : null;
+    $: avgSellPrice =
+        sellPrices.length > 0 ? sellPrices.reduce((sum, price) => sum + price, 0) / sellPrices.length : null;
+
     $: minTime = validData.length > 0 ? validData[0].timestamp : 0;
     $: maxTime = validData.length > 0 ? validData[validData.length - 1].timestamp : 1;
     $: timeSpan = maxTime - minTime || 1;
@@ -200,6 +207,34 @@
                         />
                     {/each}
 
+                    <!-- Average horizontal reference lines -->
+                    {#if avgBuyPrice !== null}
+                        <line
+                            x1="0"
+                            y1={scaleY(avgBuyPrice)}
+                            x2={innerWidth}
+                            y2={scaleY(avgBuyPrice)}
+                            stroke="#f97316"
+                            stroke-width="1"
+                            stroke-dasharray="8,4"
+                            opacity="0.7"
+                            class="average-line"
+                        />
+                    {/if}
+                    {#if avgSellPrice !== null}
+                        <line
+                            x1="0"
+                            y1={scaleY(avgSellPrice)}
+                            x2={innerWidth}
+                            y2={scaleY(avgSellPrice)}
+                            stroke="#10b981"
+                            stroke-width="1"
+                            stroke-dasharray="8,4"
+                            opacity="0.7"
+                            class="average-line"
+                        />
+                    {/if}
+
                     <!-- Price lines -->
                     <path d={buyPath} fill="none" stroke="#f97316" stroke-width="2" class="buy-line" />
                     <path d={sellPath} fill="none" stroke="#10b981" stroke-width="2" class="sell-line" />
@@ -240,7 +275,7 @@
                             opacity="0.5"
                             class="crosshair"
                         />
-                        <!-- Horizontal line for buy price -->
+                        <!-- Horizontal line for insta-buy price -->
                         {#if hoveredBuyY !== null}
                             <line
                                 x1="0"
@@ -254,7 +289,7 @@
                                 class="crosshair"
                             />
                         {/if}
-                        <!-- Horizontal line for sell price -->
+                        <!-- Horizontal line for insta-sell price -->
                         {#if hoveredSellY !== null}
                             <line
                                 x1="0"
@@ -368,11 +403,23 @@
         <div class="flex justify-center gap-6 mt-4">
             <div class="flex items-center gap-2">
                 <div class="w-8 h-0.5 bg-orange-500"></div>
-                <span class="text-sm">Buy Price (High)</span>
+                <span class="text-sm">Insta-Buy Price (High)</span>
             </div>
             <div class="flex items-center gap-2">
                 <div class="w-8 h-0.5 bg-green-500"></div>
-                <span class="text-sm">Sell Price (Low)</span>
+                <span class="text-sm">Insta-Sell Price (Low)</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <svg width="32" height="2" class="opacity-70">
+                    <line x1="0" y1="1" x2="32" y2="1" stroke="#f97316" stroke-width="2" stroke-dasharray="8,4" />
+                </svg>
+                <span class="text-sm">Avg Buy</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <svg width="32" height="2" class="opacity-70">
+                    <line x1="0" y1="1" x2="32" y2="1" stroke="#10b981" stroke-width="2" stroke-dasharray="8,4" />
+                </svg>
+                <span class="text-sm">Avg Sell</span>
             </div>
         </div>
     {/if}

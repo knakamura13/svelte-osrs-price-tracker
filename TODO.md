@@ -9,7 +9,7 @@
 
 ### Table UI (All Items)
 
-- [x] Implement table columns: name, buy limit, buy price, sell price, most recent buy, most recent sell, margin, daily volume
+- [x] Implement table columns: name, buy limit, insta-buy price, insta-sell price, most recent buy, most recent sell, margin, daily volume
 - [x] Search input with debounce
 - [x] Column sorting and page size selector
 - [x] Pagination controls
@@ -103,7 +103,7 @@ All core features and polish priorities completed!
 
 - [x] Dynamic route `/item/[id]` with server-side data loading
 - [x] Time-series price chart (pure SVG, no library dependencies)
-- [x] Buy/sell price visualization with 5-minute intervals
+- [x] Insta-buy/sell price visualization with 5-minute intervals
 - [x] Item metadata panel (buy limit, examine text, members status)
 - [x] Price statistics (margin, daily volume, ROI)
 - [x] Profit analytics (post-tax profit, margin × volume)
@@ -117,7 +117,7 @@ All core features and polish priorities completed!
 - [x] Time range selector (24h / 7d / 30d buttons)
 - [x] Circular markers at each data point on both lines
 - [x] Custom tooltip component (no ugly title attributes)
-- [x] Hover tooltips showing both buy/sell prices at same timestamp
+- [x] Hover tooltips showing both insta-buy/sell prices at same timestamp
 - [x] Crosshair lines (vertical + 2 horizontal dashed lines)
 - [x] Nearest point detection with mouse tracking
 - [x] Highlighted hover states with larger circles

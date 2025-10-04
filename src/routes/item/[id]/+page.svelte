@@ -124,7 +124,7 @@
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
                         <span class="text-lg">💰</span>
-                        <span class="text-sm text-gray-600 dark:text-gray-400">Buy price:</span>
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Insta-buy price:</span>
                     </div>
                     <div class="text-right">
                         <div class="text-lg font-bold text-orange-600 dark:text-orange-400">
@@ -142,7 +142,7 @@
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
                         <span class="text-lg">💰</span>
-                        <span class="text-sm text-gray-600 dark:text-gray-400">Sell price:</span>
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Insta-sell price:</span>
                     </div>
                     <div class="text-right">
                         <div class="text-lg font-bold text-green-600 dark:text-green-400">
@@ -190,6 +190,40 @@
                     <span class="text-sm text-gray-600 dark:text-gray-400">ROI:</span>
                     <div class="text-lg font-bold text-green-600 dark:text-green-400">
                         {roi !== null ? `${roi}%` : '—'}
+                    </div>
+                </div>
+
+                <!-- Daily low -->
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Daily low:</span>
+                    <div class="text-lg font-bold text-blue-600 dark:text-blue-400">
+                        {item.dailyLow !== null && item.dailyLow !== undefined ? formatInt(item.dailyLow) : '—'}
+                    </div>
+                </div>
+
+                <!-- Daily high -->
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Daily high:</span>
+                    <div class="text-lg font-bold text-blue-600 dark:text-blue-400">
+                        {item.dailyHigh !== null && item.dailyHigh !== undefined ? formatInt(item.dailyHigh) : '—'}
+                    </div>
+                </div>
+
+                <!-- Average buy -->
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Avg buy (24h):</span>
+                    <div class="text-lg font-bold text-purple-600 dark:text-purple-400">
+                        {item.averageBuy !== null && item.averageBuy !== undefined ? formatInt(item.averageBuy) : '—'}
+                    </div>
+                </div>
+
+                <!-- Average sell -->
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Avg sell (24h):</span>
+                    <div class="text-lg font-bold text-purple-600 dark:text-purple-400">
+                        {item.averageSell !== null && item.averageSell !== undefined
+                            ? formatInt(item.averageSell)
+                            : '—'}
                     </div>
                 </div>
             </div>
