@@ -330,13 +330,13 @@
                     {/if}
                     {#if columnVisibility.dailyVolume}
                         <td class="p-2 text-right">
-                            {#if r.dailyVolume !== null}
+                            {#if r.dailyVolume !== null && r.dailyVolume !== undefined && r.dailyVolume > 0}
                                 {formatInt(r.dailyVolume)}
                             {:else}
                                 <span
                                     title="No volume data available for this item"
                                     class="cursor-help"
-                                    class:red-text={r.dailyVolume === null || r.dailyVolume <= 0}>0</span
+                                    class:red-text={true}>—</span
                                 >
                             {/if}
                         </td>

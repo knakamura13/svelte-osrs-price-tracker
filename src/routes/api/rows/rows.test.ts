@@ -6,8 +6,21 @@ function transformToRow(mapping: ItemMapping, latestMap: LatestResponse, volumeM
     const l = latestMap[String(mapping.id)];
     const high = l?.high ?? null;
     const low = l?.low ?? null;
+
+    // First try to get volume from 24h API
+    let dailyVolume: number | null = null;
     const volEntry = volumeMap[String(mapping.id)];
-    const dailyVolume = volEntry ? Math.max(0, (volEntry.highPriceVolume ?? 0) + (volEntry.lowPriceVolume ?? 0)) : null;
+    if (volEntry) {
+        const highVol = volEntry.highPriceVolume ?? 0;
+        const lowVol = volEntry.lowPriceVolume ?? 0;
+        const totalVol = highVol + lowVol;
+        if (totalVol > 0) {
+            dailyVolume = totalVol;
+        }
+    }
+
+    // If no volume data from 24h API, this would be null (in real implementation we'd fetch from timeseries)
+    // For testing purposes, we'll simulate this
 
     return {
         id: mapping.id,
@@ -22,36 +35,24 @@ function transformToRow(mapping: ItemMapping, latestMap: LatestResponse, volumeM
         margin: high != null && low != null ? high - low : null,
         dailyVolume,
         examine: mapping.examine,
-        wikiUrl: `https://oldschool.runescape.wiki/w/${encodeURIComponent(mapping.name)}`
+        wikiUrl: `https://oldschool.runescape.wiki/w/${encodeURIComponent(mapping.name)}`,
+        highalch: mapping.highalch ?? null,
+        lowalch: mapping.lowalch ?? null,
+        value: mapping.value ?? null
     };
 }
 
 describe('API rows join logic', () => {
     describe('transformToRow', () => {
         it('should join mapping with latest prices', () => {
-            const mapping: ItemMapping = {
-                id: 2,
-                name: 'Cannonball',
-                members: true,
-                limit: 11000
-            };
+            const mapping: ItemMapping = { id: 2, name: 'Cannonball', members: true, limit: 11000 };
 
             const latestMap: LatestResponse = {
-                '2': {
-                    high: 250,
-                    highTime: 1704067200,
-                    low: 240,
-                    lowTime: 1704067100
-                }
+                '2': { high: 250, highTime: 1704067200, low: 240, lowTime: 1704067100 }
             };
 
             const volumeMap: Volume24hResponse = {
-                '2': {
-                    avgHighPrice: 250,
-                    highPriceVolume: 50000,
-                    avgLowPrice: 240,
-                    lowPriceVolume: 45000
-                }
+                '2': { avgHighPrice: 250, highPriceVolume: 50000, avgLowPrice: 240, lowPriceVolume: 45000 }
             };
 
             const result = transformToRow(mapping, latestMap, volumeMap);
@@ -69,17 +70,15 @@ describe('API rows join logic', () => {
                 margin: 10,
                 dailyVolume: 95000,
                 examine: undefined,
-                wikiUrl: 'https://oldschool.runescape.wiki/w/Cannonball'
+                wikiUrl: 'https://oldschool.runescape.wiki/w/Cannonball',
+                highalch: null,
+                lowalch: null,
+                value: null
             });
         });
 
         it('should handle missing latest data', () => {
-            const mapping: ItemMapping = {
-                id: 999,
-                name: 'Rare Item',
-                members: true,
-                limit: 2
-            };
+            const mapping: ItemMapping = { id: 999, name: 'Rare Item', members: true, limit: 2 };
 
             const latestMap: LatestResponse = {}; // No data for this item
             const volumeMap: Volume24hResponse = {};
@@ -93,19 +92,10 @@ describe('API rows join logic', () => {
         });
 
         it('should calculate margin correctly', () => {
-            const mapping: ItemMapping = {
-                id: 1,
-                name: 'Test Item',
-                members: false
-            };
+            const mapping: ItemMapping = { id: 1, name: 'Test Item', members: false };
 
             const latestMap: LatestResponse = {
-                '1': {
-                    high: 1000,
-                    highTime: 1704067200,
-                    low: 900,
-                    lowTime: 1704067100
-                }
+                '1': { high: 1000, highTime: 1704067200, low: 900, lowTime: 1704067100 }
             };
 
             const result = transformToRow(mapping, latestMap, {});
@@ -114,31 +104,17 @@ describe('API rows join logic', () => {
         });
 
         it('should return null margin when only one price is available', () => {
-            const mapping: ItemMapping = {
-                id: 1,
-                name: 'Test Item',
-                members: false
-            };
+            const mapping: ItemMapping = { id: 1, name: 'Test Item', members: false };
 
             const latestMapHighOnly: LatestResponse = {
-                '1': {
-                    high: 1000,
-                    highTime: 1704067200,
-                    low: null,
-                    lowTime: null
-                }
+                '1': { high: 1000, highTime: 1704067200, low: null, lowTime: null }
             };
 
             const result1 = transformToRow(mapping, latestMapHighOnly, {});
             expect(result1.margin).toBeNull();
 
             const latestMapLowOnly: LatestResponse = {
-                '1': {
-                    high: null,
-                    highTime: null,
-                    low: 900,
-                    lowTime: 1704067100
-                }
+                '1': { high: null, highTime: null, low: 900, lowTime: 1704067100 }
             };
 
             const result2 = transformToRow(mapping, latestMapLowOnly, {});
@@ -146,19 +122,10 @@ describe('API rows join logic', () => {
         });
 
         it('should calculate daily volume from high and low price volumes', () => {
-            const mapping: ItemMapping = {
-                id: 1,
-                name: 'Test Item',
-                members: false
-            };
+            const mapping: ItemMapping = { id: 1, name: 'Test Item', members: false };
 
             const volumeMap: Volume24hResponse = {
-                '1': {
-                    avgHighPrice: 100,
-                    highPriceVolume: 1000,
-                    avgLowPrice: 90,
-                    lowPriceVolume: 2000
-                }
+                '1': { avgHighPrice: 100, highPriceVolume: 1000, avgLowPrice: 90, lowPriceVolume: 2000 }
             };
 
             const result = transformToRow(mapping, {}, volumeMap);
@@ -167,19 +134,10 @@ describe('API rows join logic', () => {
         });
 
         it('should handle null volumes gracefully', () => {
-            const mapping: ItemMapping = {
-                id: 1,
-                name: 'Test Item',
-                members: false
-            };
+            const mapping: ItemMapping = { id: 1, name: 'Test Item', members: false };
 
             const volumeMap: Volume24hResponse = {
-                '1': {
-                    avgHighPrice: 100,
-                    highPriceVolume: null,
-                    avgLowPrice: 90,
-                    lowPriceVolume: 500
-                }
+                '1': { avgHighPrice: 100, highPriceVolume: null, avgLowPrice: 90, lowPriceVolume: 500 }
             };
 
             const result = transformToRow(mapping, {}, volumeMap);
@@ -188,11 +146,7 @@ describe('API rows join logic', () => {
         });
 
         it('should encode wiki URLs correctly', () => {
-            const mapping: ItemMapping = {
-                id: 1,
-                name: 'Dragon longsword',
-                members: true
-            };
+            const mapping: ItemMapping = { id: 1, name: 'Dragon longsword', members: true };
 
             const result = transformToRow(mapping, {}, {});
 
@@ -200,11 +154,7 @@ describe('API rows join logic', () => {
         });
 
         it('should handle special characters in item names for wiki URLs', () => {
-            const mapping: ItemMapping = {
-                id: 1,
-                name: '3rd age platebody',
-                members: true
-            };
+            const mapping: ItemMapping = { id: 1, name: '3rd age platebody', members: true };
 
             const result = transformToRow(mapping, {}, {});
 

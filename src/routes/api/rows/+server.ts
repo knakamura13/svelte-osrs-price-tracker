@@ -6,9 +6,7 @@ import { createHash } from 'node:crypto';
 const cache = new TtlCache<any>(60_000); // 60s default TTL
 
 async function fetchJson(fetchFn: typeof fetch, url: string): Promise<any> {
-    const res = await fetchFn(url, {
-        headers: { 'User-Agent': process.env.USER_AGENT ?? 'osrs-price-tracker (dev)' }
-    });
+    const res = await fetchFn(url, { headers: { 'User-Agent': process.env.USER_AGENT ?? 'osrs-price-tracker (dev)' } });
     if (!res.ok) throw new Error(`Failed ${url}: ${res.status}`);
     return res.json();
 }
@@ -38,34 +36,71 @@ export const GET: RequestHandler = async ({ fetch }) => {
         return `https://oldschool.runescape.wiki/images/${d1}/${d2}/${encodeURIComponent(normalized)}`;
     }
 
-    const rows: PriceRow[] = mapping.map((m) => {
-        const l = latestMap[String(m.id)];
-        const high = l?.high ?? null;
-        const low = l?.low ?? null;
-        const volEntry = volumeMap[String(m.id)];
-        const dailyVolume = volEntry
-            ? Math.max(0, (volEntry.highPriceVolume ?? 0) + (volEntry.lowPriceVolume ?? 0))
-            : null;
-        return {
-            id: m.id,
-            name: m.name,
-            // Deterministic hashed upload path to avoid client-side redirects
-            icon: buildWikiImageUrl(m.icon),
-            members: m.members,
-            buyLimit: m.limit ?? null,
-            buyPrice: high,
-            buyTime: l?.highTime ?? null,
-            sellPrice: low,
-            sellTime: l?.lowTime ?? null,
-            margin: high != null && low != null ? high - low : null,
-            dailyVolume,
-            examine: m.examine,
-            wikiUrl: `https://oldschool.runescape.wiki/w/${encodeURIComponent(m.name)}`,
-            highalch: m.highalch ?? null,
-            lowalch: m.lowalch ?? null,
-            value: m.value ?? null
-        };
-    });
+    // Helper function to calculate daily volume from timeseries data
+    async function getVolumeFromTimeseries(itemId: number): Promise<number | null> {
+        try {
+            const timeseriesRes = await fetch(`/api/timeseries?id=${itemId}&timestep=5m`);
+            if (!timeseriesRes.ok) return null;
+
+            const timeseriesData = await timeseriesRes.json();
+            const dataPoints = timeseriesData.data || [];
+
+            // Sum up all volume data points
+            const totalVolume = dataPoints.reduce((sum: number, point: any) => {
+                return sum + (point.highPriceVolume || 0) + (point.lowPriceVolume || 0);
+            }, 0);
+
+            return totalVolume > 0 ? totalVolume : null;
+        } catch (error) {
+            console.error(`Failed to fetch timeseries for item ${itemId}:`, error);
+            return null;
+        }
+    }
+
+    const rows: PriceRow[] = await Promise.all(
+        mapping.map(async (m) => {
+            const l = latestMap[String(m.id)];
+            const high = l?.high ?? null;
+            const low = l?.low ?? null;
+
+            // First try to get volume from 24h API
+            let dailyVolume: number | null = null;
+            const volEntry = volumeMap[String(m.id)];
+            if (volEntry) {
+                const highVol = volEntry.highPriceVolume ?? 0;
+                const lowVol = volEntry.lowPriceVolume ?? 0;
+                const totalVol = highVol + lowVol;
+                if (totalVol > 0) {
+                    dailyVolume = totalVol;
+                }
+            }
+
+            // If no volume data from 24h API, try to calculate from timeseries
+            if (dailyVolume === null) {
+                dailyVolume = await getVolumeFromTimeseries(m.id);
+            }
+
+            return {
+                id: m.id,
+                name: m.name,
+                // Deterministic hashed upload path to avoid client-side redirects
+                icon: buildWikiImageUrl(m.icon),
+                members: m.members,
+                buyLimit: m.limit ?? null,
+                buyPrice: high,
+                buyTime: l?.highTime ?? null,
+                sellPrice: low,
+                sellTime: l?.lowTime ?? null,
+                margin: high != null && low != null ? high - low : null,
+                dailyVolume,
+                examine: m.examine,
+                wikiUrl: `https://oldschool.runescape.wiki/w/${encodeURIComponent(m.name)}`,
+                highalch: m.highalch ?? null,
+                lowalch: m.lowalch ?? null,
+                value: m.value ?? null
+            };
+        })
+    );
 
     const payload = { rows };
     cache.set(cacheKey, payload);
