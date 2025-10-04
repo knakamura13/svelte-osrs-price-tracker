@@ -84,6 +84,7 @@
                 <th class="p-2 select-none">
                     <!-- Image column -->
                 </th>
+                <!-- Item Info -->
                 {#if columnVisibility.name}
                     <th
                         class="text-left p-2 select-none hover:text-white transition-colors {sortable
@@ -106,6 +107,8 @@
                         Buy limit <span class="ml-1 opacity-60 select-none">{sortIcon('buyLimit')}</span>
                     </th>
                 {/if}
+
+                <!-- Current Trading -->
                 {#if columnVisibility.buyPrice}
                     <th
                         class="text-right p-2 select-none hover:text-white transition-colors {sortable
@@ -115,15 +118,6 @@
                         on:click={() => sortable && sortBy && sortBy('buyPrice')}
                     >
                         Insta-buy price <span class="ml-1 opacity-60 select-none">{sortIcon('buyPrice')}</span>
-                    </th>
-                {/if}
-                {#if columnVisibility.buyTime}
-                    <th
-                        class="text-right p-2 {sortable ? 'cursor-pointer' : ''}"
-                        title="When the last buy transaction occurred"
-                        on:click={() => sortable && sortBy && sortBy('buyTime')}
-                    >
-                        Last buy <span class="ml-1 opacity-60 select-none">{sortIcon('buyTime')}</span>
                     </th>
                 {/if}
                 {#if columnVisibility.sellPrice}
@@ -137,6 +131,15 @@
                         Insta-sell price <span class="ml-1 opacity-60 select-none">{sortIcon('sellPrice')}</span>
                     </th>
                 {/if}
+                {#if columnVisibility.buyTime}
+                    <th
+                        class="text-right p-2 {sortable ? 'cursor-pointer' : ''}"
+                        title="When the last buy transaction occurred"
+                        on:click={() => sortable && sortBy && sortBy('buyTime')}
+                    >
+                        Last buy <span class="ml-1 opacity-60 select-none">{sortIcon('buyTime')}</span>
+                    </th>
+                {/if}
                 {#if columnVisibility.sellTime}
                     <th
                         class="text-right p-2 select-none hover:text-white transition-colors {sortable
@@ -146,6 +149,19 @@
                         on:click={() => sortable && sortBy && sortBy('sellTime')}
                     >
                         Last sell <span class="ml-1 opacity-60 select-none">{sortIcon('sellTime')}</span>
+                    </th>
+                {/if}
+
+                <!-- Profit Analysis -->
+                {#if columnVisibility.margin}
+                    <th
+                        class="text-right p-2 select-none hover:text-white transition-colors {sortable
+                            ? 'cursor-pointer'
+                            : ''}"
+                        title="The profit margin (sell price - buy price)"
+                        on:click={() => sortable && sortBy && sortBy('margin')}
+                    >
+                        Margin <span class="ml-1 opacity-60 select-none">{sortIcon('margin')}</span>
                     </th>
                 {/if}
                 {#if columnVisibility.breakEvenPrice}
@@ -163,17 +179,6 @@
                             aria-label="Break-even Price tooltip">?</span
                         >
                         <span class="ml-1 opacity-60 select-none">{sortIcon('breakEvenPrice')}</span>
-                    </th>
-                {/if}
-                {#if columnVisibility.margin}
-                    <th
-                        class="text-right p-2 select-none hover:text-white transition-colors {sortable
-                            ? 'cursor-pointer'
-                            : ''}"
-                        title="The profit margin (sell price - buy price)"
-                        on:click={() => sortable && sortBy && sortBy('margin')}
-                    >
-                        Margin <span class="ml-1 opacity-60 select-none">{sortIcon('margin')}</span>
                     </th>
                 {/if}
                 {#if columnVisibility.postTaxProfit}
@@ -210,6 +215,8 @@
                         <span class="ml-1 opacity-60 select-none">{sortIcon('potentialProfit')}</span>
                     </th>
                 {/if}
+
+                <!-- Historical Data -->
                 {#if columnVisibility.dailyVolume}
                     <th
                         class="text-right p-2 select-none hover:text-white transition-colors {sortable

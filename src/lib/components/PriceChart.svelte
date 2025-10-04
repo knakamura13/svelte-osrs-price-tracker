@@ -69,24 +69,44 @@
     const scaleX = (timestamp: number) => ((timestamp - minTime) / timeSpan) * innerWidth;
     const scaleY = (price: number) => innerHeight - ((price - minPrice) / priceRange) * innerHeight;
 
-    // Generate SVG path for prices
-    $: buyPath = validData
-        .filter((d) => d.avgHighPrice !== null)
-        .map((d, i) => {
+    // Generate SVG path for prices - extend lines to y-axis to prevent floating datapoints
+    $: buyPath = (() => {
+        const points = validData.filter((d) => d.avgHighPrice !== null);
+        if (points.length === 0) return '';
+
+        // Start from the y-axis at the beginning of the time range
+        const firstPoint = points[0];
+        const firstY = scaleY(firstPoint.avgHighPrice!);
+        let path = `M 0 ${firstY}`;
+
+        // Add all data points
+        points.forEach((d) => {
             const x = scaleX(d.timestamp);
             const y = scaleY(d.avgHighPrice!);
-            return i === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
-        })
-        .join(' ');
+            path += ` L ${x} ${y}`;
+        });
 
-    $: sellPath = validData
-        .filter((d) => d.avgLowPrice !== null)
-        .map((d, i) => {
+        return path;
+    })();
+
+    $: sellPath = (() => {
+        const points = validData.filter((d) => d.avgLowPrice !== null);
+        if (points.length === 0) return '';
+
+        // Start from the y-axis at the beginning of the time range
+        const firstPoint = points[0];
+        const firstY = scaleY(firstPoint.avgLowPrice!);
+        let path = `M 0 ${firstY}`;
+
+        // Add all data points
+        points.forEach((d) => {
             const x = scaleX(d.timestamp);
             const y = scaleY(d.avgLowPrice!);
-            return i === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
-        })
-        .join(' ');
+            path += ` L ${x} ${y}`;
+        });
+
+        return path;
+    })();
 
     // Format timestamp for axis labels based on time range
     const formatTime = (timestamp: number) => {
