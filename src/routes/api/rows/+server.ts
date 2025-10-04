@@ -60,7 +60,10 @@ export const GET: RequestHandler = async ({ fetch }) => {
             margin: high != null && low != null ? high - low : null,
             dailyVolume,
             examine: m.examine,
-            wikiUrl: `https://oldschool.runescape.wiki/w/${encodeURIComponent(m.name)}`
+            wikiUrl: `https://oldschool.runescape.wiki/w/${encodeURIComponent(m.name)}`,
+            highalch: m.highalch ?? null,
+            lowalch: m.lowalch ?? null,
+            value: m.value ?? null
         };
     });
 

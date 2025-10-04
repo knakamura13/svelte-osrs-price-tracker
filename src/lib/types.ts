@@ -5,6 +5,9 @@ export type ItemMapping = {
     members: boolean;
     limit?: number | null;
     examine?: string;
+    highalch?: number | null;
+    lowalch?: number | null;
+    value?: number | null;
 };
 
 export type LatestEntry = {
@@ -30,6 +33,9 @@ export type PriceRow = {
     dailyVolume?: number | null;
     examine?: string;
     wikiUrl?: string;
+    highalch?: number | null;
+    lowalch?: number | null;
+    value?: number | null;
 };
 
 export type Volume24hEntry = {

@@ -115,93 +115,141 @@
         </div>
     </div>
 
-    <!-- Stats grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <!-- Buy price -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">💰 Buy price</div>
-            <div class="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                {item.buyPrice !== null ? formatInt(item.buyPrice) : '—'}
-                <span class="text-sm font-normal text-gray-600 dark:text-gray-400">coins</span>
-            </div>
-            {#if item.buyTime}
-                <div class="text-xs text-gray-500 mt-1">
-                    Last trade: {secondsAgoFromUnix(item.buyTime)}
+    <!-- Stats grid - 3 columns as shown in screenshot -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column -->
+            <div class="space-y-3">
+                <!-- Buy price -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg">💰</span>
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Buy price:</span>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-lg font-bold text-orange-600 dark:text-orange-400">
+                            {item.buyPrice !== null ? formatInt(item.buyPrice) : '—'}
+                        </div>
+                        {#if item.buyTime}
+                            <div class="text-xs text-gray-500">
+                                Last trade: {secondsAgoFromUnix(item.buyTime)}
+                            </div>
+                        {/if}
+                    </div>
                 </div>
-            {/if}
-        </div>
 
-        <!-- Sell price -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">💰 Sell price</div>
-            <div class="text-2xl font-bold text-green-600 dark:text-green-400">
-                {item.sellPrice !== null ? formatInt(item.sellPrice) : '—'}
-                <span class="text-sm font-normal text-gray-600 dark:text-gray-400">coins</span>
-            </div>
-            {#if item.sellTime}
-                <div class="text-xs text-gray-500 mt-1">
-                    Last trade: {secondsAgoFromUnix(item.sellTime)}
+                <!-- Sell price -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg">💰</span>
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Sell price:</span>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-lg font-bold text-green-600 dark:text-green-400">
+                            {item.sellPrice !== null ? formatInt(item.sellPrice) : '—'}
+                        </div>
+                        {#if item.sellTime}
+                            <div class="text-xs text-gray-500">
+                                Last trade: {secondsAgoFromUnix(item.sellTime)}
+                            </div>
+                        {/if}
+                    </div>
                 </div>
-            {/if}
-        </div>
+            </div>
 
-        <!-- Daily volume -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Daily volume</div>
-            <div class="text-2xl font-bold">
-                {item.dailyVolume !== null ? formatInt(item.dailyVolume) : '—'}
-            </div>
-            <div class="text-xs text-gray-500 mt-1">Based on official OSRS GEDB</div>
-        </div>
+            <!-- Middle Column -->
+            <div class="space-y-3">
+                <!-- Daily volume -->
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Daily volume:</span>
+                    <div class="text-right">
+                        <div class="text-lg font-bold text-orange-600 dark:text-orange-400">
+                            {item.dailyVolume !== null ? formatInt(item.dailyVolume) : '—'}
+                        </div>
+                    </div>
+                </div>
 
-        <!-- Buy limit -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Buy limit</div>
-            <div class="text-2xl font-bold">
-                {item.buyLimit !== null ? formatInt(item.buyLimit) : '∞'}
-            </div>
-            <div class="text-xs text-gray-500 mt-1">
-                {item.buyLimit !== null ? 'Per 4 hours' : 'No limit'}
-            </div>
-        </div>
-    </div>
+                <!-- Potential profit -->
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Potential profit:</span>
+                    <div class="text-lg font-bold text-green-600 dark:text-green-400">
+                        {postTaxProfit !== null ? formatInt(postTaxProfit) : '—'}
+                    </div>
+                </div>
 
-    <!-- Profit stats -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Margin</div>
-            <div class="text-xl font-bold {margin && margin > 0 ? 'text-green-600 dark:text-green-400' : ''}">
-                {margin !== null ? formatInt(margin) : '—'}
-            </div>
-        </div>
+                <!-- Margin × volume -->
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Margin × volume:</span>
+                    <div class="text-lg font-bold text-green-600 dark:text-green-400">
+                        {marginVolume || '—'}
+                    </div>
+                </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                Potential profit
-                <span class="text-xs opacity-70" title="After 2% GE tax">(?)</span>
+                <!-- ROI -->
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">ROI:</span>
+                    <div class="text-lg font-bold text-green-600 dark:text-green-400">
+                        {roi !== null ? `${roi}%` : '—'}
+                    </div>
+                </div>
             </div>
-            <div
-                class="text-xl font-bold {postTaxProfit && postTaxProfit > 0
-                    ? 'text-green-600 dark:text-green-400'
-                    : postTaxProfit && postTaxProfit < 0
-                      ? 'text-red-600 dark:text-red-400'
-                      : ''}"
-            >
-                {postTaxProfit !== null ? formatInt(postTaxProfit) : '—'}
-            </div>
-        </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Margin × volume</div>
-            <div class="text-xl font-bold">
-                {marginVolume || '—'}
-            </div>
-        </div>
+            <!-- Right Column -->
+            <div class="space-y-3">
+                <!-- Buy limit -->
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Buy limit:</span>
+                    <div class="text-lg font-bold">
+                        {item.buyLimit !== null ? formatInt(item.buyLimit) : '∞'}
+                    </div>
+                </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">ROI</div>
-            <div class="text-xl font-bold">
-                {roi !== null ? `${roi}%` : '—'}
+                <!-- High alch -->
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">High alch:</span>
+                    <div class="text-right">
+                        <div class="text-lg font-bold">
+                            {item.highalch !== null ? formatInt(item.highalch) : '—'}
+                        </div>
+                        {#if item.highalch !== null && item.highalch !== undefined && item.sellPrice !== null}
+                            <div class="text-xs text-red-600 dark:text-red-400">
+                                ({formatInt(item.highalch - item.sellPrice)})
+                            </div>
+                        {/if}
+                    </div>
+                </div>
+
+                <!-- Low alch -->
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Low alch:</span>
+                    <div class="text-lg font-bold">
+                        {item.lowalch !== null ? formatInt(item.lowalch) : '—'}
+                    </div>
+                </div>
+
+                <!-- Members -->
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Members:</span>
+                    <div class="text-lg">
+                        {#if item.members}
+                            <span class="text-yellow-500">⭐</span>
+                        {:else}
+                            <span class="grayscale">⭐</span>
+                        {/if}
+                    </div>
+                </div>
+
+                <!-- Examine -->
+                {#if item.examine}
+                    <div class="flex items-start justify-between">
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Examine:</span>
+                        <div class="text-right max-w-xs">
+                            <div class="text-sm italic text-gray-700 dark:text-gray-300">
+                                {item.examine}
+                            </div>
+                        </div>
+                    </div>
+                {/if}
             </div>
         </div>
     </div>
