@@ -257,43 +257,34 @@
     <!-- Price chart -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
         <!-- Time range selector -->
-        <div class="flex justify-center gap-2 mb-6">
-            <button
-                class="px-4 py-2 rounded transition-colors {timeRange === '5m'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'}"
-                on:click={() => handleTimeRangeChange('5m')}
-                disabled={loading}
-            >
-                24 Hours
-            </button>
-            <button
-                class="px-4 py-2 rounded transition-colors {timeRange === '1h'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'}"
-                on:click={() => handleTimeRangeChange('1h')}
-                disabled={loading}
-            >
-                7 Days
-            </button>
-            <button
-                class="px-4 py-2 rounded transition-colors {timeRange === '6h'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'}"
-                on:click={() => handleTimeRangeChange('6h')}
-                disabled={loading}
-            >
-                30 Days
-            </button>
-            <button
-                class="px-4 py-2 rounded transition-colors {timeRange === '1y'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'}"
-                on:click={() => handleTimeRangeChange('1y')}
-                disabled={loading}
-            >
-                1 Year
-            </button>
+        <div class="flex justify-end mb-6">
+            <div class="relative">
+                <select
+                    class="px-4 py-2 rounded transition-colors bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 border-none outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed appearance-none pr-8"
+                    bind:value={timeRange}
+                    on:change={(e) => {
+                        if (e.target) {
+                            handleTimeRangeChange((e.target as HTMLSelectElement).value as '5m' | '1h' | '6h' | '1y');
+                        }
+                    }}
+                    disabled={loading}
+                >
+                    <option value="5m">24 Hours</option>
+                    <option value="1h">7 Days</option>
+                    <option value="6h">30 Days</option>
+                    <option value="1y">1 Year</option>
+                </select>
+                <div class="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                    <svg
+                        class="w-4 h-4 text-gray-600 dark:text-gray-300"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+            </div>
         </div>
 
         {#if loading}
