@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { slide } from 'svelte/transition';
+
     export let expanded: boolean = false;
     export let columnVisibility: {
         name: boolean;
