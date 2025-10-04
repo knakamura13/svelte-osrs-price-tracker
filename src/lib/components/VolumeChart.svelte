@@ -10,7 +10,7 @@
         timeSpan = 1
     } = $props<{
         data: TimeseriesDataPoint[];
-        timeRange: '5m' | '1h' | '6h';
+        timeRange: '5m' | '1h' | '6h' | '1y';
         minTime: number;
         maxTime: number;
         timeSpan: number;
@@ -60,7 +60,7 @@
             // 7 days: show month/day and time
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         } else {
-            // 30 days: show month/day only
+            // 30 days or 1 year: show month/day only
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         }
     };

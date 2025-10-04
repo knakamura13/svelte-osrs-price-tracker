@@ -11,12 +11,12 @@
     $: timeseries = data.timeseries;
 
     // Time range state
-    let timeRange: '5m' | '1h' | '6h' = '5m'; // 5m = 24h, 1h = 7d, 6h = 30d
+    let timeRange: '5m' | '1h' | '6h' | '1y' = '5m'; // 5m = 24h, 1h = 7d, 6h = 30d, 1y = 1 year
     $: timeseriesData = timeseries; // Make reactive to initial data
     let loading = false;
 
     // Fetch new data when time range changes
-    async function fetchTimeseriesData(range: '5m' | '1h' | '6h') {
+    async function fetchTimeseriesData(range: '5m' | '1h' | '6h' | '1y') {
         loading = true;
         try {
             const res = await fetch(`/api/timeseries?id=${item.id}&timestep=${range}`);
@@ -32,7 +32,7 @@
     }
 
     // Handle time range change
-    async function handleTimeRangeChange(range: '5m' | '1h' | '6h') {
+    async function handleTimeRangeChange(range: '5m' | '1h' | '6h' | '1y') {
         timeRange = range;
         await fetchTimeseriesData(range);
     }
@@ -284,6 +284,15 @@
                 disabled={loading}
             >
                 30 Days
+            </button>
+            <button
+                class="px-4 py-2 rounded transition-colors {timeRange === '1y'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'}"
+                on:click={() => handleTimeRangeChange('1y')}
+                disabled={loading}
+            >
+                1 Year
             </button>
         </div>
 

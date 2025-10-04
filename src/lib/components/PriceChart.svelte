@@ -6,7 +6,7 @@
 
     export let data: TimeseriesDataPoint[] = [];
     export let itemName: string = '';
-    export let timeRange: '5m' | '1h' | '6h' = '5m';
+    export let timeRange: '5m' | '1h' | '6h' | '1y' = '5m';
 
     // Mouse tracking
     let svgElement: SVGSVGElement;
@@ -16,12 +16,18 @@
     let hoveredPointIndex = -1;
 
     // Helper functions for time range
-    function getTimeRangeSeconds(range: '5m' | '1h' | '6h'): number {
-        return range === '5m' ? 24 * 60 * 60 : range === '1h' ? 7 * 24 * 60 * 60 : 30 * 24 * 60 * 60;
+    function getTimeRangeSeconds(range: '5m' | '1h' | '6h' | '1y'): number {
+        return range === '5m'
+            ? 24 * 60 * 60
+            : range === '1h'
+              ? 7 * 24 * 60 * 60
+              : range === '6h'
+                ? 30 * 24 * 60 * 60
+                : 365 * 24 * 60 * 60;
     }
 
-    function getTimeRangeLabel(range: '5m' | '1h' | '6h'): string {
-        return range === '5m' ? '24 Hours' : range === '1h' ? '7 Days' : '30 Days';
+    function getTimeRangeLabel(range: '5m' | '1h' | '6h' | '1y'): string {
+        return range === '5m' ? '24 Hours' : range === '1h' ? '7 Days' : range === '6h' ? '30 Days' : '1 Year';
     }
 
     // Filter data to only show the selected time range
@@ -86,7 +92,7 @@
             // 7 days: show month/day and time
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         } else {
-            // 30 days: show month/day only
+            // 30 days or 1 year: show month/day only
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         }
     };
