@@ -12,7 +12,7 @@
 
     // Time range state
     let timeRange: '5m' | '1h' | '6h' = '5m'; // 5m = 24h, 1h = 7d, 6h = 30d
-    let timeseriesData = timeseries;
+    $: timeseriesData = timeseries; // Make reactive to initial data
     let loading = false;
 
     // Fetch new data when time range changes
