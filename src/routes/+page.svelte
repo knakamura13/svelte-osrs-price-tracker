@@ -248,10 +248,11 @@
             const unixSeconds = Math.floor(lastUpdated / 1000);
             const now = Math.floor(Date.now() / 1000);
             const diff = Math.max(0, now - unixSeconds);
-            // Cap the displayed seconds at 59 to avoid showing the full 60-second refresh interval
-            const cappedDiff = Math.min(diff, 59);
-            if (cappedDiff < 60) {
-                lastUpdatedLabel = `${cappedDiff}s ago`;
+
+            // Only cap the display when auto-refresh is enabled and we're close to refresh time
+            // This prevents showing "60s ago" before immediately showing "0s ago"
+            if (auto && diff >= 59) {
+                lastUpdatedLabel = '59s ago';
             } else {
                 lastUpdatedLabel = secondsAgoFromUnix(unixSeconds);
             }
