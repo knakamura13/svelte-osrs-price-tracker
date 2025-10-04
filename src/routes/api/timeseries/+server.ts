@@ -5,7 +5,7 @@ const BASE = 'https://prices.runescape.wiki/api/v1/osrs';
 export const GET: RequestHandler = async ({ fetch, url }) => {
     const id = url.searchParams.get('id');
     const timestep = url.searchParams.get('timestep') || '5m'; // 5m, 1h, 6h, or 24h
-    
+
     if (!id) {
         return new Response(JSON.stringify({ error: 'Item ID required' }), {
             status: 400,
@@ -14,7 +14,7 @@ export const GET: RequestHandler = async ({ fetch, url }) => {
     }
 
     const endpoint = `${BASE}/timeseries?timestep=${timestep}&id=${encodeURIComponent(id)}`;
-    
+
     try {
         const res = await fetch(endpoint, {
             headers: {
@@ -34,13 +34,10 @@ export const GET: RequestHandler = async ({ fetch, url }) => {
             }
         });
     } catch (error: any) {
-        return new Response(
-            JSON.stringify({ error: error?.message ?? 'Failed to fetch timeseries' }),
-            {
-                status: 500,
-                headers: { 'content-type': 'application/json' }
-            }
-        );
+        return new Response(JSON.stringify({ error: error?.message ?? 'Failed to fetch timeseries' }), {
+            status: 500,
+            headers: { 'content-type': 'application/json' }
+        });
     }
 };
 

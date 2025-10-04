@@ -10,16 +10,40 @@
     $: item = data.item;
     $: timeseries = data.timeseries;
 
+    // Time range state
+    let timeRange: '5m' | '1h' | '6h' = '5m'; // 5m = 24h, 1h = 7d, 6h = 30d
+    let timeseriesData = timeseries;
+    let loading = false;
+
+    // Fetch new data when time range changes
+    async function fetchTimeseriesData(range: '5m' | '1h' | '6h') {
+        loading = true;
+        try {
+            const res = await fetch(`/api/timeseries?id=${item.id}&timestep=${range}`);
+            if (res.ok) {
+                const data = await res.json();
+                timeseriesData = data.data || [];
+            }
+        } catch (err) {
+            console.error('Failed to fetch timeseries:', err);
+        } finally {
+            loading = false;
+        }
+    }
+
+    // Handle time range change
+    async function handleTimeRangeChange(range: '5m' | '1h' | '6h') {
+        timeRange = range;
+        await fetchTimeseriesData(range);
+    }
+
     // Calculate stats
     $: margin = item.buyPrice && item.sellPrice ? item.buyPrice - item.sellPrice : null;
     $: taxRate = 0.02;
     $: postTaxProfit =
-        item.buyPrice && item.sellPrice
-            ? Math.floor(item.buyPrice * (1 - taxRate) - item.sellPrice)
-            : null;
+        item.buyPrice && item.sellPrice ? Math.floor(item.buyPrice * (1 - taxRate) - item.sellPrice) : null;
     $: roi = item.sellPrice && postTaxProfit ? ((postTaxProfit / item.sellPrice) * 100).toFixed(2) : null;
-    $: marginVolume =
-        margin && item.dailyVolume ? formatInt(margin * item.dailyVolume) : null;
+    $: marginVolume = margin && item.dailyVolume ? formatInt(margin * item.dailyVolume) : null;
 
     // Check if low volume
     $: isLowVolume = item.dailyVolume !== null && item.dailyVolume < 100;
@@ -32,17 +56,9 @@
 <div class="container mx-auto px-4 py-6 max-w-7xl">
     <!-- Back navigation -->
     <div class="mb-4">
-        <a
-            href="/"
-            class="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline"
-        >
+        <a href="/" class="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15 19l-7-7 7-7"
-                />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
             Back to all items
         </a>
@@ -54,9 +70,8 @@
             class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 text-yellow-800 dark:text-yellow-200 p-4 rounded-lg mb-6"
         >
             <p class="font-medium">
-                This is a low volume item. The prices displayed here may fluctuate dramatically, or be
-                somewhat inaccurate given the low amount of trades per day. Take extra care when trading
-                this item.
+                This is a low volume item. The prices displayed here may fluctuate dramatically, or be somewhat
+                inaccurate given the low amount of trades per day. Take extra care when trading this item.
             </p>
         </div>
     {/if}
@@ -167,7 +182,13 @@
                 Potential profit
                 <span class="text-xs opacity-70" title="After 2% GE tax">(?)</span>
             </div>
-            <div class="text-xl font-bold {postTaxProfit && postTaxProfit > 0 ? 'text-green-600 dark:text-green-400' : postTaxProfit && postTaxProfit < 0 ? 'text-red-600 dark:text-red-400' : ''}">
+            <div
+                class="text-xl font-bold {postTaxProfit && postTaxProfit > 0
+                    ? 'text-green-600 dark:text-green-400'
+                    : postTaxProfit && postTaxProfit < 0
+                      ? 'text-red-600 dark:text-red-400'
+                      : ''}"
+            >
                 {postTaxProfit !== null ? formatInt(postTaxProfit) : '—'}
             </div>
         </div>
@@ -189,7 +210,44 @@
 
     <!-- Price chart -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
-        <PriceChart data={timeseries} itemName={item.name} />
+        <!-- Time range selector -->
+        <div class="flex justify-center gap-2 mb-6">
+            <button
+                class="px-4 py-2 rounded transition-colors {timeRange === '5m'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'}"
+                on:click={() => handleTimeRangeChange('5m')}
+                disabled={loading}
+            >
+                24 Hours
+            </button>
+            <button
+                class="px-4 py-2 rounded transition-colors {timeRange === '1h'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'}"
+                on:click={() => handleTimeRangeChange('1h')}
+                disabled={loading}
+            >
+                7 Days
+            </button>
+            <button
+                class="px-4 py-2 rounded transition-colors {timeRange === '6h'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'}"
+                on:click={() => handleTimeRangeChange('6h')}
+                disabled={loading}
+            >
+                30 Days
+            </button>
+        </div>
+
+        {#if loading}
+            <div class="flex items-center justify-center h-96">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+        {:else}
+            <PriceChart data={timeseriesData} itemName={item.name} {timeRange} />
+        {/if}
     </div>
 </div>
 
