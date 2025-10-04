@@ -2,6 +2,7 @@
     import type { TimeseriesDataPoint } from '$lib/types';
     import { formatInt } from '$lib/utils/format';
     import ChartTooltip from './ChartTooltip.svelte';
+    import VolumeChart from './VolumeChart.svelte';
 
     export let data: TimeseriesDataPoint[] = [];
     export let itemName: string = '';
@@ -370,6 +371,11 @@
         </div>
     {/if}
 </div>
+
+<!-- Volume Chart -->
+{#if validData.length > 0}
+    <VolumeChart data={validData} {timeRange} {minTime} {maxTime} {timeSpan} />
+{/if}
 
 <style>
     .buy-line,
