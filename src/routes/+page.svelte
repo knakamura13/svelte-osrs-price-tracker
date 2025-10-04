@@ -32,6 +32,9 @@
     let auto = false;
     // Refresh interval is hardcoded to 60 seconds
     const refreshSec = 60;
+    // Throttle instant refreshes to prevent abuse (minimum 1 second between refreshes)
+    let lastRefreshTime = 0;
+    const MIN_REFRESH_INTERVAL = 1000; // 1 second
 
     let allRows: PriceRow[] = data?.rows ?? [];
     let lastUpdated: number | null = null;
@@ -120,6 +123,7 @@
             const rows = Array.isArray(json?.rows) ? (json.rows as PriceRow[]) : [];
             allRows = rows;
             lastUpdated = Date.now();
+            lastRefreshTime = Date.now(); // Update throttle timestamp
             failCount = 0; // Reset fail count on success
             page = 1;
             // Show success toast
@@ -288,7 +292,12 @@
             auto = v;
             // If auto-refresh was just enabled and we're not currently loading, trigger immediate refresh
             if (auto && !prevAuto && !loading) {
-                loadRows();
+                const now = Date.now();
+                // Throttle refreshes to prevent abuse (minimum 1 second between refreshes)
+                if (now - lastRefreshTime >= MIN_REFRESH_INTERVAL) {
+                    lastRefreshTime = now;
+                    loadRows();
+                }
             }
             prevAuto = auto;
         }}
