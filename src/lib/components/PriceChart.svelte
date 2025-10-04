@@ -14,8 +14,25 @@
     let hovering = false;
     let hoveredPointIndex = -1;
 
+    // Helper functions for time range
+    function getTimeRangeSeconds(range: '5m' | '1h' | '6h'): number {
+        return range === '5m' ? 24 * 60 * 60 : range === '1h' ? 7 * 24 * 60 * 60 : 30 * 24 * 60 * 60;
+    }
+
+    function getTimeRangeLabel(range: '5m' | '1h' | '6h'): string {
+        return range === '5m' ? '24 Hours' : range === '1h' ? '7 Days' : '30 Days';
+    }
+
+    // Filter data to only show the selected time range
+    $: filteredByTime = (() => {
+        if (!data || data.length === 0) return [];
+        const now = Math.floor(Date.now() / 1000);
+        const cutoffTime = now - getTimeRangeSeconds(timeRange);
+        return data.filter((d) => d.timestamp >= cutoffTime);
+    })();
+
     // Filter out data points with no prices
-    $: validData = data.filter((d) => d.avgHighPrice !== null || d.avgLowPrice !== null);
+    $: validData = filteredByTime.filter((d) => d.avgHighPrice !== null || d.avgLowPrice !== null);
 
     // Calculate chart dimensions and scales
     $: chartWidth = 800;
@@ -32,10 +49,10 @@
 
     $: minTime = validData.length > 0 ? validData[0].timestamp : 0;
     $: maxTime = validData.length > 0 ? validData[validData.length - 1].timestamp : 1;
-    $: timeRange = maxTime - minTime || 1;
+    $: timeSpan = maxTime - minTime || 1;
 
     // Scale functions
-    const scaleX = (timestamp: number) => ((timestamp - minTime) / timeRange) * innerWidth;
+    const scaleX = (timestamp: number) => ((timestamp - minTime) / timeSpan) * innerWidth;
     const scaleY = (price: number) => innerHeight - ((price - minPrice) / priceRange) * innerHeight;
 
     // Generate SVG path for prices
@@ -57,10 +74,20 @@
         })
         .join(' ');
 
-    // Format timestamp for axis labels
+    // Format timestamp for axis labels based on time range
     const formatTime = (timestamp: number) => {
         const date = new Date(timestamp * 1000);
-        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        
+        if (timeRange === '5m') {
+            // 24 hours: show time only
+            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        } else if (timeRange === '1h') {
+            // 7 days: show month/day and time
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        } else {
+            // 30 days: show month/day only
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
     };
 
     // Generate Y-axis ticks
@@ -286,7 +313,7 @@
                     text-anchor="middle"
                     class="text-sm fill-current font-medium"
                 >
-                    Time (5-minute intervals)
+                    Time ({getTimeRangeLabel(timeRange)})
                 </text>
                 <text
                     x={-innerHeight / 2}
