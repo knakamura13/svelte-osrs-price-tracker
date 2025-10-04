@@ -113,7 +113,7 @@
         // Find nearest data point
         if (x >= 0 && x <= innerWidth && y >= 0 && y <= innerHeight) {
             hovering = true;
-            const timestamp = minTime + (x / innerWidth) * timeRange;
+            const timestamp = minTime + (x / innerWidth) * timeSpan;
             
             // Find closest data point
             let closestIndex = 0;
