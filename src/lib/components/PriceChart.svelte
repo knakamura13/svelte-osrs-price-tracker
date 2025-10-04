@@ -35,9 +35,9 @@
     $: validData = filteredByTime.filter((d) => d.avgHighPrice !== null || d.avgLowPrice !== null);
 
     // Calculate chart dimensions and scales
-    $: chartWidth = 800;
+    $: chartWidth = 1200;
     $: chartHeight = 400;
-    $: padding = { top: 20, right: 60, bottom: 60, left: 80 };
+    $: padding = { top: 20, right: 60, bottom: 60, left: 140 };
     $: innerWidth = chartWidth - padding.left - padding.right;
     $: innerHeight = chartHeight - padding.top - padding.bottom;
 
@@ -77,7 +77,7 @@
     // Format timestamp for axis labels based on time range
     const formatTime = (timestamp: number) => {
         const date = new Date(timestamp * 1000);
-        
+
         if (timeRange === '5m') {
             // 24 hours: show time only
             return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
@@ -114,7 +114,7 @@
         if (x >= 0 && x <= innerWidth && y >= 0 && y <= innerHeight) {
             hovering = true;
             const timestamp = minTime + (x / innerWidth) * timeSpan;
-            
+
             // Find closest data point
             let closestIndex = 0;
             let minDistance = Math.abs(validData[0].timestamp - timestamp);
@@ -154,178 +154,186 @@
             <p class="text-gray-500">No price data available</p>
         </div>
     {:else}
-        <div class="relative inline-block">
+        <div class="relative w-full">
             <svg
                 bind:this={svgElement}
-                width={chartWidth}
+                width="100%"
                 height={chartHeight}
                 class="mx-auto"
                 viewBox="0 0 {chartWidth} {chartHeight}"
+                preserveAspectRatio="xMidYMid meet"
                 role="img"
                 aria-label="Price history chart"
                 on:mousemove={handleMouseMove}
                 on:mouseleave={handleMouseLeave}
             >
-            <!-- Chart area -->
-            <g transform="translate({padding.left}, {padding.top})">
-                <!-- Grid lines -->
-                {#each yTicks as tick}
+                <!-- Chart area -->
+                <g transform="translate({padding.left}, {padding.top})">
+                    <!-- Grid lines -->
+                    {#each yTicks as tick}
+                        <line
+                            x1="0"
+                            y1={scaleY(tick)}
+                            x2={innerWidth}
+                            y2={scaleY(tick)}
+                            stroke="currentColor"
+                            stroke-opacity="0.1"
+                            stroke-width="1"
+                        />
+                    {/each}
+
+                    <!-- Price lines -->
+                    <path d={buyPath} fill="none" stroke="#f97316" stroke-width="2" class="buy-line" />
+                    <path d={sellPath} fill="none" stroke="#10b981" stroke-width="2" class="sell-line" />
+
+                    <!-- Circular markers at each data point -->
+                    {#each validData as point}
+                        {#if point.avgHighPrice !== null}
+                            <circle
+                                cx={scaleX(point.timestamp)}
+                                cy={scaleY(point.avgHighPrice)}
+                                r="3"
+                                fill="#f97316"
+                                class="data-point"
+                            />
+                        {/if}
+                        {#if point.avgLowPrice !== null}
+                            <circle
+                                cx={scaleX(point.timestamp)}
+                                cy={scaleY(point.avgLowPrice)}
+                                r="3"
+                                fill="#10b981"
+                                class="data-point"
+                            />
+                        {/if}
+                    {/each}
+
+                    <!-- Crosshair lines when hovering -->
+                    {#if hovering && hoveredPoint}
+                        <!-- Vertical line -->
+                        <line
+                            x1={hoveredX}
+                            y1="0"
+                            x2={hoveredX}
+                            y2={innerHeight}
+                            stroke="currentColor"
+                            stroke-width="1"
+                            stroke-dasharray="4,4"
+                            opacity="0.5"
+                            class="crosshair"
+                        />
+                        <!-- Horizontal line for buy price -->
+                        {#if hoveredBuyY !== null}
+                            <line
+                                x1="0"
+                                y1={hoveredBuyY}
+                                x2={innerWidth}
+                                y2={hoveredBuyY}
+                                stroke="#f97316"
+                                stroke-width="1"
+                                stroke-dasharray="4,4"
+                                opacity="0.5"
+                                class="crosshair"
+                            />
+                        {/if}
+                        <!-- Horizontal line for sell price -->
+                        {#if hoveredSellY !== null}
+                            <line
+                                x1="0"
+                                y1={hoveredSellY}
+                                x2={innerWidth}
+                                y2={hoveredSellY}
+                                stroke="#10b981"
+                                stroke-width="1"
+                                stroke-dasharray="4,4"
+                                opacity="0.5"
+                                class="crosshair"
+                            />
+                        {/if}
+
+                        <!-- Highlight hovered points -->
+                        {#if hoveredBuyY !== null}
+                            <circle
+                                cx={hoveredX}
+                                cy={hoveredBuyY}
+                                r="6"
+                                fill="#f97316"
+                                stroke="white"
+                                stroke-width="2"
+                                class="hovered-point"
+                            />
+                        {/if}
+                        {#if hoveredSellY !== null}
+                            <circle
+                                cx={hoveredX}
+                                cy={hoveredSellY}
+                                r="6"
+                                fill="#10b981"
+                                stroke="white"
+                                stroke-width="2"
+                                class="hovered-point"
+                            />
+                        {/if}
+                    {/if}
+
+                    <!-- Y-axis -->
+                    <line x1="0" y1="0" x2="0" y2={innerHeight} stroke="currentColor" stroke-width="2" />
+
+                    <!-- Y-axis labels -->
+                    {#each yTicks as tick}
+                        <text
+                            x="-10"
+                            y={scaleY(tick)}
+                            text-anchor="end"
+                            dominant-baseline="middle"
+                            class="text-xs fill-current"
+                        >
+                            {formatInt(Math.round(tick))}
+                        </text>
+                    {/each}
+
+                    <!-- X-axis -->
                     <line
                         x1="0"
-                        y1={scaleY(tick)}
+                        y1={innerHeight}
                         x2={innerWidth}
-                        y2={scaleY(tick)}
-                        stroke="currentColor"
-                        stroke-opacity="0.1"
-                        stroke-width="1"
-                    />
-                {/each}
-
-                <!-- Price lines -->
-                <path d={buyPath} fill="none" stroke="#f97316" stroke-width="2" class="buy-line" />
-                <path d={sellPath} fill="none" stroke="#10b981" stroke-width="2" class="sell-line" />
-
-                <!-- Circular markers at each data point -->
-                {#each validData as point}
-                    {#if point.avgHighPrice !== null}
-                        <circle
-                            cx={scaleX(point.timestamp)}
-                            cy={scaleY(point.avgHighPrice)}
-                            r="3"
-                            fill="#f97316"
-                            class="data-point"
-                        />
-                    {/if}
-                    {#if point.avgLowPrice !== null}
-                        <circle
-                            cx={scaleX(point.timestamp)}
-                            cy={scaleY(point.avgLowPrice)}
-                            r="3"
-                            fill="#10b981"
-                            class="data-point"
-                        />
-                    {/if}
-                {/each}
-
-                <!-- Crosshair lines when hovering -->
-                {#if hovering && hoveredPoint}
-                    <!-- Vertical line -->
-                    <line
-                        x1={hoveredX}
-                        y1="0"
-                        x2={hoveredX}
                         y2={innerHeight}
                         stroke="currentColor"
-                        stroke-width="1"
-                        stroke-dasharray="4,4"
-                        opacity="0.5"
-                        class="crosshair"
+                        stroke-width="2"
                     />
-                    <!-- Horizontal line for buy price -->
-                    {#if hoveredBuyY !== null}
-                        <line
-                            x1="0"
-                            y1={hoveredBuyY}
-                            x2={innerWidth}
-                            y2={hoveredBuyY}
-                            stroke="#f97316"
-                            stroke-width="1"
-                            stroke-dasharray="4,4"
-                            opacity="0.5"
-                            class="crosshair"
-                        />
-                    {/if}
-                    <!-- Horizontal line for sell price -->
-                    {#if hoveredSellY !== null}
-                        <line
-                            x1="0"
-                            y1={hoveredSellY}
-                            x2={innerWidth}
-                            y2={hoveredSellY}
-                            stroke="#10b981"
-                            stroke-width="1"
-                            stroke-dasharray="4,4"
-                            opacity="0.5"
-                            class="crosshair"
-                        />
-                    {/if}
 
-                    <!-- Highlight hovered points -->
-                    {#if hoveredBuyY !== null}
-                        <circle
-                            cx={hoveredX}
-                            cy={hoveredBuyY}
-                            r="6"
-                            fill="#f97316"
-                            stroke="white"
-                            stroke-width="2"
-                            class="hovered-point"
-                        />
-                    {/if}
-                    {#if hoveredSellY !== null}
-                        <circle
-                            cx={hoveredX}
-                            cy={hoveredSellY}
-                            r="6"
-                            fill="#10b981"
-                            stroke="white"
-                            stroke-width="2"
-                            class="hovered-point"
-                        />
-                    {/if}
-                {/if}
+                    <!-- X-axis labels -->
+                    {#each xTicks as tick}
+                        <text
+                            x={scaleX(tick.timestamp)}
+                            y={innerHeight + 20}
+                            text-anchor="middle"
+                            class="text-xs fill-current"
+                        >
+                            {formatTime(tick.timestamp)}
+                        </text>
+                    {/each}
 
-                <!-- Y-axis -->
-                <line x1="0" y1="0" x2="0" y2={innerHeight} stroke="currentColor" stroke-width="2" />
-
-                <!-- Y-axis labels -->
-                {#each yTicks as tick}
+                    <!-- Axis labels -->
                     <text
-                        x="-10"
-                        y={scaleY(tick)}
-                        text-anchor="end"
-                        dominant-baseline="middle"
-                        class="text-xs fill-current"
-                    >
-                        {formatInt(Math.round(tick))}
-                    </text>
-                {/each}
-
-                <!-- X-axis -->
-                <line x1="0" y1={innerHeight} x2={innerWidth} y2={innerHeight} stroke="currentColor" stroke-width="2" />
-
-                <!-- X-axis labels -->
-                {#each xTicks as tick}
-                    <text
-                        x={scaleX(tick.timestamp)}
-                        y={innerHeight + 20}
+                        x={innerWidth / 2}
+                        y={innerHeight + 50}
                         text-anchor="middle"
-                        class="text-xs fill-current"
+                        class="text-sm fill-current font-medium"
                     >
-                        {formatTime(tick.timestamp)}
+                        Time ({getTimeRangeLabel(timeRange)})
                     </text>
-                {/each}
-
-                <!-- Axis labels -->
-                <text
-                    x={innerWidth / 2}
-                    y={innerHeight + 50}
-                    text-anchor="middle"
-                    class="text-sm fill-current font-medium"
-                >
-                    Time ({getTimeRangeLabel(timeRange)})
-                </text>
-                <text
-                    x={-innerHeight / 2}
-                    y="-60"
-                    text-anchor="middle"
-                    transform="rotate(-90)"
-                    class="text-sm fill-current font-medium"
-                >
-                    Price (gp)
-                </text>
-            </g>
-        </svg>
+                    <text
+                        x={-innerHeight / 2}
+                        y="-100"
+                        text-anchor="middle"
+                        transform="rotate(-90)"
+                        class="text-sm fill-current font-medium"
+                    >
+                        Price (gp)
+                    </text>
+                </g>
+            </svg>
 
             <!-- Custom tooltip -->
             <ChartTooltip
@@ -358,4 +366,3 @@
         filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
     }
 </style>
-
