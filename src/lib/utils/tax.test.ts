@@ -80,6 +80,38 @@ describe('Grand Exchange Tax Calculations', () => {
             const lobsterId = 379; // Lobster
             expect(calculateBreakEvenPrice(500, lobsterId)).toBe(500);
         });
+
+        it('should handle large costs correctly', () => {
+            // For a cost of 100M, calculate the correct break-even price
+            // estimatedPrice = ceil(100M / 0.98) = ceil(102040816.3265) = 102040817
+            // taxAtEstimate = floor(102040817 * 0.02) = 2040816
+            // Since actualReceived >= cost, return estimatedPrice
+            const cost = 100_000_000;
+            const result = calculateBreakEvenPrice(cost);
+            expect(result).toBeGreaterThan(0);
+            expect(result).toBe(102040817); // Correct break-even price for 100M cost
+        });
+
+        it('should never return negative or zero values', () => {
+            // Test with various edge cases
+            expect(calculateBreakEvenPrice(-100)).toBeNull(); // Negative cost should return null
+            expect(calculateBreakEvenPrice(0)).toBeNull(); // Zero cost should return null
+            expect(calculateBreakEvenPrice(1)).toBe(1); // Minimum positive should work
+            expect(calculateBreakEvenPrice(100)).toBeGreaterThan(0); // Normal case should be positive
+        });
+
+        it('should handle data errors (unreasonably high prices)', () => {
+            // Test with data error value (2^31-1)
+            expect(calculateBreakEvenPrice(2147483647)).toBeNull(); // Should return null for data errors
+            expect(calculateGeTax(2147483647)).toBe(0); // Should return 0 tax for data errors
+            expect(calculatePostTaxProfit(2147483647, 1000)).toBeNull(); // Should return null for data errors
+            expect(calculatePostTaxProfit(1000, 2147483647)).toBeNull(); // Should return null for data errors
+        });
+
+        it('should handle very small costs correctly', () => {
+            expect(calculateBreakEvenPrice(1)).toBe(1); // Below tax threshold
+            expect(calculateBreakEvenPrice(49)).toBe(49); // Below tax threshold
+        });
     });
 
     describe('calculatePostTaxProfit', () => {

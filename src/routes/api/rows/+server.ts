@@ -64,8 +64,12 @@ export const GET: RequestHandler = async ({ fetch }) => {
     const rows: PriceRow[] = await Promise.all(
         mapping.map(async (m) => {
             const l = latestMap[String(m.id)];
-            const high = l?.high ?? null;
-            const low = l?.low ?? null;
+            let high = l?.high ?? null;
+            let low = l?.low ?? null;
+
+            // Handle data errors - unreasonably high prices (like 2^31-1) are likely data errors
+            if (high !== null && high >= 2147483647) high = null;
+            if (low !== null && low >= 2147483647) low = null;
 
             // First try to get volume from 24h API
             let dailyVolume: number | null = null;
@@ -123,9 +127,13 @@ export const GET: RequestHandler = async ({ fetch }) => {
                 console.error(`Failed to calculate daily metrics for item ${m.id}:`, error);
             }
 
+            // Calculate margin (buy price - sell price)
+            const margin = high != null && low != null ? high - low : null;
+
             // Calculate potential profit (buyLimit × postTaxProfit)
             const postTaxProfit = calculatePostTaxProfit(high, low, m.id);
-            const potentialProfit = (m.limit ?? 0) > 0 && postTaxProfit !== null ? (m.limit ?? 0) * postTaxProfit : null;
+            const potentialProfit =
+                (m.limit ?? 0) > 0 && postTaxProfit !== null ? (m.limit ?? 0) * postTaxProfit : null;
 
             return {
                 id: m.id,
@@ -138,7 +146,7 @@ export const GET: RequestHandler = async ({ fetch }) => {
                 buyTime: l?.highTime ?? null,
                 sellPrice: low,
                 sellTime: l?.lowTime ?? null,
-                margin: high != null && low != null ? high - low : null,
+                margin,
                 dailyVolume,
                 dailyLow: dailyMetrics?.dailyLow ?? null,
                 dailyHigh: dailyMetrics?.dailyHigh ?? null,

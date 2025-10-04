@@ -94,6 +94,9 @@ export const TAX_EXEMPT_ITEMS = new Set<number>([
  * @returns The tax amount in gp
  */
 export function calculateGeTax(salePrice: number, itemId?: number): number {
+    // Handle data errors - unreasonably high prices are likely data errors
+    if (salePrice >= 2147483647) return 0;
+
     // Check if item is exempt from tax
     if (itemId !== undefined && TAX_EXEMPT_ITEMS.has(itemId)) {
         return 0;
@@ -114,16 +117,19 @@ export function calculateGeTax(salePrice: number, itemId?: number): number {
  * @returns The minimum sell price needed to break even (null if cost is null)
  */
 export function calculateBreakEvenPrice(cost: number | null, itemId?: number): number | null {
-    if (cost === null) return null;
+    if (cost === null || cost <= 0) return null;
+
+    // Handle data errors - prices that are unreasonably high (like 2^31-1) are likely data errors
+    if (cost >= 2147483647) return null;
 
     // Check if item is exempt from tax
     if (itemId !== undefined && TAX_EXEMPT_ITEMS.has(itemId)) {
-        return cost; // No tax, so break-even = cost
+        return Math.max(cost, 1); // No tax, so break-even = cost, but ensure positive
     }
 
     // For very cheap items (cost < MIN_PRICE_FOR_TAX), no tax applies, so break-even = cost
     if (cost < MIN_PRICE_FOR_TAX) {
-        return cost;
+        return Math.max(cost, 1);
     }
 
     // For items that would hit the tax cap (250M+)
@@ -131,7 +137,8 @@ export function calculateBreakEvenPrice(cost: number | null, itemId?: number): n
     // If cost >= 245M, you need to account for the cap
     const priceWhereCapApplies = TAX_CAP / TAX_RATE; // 250,000,000
     if (cost >= priceWhereCapApplies - TAX_CAP) {
-        return cost + TAX_CAP;
+        const result = cost + TAX_CAP;
+        return Math.max(result, 1); // Ensure positive result
     }
 
     // Normal case: find minimum P where P - floor(P * 0.02) >= cost
@@ -141,11 +148,21 @@ export function calculateBreakEvenPrice(cost: number | null, itemId?: number): n
     const actualReceived = estimatedPrice - taxAtEstimate;
 
     // If the estimated price doesn't cover the cost due to floor rounding, increment
+    let finalPrice = estimatedPrice;
     if (actualReceived < cost) {
-        return estimatedPrice + 1;
+        finalPrice = estimatedPrice + 1;
     }
 
-    return estimatedPrice;
+    // Double-check that our calculation is correct and never return negative or zero
+    const finalTax = Math.floor(finalPrice * TAX_RATE);
+    const finalReceived = finalPrice - finalTax;
+
+    if (finalReceived < cost || finalPrice <= 0) {
+        // If calculation fails, fall back to a safe minimum
+        return Math.max(cost + 1, 1);
+    }
+
+    return Math.max(finalPrice, 1);
 }
 
 /**
@@ -162,6 +179,9 @@ export function calculatePostTaxProfit(
     itemId?: number
 ): number | null {
     if (buyPrice === null || sellPrice === null) return null;
+
+    // Handle data errors - unreasonably high prices are likely data errors
+    if (buyPrice >= 2147483647 || sellPrice >= 2147483647) return null;
 
     const tax = calculateGeTax(buyPrice, itemId);
     return Math.floor(buyPrice - tax - sellPrice);

@@ -22,6 +22,9 @@ function transformToRow(mapping: ItemMapping, latestMap: LatestResponse, volumeM
     // If no volume data from 24h API, this would be null (in real implementation we'd fetch from timeseries)
     // For testing purposes, we'll simulate this
 
+    // Calculate margin (buy price - sell price)
+    const margin = high != null && low != null ? high - low : null;
+
     return {
         id: mapping.id,
         name: mapping.name,
@@ -32,7 +35,7 @@ function transformToRow(mapping: ItemMapping, latestMap: LatestResponse, volumeM
         buyTime: l?.highTime ?? null,
         sellPrice: low,
         sellTime: l?.lowTime ?? null,
-        margin: high != null && low != null ? high - low : null,
+        margin,
         dailyVolume,
         examine: mapping.examine,
         wikiUrl: `https://oldschool.runescape.wiki/w/${encodeURIComponent(mapping.name)}`,
@@ -119,6 +122,39 @@ describe('API rows join logic', () => {
 
             const result2 = transformToRow(mapping, latestMapLowOnly, {});
             expect(result2.margin).toBeNull();
+        });
+
+        it('should handle negative margins (when buy price < sell price)', () => {
+            const mapping: ItemMapping = { id: 1, name: 'Inverted Item', members: false };
+
+            const latestMap: LatestResponse = {
+                '1': { high: 800, highTime: 1704067200, low: 1000, lowTime: 1704067100 }
+            };
+
+            const result = transformToRow(mapping, latestMap, {});
+            expect(result.margin).toBe(-200); // 800 - 1000 = -200
+        });
+
+        it('should handle very large margins correctly', () => {
+            const mapping: ItemMapping = { id: 1, name: 'Expensive Item', members: false };
+
+            const latestMap: LatestResponse = {
+                '1': { high: 500_000_000, highTime: 1704067200, low: 400_000_000, lowTime: 1704067100 }
+            };
+
+            const result = transformToRow(mapping, latestMap, {});
+            expect(result.margin).toBe(100_000_000); // 500M - 400M = 100M
+        });
+
+        it('should handle zero margin', () => {
+            const mapping: ItemMapping = { id: 1, name: 'Same Price Item', members: false };
+
+            const latestMap: LatestResponse = {
+                '1': { high: 1000, highTime: 1704067200, low: 1000, lowTime: 1704067100 }
+            };
+
+            const result = transformToRow(mapping, latestMap, {});
+            expect(result.margin).toBe(0);
         });
 
         it('should calculate daily volume from high and low price volumes', () => {

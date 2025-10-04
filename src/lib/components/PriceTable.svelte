@@ -49,12 +49,11 @@
     };
 
     // Wrapper functions for break-even and post-tax profit calculations
-    const calculateBreakEvenPrice = (
-        _buyPrice: number | null,
-        sellPrice: number | null,
-        itemId: number
-    ): number | null => {
-        return calcBreakEven(sellPrice, itemId);
+    const calculateBreakEvenPrice = (cost: number | null, itemId: number): number | null => {
+        // For break-even price in flipping context, we want to know:
+        // "What price do I need to sell at to break even if I bought at the insta-sell price?"
+        // So we use sellPrice as the cost (what we paid to acquire the item)
+        return calcBreakEven(cost, itemId);
     };
 
     const calculatePostTaxProfit = (
@@ -371,17 +370,6 @@
                         {#if columnVisibility.sellTime}
                             <td class="p-2 text-right opacity-70">{secondsAgoFromUnix(r.sellTime)}</td>
                         {/if}
-                        {#if columnVisibility.breakEvenPrice}
-                            <td class="p-2 text-right">
-                                {#if calculateBreakEvenPrice(r.buyPrice, r.sellPrice, r.id) == null}
-                                    <span title="No break-even price data available for this item" class="cursor-help"
-                                        >—</span
-                                    >
-                                {:else}
-                                    {formatInt(calculateBreakEvenPrice(r.buyPrice, r.sellPrice, r.id))}
-                                {/if}
-                            </td>
-                        {/if}
                         {#if columnVisibility.margin}
                             <td
                                 class="p-2 text-right"
@@ -392,6 +380,23 @@
                                     <span title="No margin data available for this item" class="cursor-help">—</span>
                                 {:else}
                                     {formatInt(r.margin)}
+                                {/if}
+                            </td>
+                        {/if}
+                        {#if columnVisibility.breakEvenPrice}
+                            {@const breakEvenPrice = calculateBreakEvenPrice(r.sellPrice, r.id)}
+                            <td class="p-2 text-right">
+                                {#if breakEvenPrice == null}
+                                    <span title="No break-even price data available for this item" class="cursor-help"
+                                        >—</span
+                                    >
+                                {:else if breakEvenPrice <= 0}
+                                    <span
+                                        title="Unexpected negative break-even price - please report this bug"
+                                        class="cursor-help text-red-500">ERROR</span
+                                    >
+                                {:else}
+                                    {formatInt(breakEvenPrice)}
                                 {/if}
                             </td>
                         {/if}
