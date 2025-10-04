@@ -125,24 +125,6 @@
                             />
                             <span class="text-sm">Insta-sell price</span>
                         </label>
-                        <label class="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                checked={columnVisibility.buyTime}
-                                on:change={(e) =>
-                                    onChange && onChange('buyTime', (e.currentTarget as HTMLInputElement).checked)}
-                            />
-                            <span class="text-sm">Last buy</span>
-                        </label>
-                        <label class="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                checked={columnVisibility.sellTime}
-                                on:change={(e) =>
-                                    onChange && onChange('sellTime', (e.currentTarget as HTMLInputElement).checked)}
-                            />
-                            <span class="text-sm">Last sell</span>
-                        </label>
                     </div>
                 </div>
 
@@ -240,6 +222,31 @@
                                     onChange && onChange('averageSell', (e.currentTarget as HTMLInputElement).checked)}
                             />
                             <span class="text-sm">Avg sell</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Time Filters -->
+                <div class="space-y-2">
+                    <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">Time Filters</h4>
+                    <div class="flex flex-row flex-wrap gap-4 ml-2">
+                        <label class="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                checked={columnVisibility.buyTime}
+                                on:change={(e) =>
+                                    onChange && onChange('buyTime', (e.currentTarget as HTMLInputElement).checked)}
+                            />
+                            <span class="text-sm">Last buy</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                checked={columnVisibility.sellTime}
+                                on:change={(e) =>
+                                    onChange && onChange('sellTime', (e.currentTarget as HTMLInputElement).checked)}
+                            />
+                            <span class="text-sm">Last sell</span>
                         </label>
                     </div>
                 </div>

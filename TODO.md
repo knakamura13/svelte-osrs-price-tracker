@@ -1,5 +1,3 @@
-- Re-order the prices table columns in the most logical arrangement. Ensure the order is the same across the toggle columns panel, apply filters panel, the prices table, and on the item details page (slug route) (consistency across components)
-- On the price history chart, extend the price lines all the way to the y-axis to prevent "floating datapoints" from appearing, making it easier for the user to tell that the price hasn't changed from the beginning of the time series til that datapoint (chart visualization improvement)
 - Add more e2e tests, at least one per component (test coverage expansion)
 - Add a settings dropdown menu to the AppHeader with the following options:
     1. 'Auto-refresh' toggle (moved from the page header to this new menu; enabled by default)
