@@ -77,7 +77,8 @@
 <!-- Pagination Controls (Top) -->
 <PaginationControls {page} {pageSize} {totalRows} {onPageChange} {onPageSizeChange} />
 
-<table class="w-full text-sm">
+<div class="overflow-x-auto min-w-[1200px]">
+    <table class="w-full text-sm">
     <thead class="bg-gray-50 dark:bg-[#2a3138] dark:text-gray-200 sticky top-0">
         <tr>
             <th class="p-2 select-none">
@@ -465,6 +466,7 @@
         {/if}
     </tbody>
 </table>
+</div>
 
 <!-- Pagination Controls (Bottom) -->
 <PaginationControls {page} {pageSize} {totalRows} {onPageChange} {onPageSizeChange} />

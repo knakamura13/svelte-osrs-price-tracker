@@ -328,17 +328,6 @@
         }}
     />
 
-    <section class="px-4 pb-2 mt-4">
-        <SearchBar
-            value={search}
-            placeholder="Search for an item..."
-            onInput={(v) => {
-                search = v;
-                page = 1;
-            }}
-        />
-    </section>
-
     <ErrorAlert message={errorMsg} {failCount} {nextRetryIn} autoDisabled={failCount >= 5} />
 
     <section class="px-4 mt-2">
@@ -347,6 +336,23 @@
             {columnVisibility}
             onToggle={() => (columnsExpanded = !columnsExpanded)}
             onChange={(k, checked) => (columnVisibility = { ...columnVisibility, [k]: checked })}
+            onReset={() => (columnVisibility = {
+                name: true,
+                buyLimit: true,
+                buyPrice: true,
+                buyTime: true,
+                sellPrice: true,
+                sellTime: true,
+                breakEvenPrice: true,
+                margin: true,
+                postTaxProfit: true,
+                dailyVolume: true,
+                dailyLow: true,
+                dailyHigh: true,
+                averageBuy: true,
+                averageSell: true,
+                potentialProfit: true
+            })}
         />
 
         <FiltersPanel
@@ -363,6 +369,17 @@
             }}
             onTimeChange={handleTimeChange}
         />
+
+        <section class="px-4 pb-2">
+            <SearchBar
+                value={search}
+                placeholder="Search for an item..."
+                onInput={(v) => {
+                    search = v;
+                    page = 1;
+                }}
+            />
+        </section>
 
         {#if loading && allRows.length === 0}
             <LoadingSkeleton rows={pageSize} columns={Object.values(columnVisibility).filter(Boolean).length + 1} />
