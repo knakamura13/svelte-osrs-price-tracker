@@ -120,6 +120,15 @@
                         Insta-buy price <span class="ml-1 opacity-60 select-none">{sortIcon('buyPrice')}</span>
                     </th>
                 {/if}
+                {#if columnVisibility.buyTime}
+                    <th
+                        class="text-right p-2 {sortable ? 'cursor-pointer' : ''}"
+                        title="When the last buy transaction occurred"
+                        on:click={() => sortable && sortBy && sortBy('buyTime')}
+                    >
+                        Last buy <span class="ml-1 opacity-60 select-none">{sortIcon('buyTime')}</span>
+                    </th>
+                {/if}
                 {#if columnVisibility.sellPrice}
                     <th
                         class="text-right p-2 select-none hover:text-white transition-colors {sortable
@@ -129,15 +138,6 @@
                         on:click={() => sortable && sortBy && sortBy('sellPrice')}
                     >
                         Insta-sell price <span class="ml-1 opacity-60 select-none">{sortIcon('sellPrice')}</span>
-                    </th>
-                {/if}
-                {#if columnVisibility.buyTime}
-                    <th
-                        class="text-right p-2 {sortable ? 'cursor-pointer' : ''}"
-                        title="When the last buy transaction occurred"
-                        on:click={() => sortable && sortBy && sortBy('buyTime')}
-                    >
-                        Last buy <span class="ml-1 opacity-60 select-none">{sortIcon('buyTime')}</span>
                     </th>
                 {/if}
                 {#if columnVisibility.sellTime}
@@ -203,7 +203,7 @@
                         class="text-right p-2 select-none hover:text-white transition-colors {sortable
                             ? 'cursor-pointer'
                             : ''}"
-                        title="Your total profit if you insta-buy at 'Insta-sell price' and insta-sell at 'Insta-buy price' for the full buy limit, after GE tax (2% rounded down, capped at 5M gp)."
+                        title="Your total profit if you buy at 'Insta-sell price' and sell at 'Insta-buy price' for the full buy limit, after GE tax (2% rounded down, capped at 5M gp)."
                         on:click={() => sortable && sortBy && sortBy('potentialProfit')}
                     >
                         Potential profit

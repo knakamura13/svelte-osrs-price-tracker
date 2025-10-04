@@ -16,7 +16,6 @@
         | ((key: 'buyTime' | 'sellTime', bound: 'min' | 'max', value: number | null) => void)
         | undefined;
 
-    type NumericFilterKey = Exclude<keyof Filters, 'buyTime' | 'sellTime'>;
     type FilterKey = keyof Filters;
 
     // Define filter groups in logical table column order
@@ -57,6 +56,44 @@
 
     // Flatten for backward compatibility
     const allFilterDefs = filterGroups.flatMap((group) => group.filters);
+
+    // Check if any filters are currently active (have values)
+    $: hasActiveFilters = (() => {
+        // Check numeric filters
+        for (const group of filterGroups) {
+            for (const filter of group.filters) {
+                if (filter.type === 'numeric') {
+                    const minVal = filters[filter.key].min;
+                    const maxVal = filters[filter.key].max;
+
+                    // Check if min has a non-empty value
+                    if (minVal !== null && minVal !== undefined) {
+                        const minStr = String(minVal).trim();
+                        if (minStr !== '' && minStr !== '0') {
+                            return true;
+                        }
+                    }
+
+                    // Check if max has a non-empty value
+                    if (maxVal !== null && maxVal !== undefined) {
+                        const maxStr = String(maxVal).trim();
+                        if (maxStr !== '' && maxStr !== '0') {
+                            return true;
+                        }
+                    }
+                } else if (filter.type === 'time') {
+                    // Check time filters (buyTime/sellTime)
+                    if (filters[filter.key].min ?? 0 > 0) {
+                        return true;
+                    }
+                    if (filters[filter.key].max ?? 0 > 0) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    })();
 
     // local time parts state for buy/sell durations
     let buyMinDays = 0,
@@ -406,7 +443,7 @@
             <div class="mt-4 flex justify-end">
                 <button
                     class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors disabled:!cursor-default disabled:hover:!bg-red-600 disabled:focus:!bg-red-600 disabled:opacity-50"
-                    disabled={activeFiltersCount === 0}
+                    disabled={!hasActiveFilters}
                     on:click={() => onClear && onClear()}
                 >
                     🗑️ Clear filters

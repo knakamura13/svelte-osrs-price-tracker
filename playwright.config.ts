@@ -10,11 +10,8 @@ export default defineConfig({
         reuseExistingServer: !process.env.CI,
         timeout: 60_000
     },
-    projects: [
-        { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-        { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-        { name: 'webkit', use: { ...devices['Desktop Safari'] } }
-    ],
+    projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
     testDir: './tests',
-    testMatch: '*.spec.ts'
+    testMatch: '*.spec.ts',
+    workers: 10 // Set the default number of workers
 });

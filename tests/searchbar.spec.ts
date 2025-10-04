@@ -31,7 +31,6 @@ test.describe('SearchBar functionality', () => {
 
         // Get initial row count
         const initialRows = await page.locator('table tbody tr').count();
-        console.log('Initial rows:', initialRows);
 
         // Search for 'spade'
         await searchInput.fill('spade');
@@ -41,11 +40,9 @@ test.describe('SearchBar functionality', () => {
 
         // Get filtered row count
         const filteredRows = await page.locator('table tbody tr').count();
-        console.log('Filtered rows after searching for "spade":', filteredRows);
 
         // Get all visible item names (name is in second td, first <a> tag in that td)
         const itemNames = await page.locator('table tbody tr td:nth-child(2) a:first-of-type').allTextContents();
-        console.log('Visible items:', itemNames);
 
         // Should have at least 1 filtered result (more robust than expecting exact count)
         expect(filteredRows).toBeGreaterThan(0);

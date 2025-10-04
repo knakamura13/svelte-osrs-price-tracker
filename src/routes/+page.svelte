@@ -129,7 +129,14 @@
         filters.averageSell.max,
         filters.potentialProfit.min,
         filters.potentialProfit.max
-    ].filter((v) => isFiniteNumber(v)).length;
+    ].filter((v) => {
+        // Handle both string and number values
+        if (typeof v === 'string') {
+            const num = Number(v);
+            return !Number.isNaN(num) && Number.isFinite(num);
+        }
+        return isFiniteNumber(v);
+    }).length;
 
     async function loadRows() {
         try {
