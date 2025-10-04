@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('SearchBar functionality', () => {
     test.beforeEach(async ({ page }) => {
         // Navigate to the main page
-        await page.goto('http://localhost:5173');
+        await page.goto('/');
         // Wait for the page to load
         await page.waitForLoadState('networkidle');
     });

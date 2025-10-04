@@ -1,15 +1,5 @@
 import { purgeCss } from 'vite-plugin-tailwind-purgecss';
 import { sveltekit } from '@sveltejs/kit/vite';
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from 'vite';
 
-export default defineConfig({
-    plugins: [sveltekit(), purgeCss()],
-    build: {
-        target: 'esnext'
-    },
-    test: {
-        include: ['src/**/*.{test,spec}.{js,ts}'],
-        globals: true,
-        environment: 'node'
-    }
-});
+export default defineConfig({ plugins: [sveltekit(), purgeCss()], build: { target: 'esnext' } });
