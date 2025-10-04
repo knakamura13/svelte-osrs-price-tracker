@@ -11,11 +11,14 @@
         draft = value;
     }
 
-    $: {
+    function handleInput(event: Event) {
+        const target = event.target as HTMLInputElement;
+        const newValue = target.value;
+        draft = newValue;
         clearTimeout(timer);
         timer = setTimeout(
             () => {
-                if (onInput) onInput(draft);
+                if (onInput) onInput(newValue);
             },
             Math.max(0, delay)
         );
@@ -25,4 +28,10 @@
     onDestroy(() => clearTimeout(timer));
 </script>
 
-<input class="border rounded p-2 w-full md:w-80" {placeholder} bind:value={draft} aria-label="Search" />
+<input
+    class="border rounded p-2 w-full md:w-80"
+    {placeholder}
+    value={draft}
+    on:input={handleInput}
+    aria-label="Search"
+/>

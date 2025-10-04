@@ -1,0 +1,105 @@
+import { test, expect } from '@playwright/test';
+
+test.describe('SearchBar functionality', () => {
+    test.beforeEach(async ({ page }) => {
+        // Navigate to the main page
+        await page.goto('http://localhost:5173');
+        // Wait for the page to load
+        await page.waitForLoadState('networkidle');
+    });
+
+    test('should render search bar', async ({ page }) => {
+        const searchInput = page.getByPlaceholder('Search for an item...');
+        await expect(searchInput).toBeVisible();
+    });
+
+    test('should accept text input', async ({ page }) => {
+        const searchInput = page.getByPlaceholder('Search for an item...');
+
+        // Type into the search bar
+        await searchInput.fill('dragon');
+
+        // Verify the input has the text
+        await expect(searchInput).toHaveValue('dragon');
+    });
+
+    test('should filter results when typing - spade test', async ({ page }) => {
+        const searchInput = page.getByPlaceholder('Search for an item...');
+
+        // Wait for table to be visible
+        await page.waitForSelector('table', { timeout: 10000 });
+
+        // Get initial row count
+        const initialRows = await page.locator('table tbody tr').count();
+        console.log('Initial rows:', initialRows);
+
+        // Search for 'spade'
+        await searchInput.fill('spade');
+
+        // Wait for debounce (200ms) plus a bit extra
+        await page.waitForTimeout(500);
+
+        // Get filtered row count
+        const filteredRows = await page.locator('table tbody tr').count();
+        console.log('Filtered rows after searching for "spade":', filteredRows);
+
+        // Get all visible item names (name is in second td, first <a> tag in that td)
+        const itemNames = await page.locator('table tbody tr td:nth-child(2) a:first-of-type').allTextContents();
+        console.log('Visible items:', itemNames);
+
+        // Should have at least 1 filtered result (more robust than expecting exact count)
+        expect(filteredRows).toBeGreaterThan(0);
+        expect(filteredRows).toBeLessThan(initialRows); // Should be fewer than all items
+
+        // All filtered items should contain 'spade' (case-insensitive)
+        itemNames.forEach((name) => {
+            expect(name.toLowerCase()).toContain('spade');
+        });
+
+        // Should have at least 2 items (Spade and Gilded spade currently)
+        expect(filteredRows).toBeGreaterThanOrEqual(2);
+    });
+
+    test('should clear and show all results when input is cleared', async ({ page }) => {
+        const searchInput = page.getByPlaceholder('Search for an item...');
+
+        // Wait for table to be visible
+        await page.waitForSelector('table', { timeout: 10000 });
+
+        // Get initial row count
+        const initialRows = await page.locator('table tbody tr').count();
+
+        // Type to filter
+        await searchInput.fill('dragon');
+        await page.waitForTimeout(500);
+
+        // Clear the input
+        await searchInput.clear();
+        await page.waitForTimeout(500);
+
+        // Should be back to initial count
+        const finalRows = await page.locator('table tbody tr').count();
+        expect(finalRows).toBe(initialRows);
+    });
+
+    test('should handle rapid typing (debounce test)', async ({ page }) => {
+        const searchInput = page.getByPlaceholder('Search for an item...');
+
+        // Wait for table
+        await page.waitForSelector('table', { timeout: 10000 });
+
+        // Type rapidly, character by character
+        await searchInput.type('dragon', { delay: 50 });
+
+        // Should eventually filter after debounce
+        await page.waitForTimeout(500);
+
+        // Verify it filtered
+        const value = await searchInput.inputValue();
+        expect(value).toBe('dragon');
+
+        // Check that table updated
+        const rows = await page.locator('table tbody tr').count();
+        expect(rows).toBeGreaterThan(0);
+    });
+});
