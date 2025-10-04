@@ -27,7 +27,8 @@
         dailyLow: true,
         dailyHigh: true,
         averageBuy: true,
-        averageSell: true
+        averageSell: true,
+        potentialProfit: true
     };
 
     // Pagination props
@@ -189,6 +190,23 @@
                         aria-label="Post-tax Profit tooltip">?</span
                     >
                     <span class="ml-1 opacity-60 select-none">{sortIcon('postTaxProfit')}</span>
+                </th>
+            {/if}
+            {#if columnVisibility.potentialProfit}
+                <th
+                    class="text-right p-2 select-none hover:text-white transition-colors {sortable
+                        ? 'cursor-pointer'
+                        : ''}"
+                    title="Your total profit if you insta-buy at 'Insta-sell price' and insta-sell at 'Insta-buy price' for the full buy limit, after GE tax (2% rounded down, capped at 5M gp)."
+                    on:click={() => sortable && sortBy && sortBy('potentialProfit')}
+                >
+                    Potential profit
+                    <span
+                        class="mr-1 text-xs opacity-70 cursor-help inline-block align-top relative"
+                        style="font-size: 0.75em; vertical-align: super; top: -0.2em;"
+                        aria-label="Potential Profit tooltip">?</span
+                    >
+                    <span class="ml-1 opacity-60 select-none">{sortIcon('potentialProfit')}</span>
                 </th>
             {/if}
             {#if columnVisibility.dailyVolume}
@@ -377,6 +395,19 @@
                                 >
                             {:else}
                                 {formatInt(calculatePostTaxProfit(r.buyPrice, r.sellPrice, r.id))}
+                            {/if}
+                        </td>
+                    {/if}
+                    {#if columnVisibility.potentialProfit}
+                        <td
+                            class="p-2 text-right"
+                            class:red-text={r.potentialProfit !== null && r.potentialProfit! < 0}
+                            class:green-text={r.potentialProfit !== null && r.potentialProfit! >= 0}
+                        >
+                            {#if r.potentialProfit == null}
+                                <span title="No potential profit data available for this item" class="cursor-help">—</span>
+                            {:else}
+                                {formatInt(r.potentialProfit)}
                             {/if}
                         </td>
                     {/if}

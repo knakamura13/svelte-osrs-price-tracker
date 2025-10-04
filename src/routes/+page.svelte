@@ -64,7 +64,8 @@
         dailyLow: { min: null as number | null, max: null as number | null },
         dailyHigh: { min: null as number | null, max: null as number | null },
         averageBuy: { min: null as number | null, max: null as number | null },
-        averageSell: { min: null as number | null, max: null as number | null }
+        averageSell: { min: null as number | null, max: null as number | null },
+        potentialProfit: { min: null as number | null, max: null as number | null }
     };
 
     // Column visibility state
@@ -83,7 +84,8 @@
         dailyLow: true,
         dailyHigh: true,
         averageBuy: true,
-        averageSell: true
+        averageSell: true,
+        potentialProfit: true
     };
 
     // Normalized filters (convert NaN/undefined to null) to drive reactivity
@@ -124,7 +126,9 @@
         filters.averageBuy.min,
         filters.averageBuy.max,
         filters.averageSell.min,
-        filters.averageSell.max
+        filters.averageSell.max,
+        filters.potentialProfit.min,
+        filters.potentialProfit.max
     ].filter((v) => isFiniteNumber(v)).length;
 
     async function loadRows() {
@@ -242,7 +246,8 @@
             dailyLow: { min: null, max: null },
             dailyHigh: { min: null, max: null },
             averageBuy: { min: null, max: null },
-            averageSell: { min: null, max: null }
+            averageSell: { min: null, max: null },
+            potentialProfit: { min: null, max: null }
         };
         page = 1;
     }

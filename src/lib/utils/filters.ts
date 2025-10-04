@@ -62,6 +62,10 @@ export function normalizeFilters(f: Filters): Filters {
         averageSell: {
             min: isFiniteNumber(f.averageSell.min) ? f.averageSell.min : null,
             max: isFiniteNumber(f.averageSell.max) ? f.averageSell.max : null
+        },
+        potentialProfit: {
+            min: isFiniteNumber(f.potentialProfit.min) ? f.potentialProfit.min : null,
+            max: isFiniteNumber(f.potentialProfit.max) ? f.potentialProfit.max : null
         }
     };
 }
@@ -254,6 +258,7 @@ export function computeFilterStats(allRows: PriceRow[]): FilterStats {
         dailyHigh: { min: null, max: null },
         averageBuy: { min: null, max: null },
         averageSell: { min: null, max: null },
+        potentialProfit: { min: null, max: null },
         breakEvenPrice: { min: null, max: null },
         postTaxProfit: { min: null, max: null }
     };
@@ -305,6 +310,21 @@ export function computeFilterStats(allRows: PriceRow[]): FilterStats {
     if (averageSells.length) {
         stats.averageSell.min = Math.min(...averageSells);
         stats.averageSell.max = Math.max(...averageSells);
+    }
+
+    // Calculate potential profit (buyLimit × postTaxProfit)
+    const potentialProfits: number[] = [];
+    for (const row of allRows) {
+        if (row.buyLimit !== null && row.buyLimit !== undefined && row.buyLimit > 0) {
+            const postTax = calculatePostTaxProfit(row.buyPrice, row.sellPrice, row.id);
+            if (postTax !== null) {
+                potentialProfits.push(row.buyLimit * postTax);
+            }
+        }
+    }
+    if (potentialProfits.length) {
+        stats.potentialProfit.min = Math.min(...potentialProfits);
+        stats.potentialProfit.max = Math.max(...potentialProfits);
     }
 
     const breakEvenPrices: number[] = [];

@@ -17,6 +17,7 @@
         dailyHigh: boolean;
         averageBuy: boolean;
         averageSell: boolean;
+        potentialProfit: boolean;
     } = {
         name: true,
         buyLimit: true,
@@ -31,7 +32,8 @@
         dailyLow: true,
         dailyHigh: true,
         averageBuy: true,
-        averageSell: true
+        averageSell: true,
+        potentialProfit: true
     };
 
     export let onToggle: (() => void) | undefined;
@@ -177,6 +179,15 @@
                             onChange && onChange('averageSell', (e.currentTarget as HTMLInputElement).checked)}
                     />
                     <span class="text-sm">Avg sell</span>
+                </label>
+                <label class="flex items-center gap-2">
+                    <input
+                        type="checkbox"
+                        checked={columnVisibility.potentialProfit}
+                        on:change={(e) =>
+                            onChange && onChange('potentialProfit', (e.currentTarget as HTMLInputElement).checked)}
+                    />
+                    <span class="text-sm">Potential profit</span>
                 </label>
             </div>
         </div>

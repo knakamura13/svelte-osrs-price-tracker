@@ -33,7 +33,8 @@
         { key: 'dailyLow', label: 'Daily low', type: 'numeric' },
         { key: 'dailyHigh', label: 'Daily high', type: 'numeric' },
         { key: 'averageBuy', label: 'Avg buy', type: 'numeric' },
-        { key: 'averageSell', label: 'Avg sell', type: 'numeric' }
+        { key: 'averageSell', label: 'Avg sell', type: 'numeric' },
+        { key: 'potentialProfit', label: 'Potential profit', type: 'numeric' }
     ];
 
     // local time parts state for buy/sell durations

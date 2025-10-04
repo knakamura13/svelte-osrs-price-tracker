@@ -2,6 +2,7 @@ import type { RequestHandler } from '@sveltejs/kit';
 import type { ItemMapping, LatestResponse, PriceRow, Volume24hResponse } from '$lib/types';
 import { TtlCache } from '$lib/server/cache';
 import { createHash } from 'node:crypto';
+import { calculatePostTaxProfit } from '$lib/utils/tax';
 
 const cache = new TtlCache<any>(60_000); // 60s default TTL
 
@@ -122,6 +123,10 @@ export const GET: RequestHandler = async ({ fetch }) => {
                 console.error(`Failed to calculate daily metrics for item ${m.id}:`, error);
             }
 
+            // Calculate potential profit (buyLimit × postTaxProfit)
+            const postTaxProfit = calculatePostTaxProfit(high, low, m.id);
+            const potentialProfit = (m.limit ?? 0) > 0 && postTaxProfit !== null ? (m.limit ?? 0) * postTaxProfit : null;
+
             return {
                 id: m.id,
                 name: m.name,
@@ -139,6 +144,7 @@ export const GET: RequestHandler = async ({ fetch }) => {
                 dailyHigh: dailyMetrics?.dailyHigh ?? null,
                 averageBuy: dailyMetrics?.averageBuy ?? null,
                 averageSell: dailyMetrics?.averageSell ?? null,
+                potentialProfit,
                 examine: m.examine,
                 wikiUrl: `https://oldschool.runescape.wiki/w/${encodeURIComponent(m.name)}`,
                 highalch: m.highalch ?? null,

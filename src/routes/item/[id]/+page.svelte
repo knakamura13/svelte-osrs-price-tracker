@@ -42,6 +42,7 @@
     $: postTaxProfit = calculatePostTaxProfit(item.buyPrice, item.sellPrice, item.id);
     $: roi = item.sellPrice && postTaxProfit ? ((postTaxProfit / item.sellPrice) * 100).toFixed(2) : null;
     $: marginVolume = margin && item.dailyVolume ? formatInt(margin * item.dailyVolume) : null;
+    $: buyLimitProfit = item.buyLimit && postTaxProfit ? item.buyLimit * postTaxProfit : null;
 
     // Check if low volume
     $: isLowVolume = item.dailyVolume !== null && item.dailyVolume !== undefined && item.dailyVolume < 100;
@@ -190,6 +191,14 @@
                     <span class="text-sm text-gray-600 dark:text-gray-400">ROI:</span>
                     <div class="text-lg font-bold text-green-600 dark:text-green-400">
                         {roi !== null ? `${roi}%` : '—'}
+                    </div>
+                </div>
+
+                <!-- Buy limit profit -->
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Buy limit profit:</span>
+                    <div class="text-lg font-bold text-green-600 dark:text-green-400">
+                        {buyLimitProfit !== null ? formatInt(buyLimitProfit) : '—'}
                     </div>
                 </div>
 

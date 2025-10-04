@@ -30,6 +30,7 @@ export type PriceRow = {
     dailyHigh?: number | null;
     averageBuy?: number | null;
     averageSell?: number | null;
+    potentialProfit?: number | null;
     examine?: string;
     wikiUrl?: string;
     highalch?: number | null;
@@ -67,6 +68,7 @@ export type Filters = {
     dailyHigh: NumericFilter;
     averageBuy: NumericFilter;
     averageSell: NumericFilter;
+    potentialProfit: NumericFilter;
 };
 
 export type SortKey =
@@ -82,6 +84,7 @@ export type SortKey =
     | 'dailyHigh'
     | 'averageBuy'
     | 'averageSell'
+    | 'potentialProfit'
     | 'buyTime'
     | 'sellTime';
 
@@ -97,6 +100,7 @@ export type FilterStats = {
     dailyHigh: NumericFilter;
     averageBuy: NumericFilter;
     averageSell: NumericFilter;
+    potentialProfit: NumericFilter;
     breakEvenPrice: NumericFilter;
     postTaxProfit: NumericFilter;
 };
