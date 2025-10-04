@@ -1,4 +1,5 @@
 import type { Filters, NumericFilterKey, PriceRow, SortKey, FilterStats } from '$lib/types';
+import { calculateBreakEvenPrice, calculatePostTaxProfit } from './tax';
 
 export function isFiniteNumber(n: number | null): n is number {
     return typeof n === 'number' && Number.isFinite(n);
@@ -111,7 +112,7 @@ export function filteredSorted(
             if (filterSet.sellTime.max !== null && age > filterSet.sellTime.max) return false;
         }
 
-        const breakEvenPrice = row.sellPrice !== null ? Math.ceil(row.sellPrice / (1 - 0.02)) : null;
+        const breakEvenPrice = calculateBreakEvenPrice(row.sellPrice, row.id);
         if (
             filterSet.breakEvenPrice.min !== null &&
             breakEvenPrice !== null &&
@@ -141,11 +142,7 @@ export function filteredSorted(
         )
             return false;
 
-        const taxRate = 0.02;
-        const postTaxProfit =
-            row.buyPrice !== null && row.sellPrice !== null
-                ? Math.floor(row.buyPrice * (1 - taxRate) - row.sellPrice)
-                : null;
+        const postTaxProfit = calculatePostTaxProfit(row.buyPrice, row.sellPrice, row.id);
         if (
             filterSet.postTaxProfit.min !== null &&
             postTaxProfit !== null &&
@@ -170,19 +167,11 @@ export function filteredSorted(
         let vb: any;
 
         if (key === 'breakEvenPrice') {
-            const taxRate = 0.02;
-            va = a.sellPrice !== null ? Math.ceil(a.sellPrice / (1 - taxRate)) : null;
-            vb = b.sellPrice !== null ? Math.ceil(b.sellPrice / (1 - taxRate)) : null;
+            va = calculateBreakEvenPrice(a.sellPrice, a.id);
+            vb = calculateBreakEvenPrice(b.sellPrice, b.id);
         } else if (key === 'postTaxProfit') {
-            const taxRate = 0.02;
-            va =
-                a.buyPrice !== null && a.sellPrice !== null
-                    ? Math.floor(a.buyPrice * (1 - taxRate) - a.sellPrice)
-                    : null;
-            vb =
-                b.buyPrice !== null && b.sellPrice !== null
-                    ? Math.floor(b.buyPrice * (1 - taxRate) - b.sellPrice)
-                    : null;
+            va = calculatePostTaxProfit(a.buyPrice, a.sellPrice, a.id);
+            vb = calculatePostTaxProfit(b.buyPrice, b.sellPrice, b.id);
         } else {
             va = (a as any)[key];
             vb = (b as any)[key];
@@ -278,13 +267,14 @@ export function computeFilterStats(allRows: PriceRow[]): FilterStats {
         stats.dailyVolume.max = Math.max(...volumes);
     }
 
-    const taxRate = 0.02;
     const breakEvenPrices: number[] = [];
     const postTaxProfits: number[] = [];
     for (const row of allRows) {
-        if (row.sellPrice !== null) breakEvenPrices.push(Math.ceil(row.sellPrice / (1 - taxRate)));
-        if (row.buyPrice !== null && row.sellPrice !== null)
-            postTaxProfits.push(Math.floor(row.buyPrice * (1 - taxRate) - row.sellPrice));
+        const breakEven = calculateBreakEvenPrice(row.sellPrice, row.id);
+        if (breakEven !== null) breakEvenPrices.push(breakEven);
+
+        const postTax = calculatePostTaxProfit(row.buyPrice, row.sellPrice, row.id);
+        if (postTax !== null) postTaxProfits.push(postTax);
     }
     if (breakEvenPrices.length) {
         stats.breakEvenPrice.min = Math.min(...breakEvenPrices);

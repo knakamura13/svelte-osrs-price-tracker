@@ -2,6 +2,10 @@
     import type { PriceRow } from '$lib/types';
     import { secondsAgoFromUnix } from '$lib/utils/time';
     import { formatInt } from '$lib/utils/format';
+    import {
+        calculateBreakEvenPrice as calcBreakEven,
+        calculatePostTaxProfit as calcPostTaxProfit
+    } from '$lib/utils/tax';
     import PaginationControls from './PaginationControls.svelte';
 
     export let rows: PriceRow[] = [];
@@ -39,24 +43,29 @@
         return '↕';
     };
 
-    // Calculate break-even sell price after 2% GE tax
-    // Formula: sellNeeded * (1 - taxRate) = cost => sellNeeded = ceil(cost / (1 - taxRate))
-    const calculateBreakEvenPrice = (_buyPrice: number | null, sellPrice: number | null): number | null => {
-        if (sellPrice === null) return null;
-        const taxRate = 0.02;
-        return Math.ceil(sellPrice / (1 - taxRate));
+    // Wrapper functions for break-even and post-tax profit calculations
+    const calculateBreakEvenPrice = (
+        _buyPrice: number | null,
+        sellPrice: number | null,
+        itemId: number
+    ): number | null => {
+        return calcBreakEven(sellPrice, itemId);
     };
 
-    // Calculate post-tax profit if buying at sellPrice and selling at buyPrice
-    // Formula: floor(buyPrice * (1 - taxRate) - sellPrice)
-    const calculatePostTaxProfit = (buyPrice: number | null, sellPrice: number | null): number | null => {
-        if (buyPrice === null || sellPrice === null) return null;
-        const taxRate = 0.02;
-        return Math.floor(buyPrice * (1 - taxRate) - sellPrice);
+    const calculatePostTaxProfit = (
+        buyPrice: number | null,
+        sellPrice: number | null,
+        itemId: number
+    ): number | null => {
+        return calcPostTaxProfit(buyPrice, sellPrice, itemId);
     };
 
-    const getPostTaxProfitValue = (buyPrice: number | null, sellPrice: number | null): number | null => {
-        return calculatePostTaxProfit(buyPrice, sellPrice);
+    const getPostTaxProfitValue = (
+        buyPrice: number | null,
+        sellPrice: number | null,
+        itemId: number
+    ): number | null => {
+        return calculatePostTaxProfit(buyPrice, sellPrice, itemId);
     };
 </script>
 
@@ -138,7 +147,7 @@
                     class="text-right p-2 select-none hover:text-white transition-colors {sortable
                         ? 'cursor-pointer'
                         : ''}"
-                    title="The minimum sell price needed to recover your cost after the 2% GE tax."
+                    title="The minimum sell price needed to recover your cost after GE tax (2%, capped at 5M gp, no tax below 50 gp)."
                     on:click={() => sortable && sortBy && sortBy('breakEvenPrice')}
                 >
                     Break-even price
@@ -166,7 +175,7 @@
                     class="text-right p-2 select-none hover:text-white transition-colors {sortable
                         ? 'cursor-pointer'
                         : ''}"
-                    title="Your profit if you were to buy at 'Sell price' and sell at 'Buy price', after deducting the 2% GE tax."
+                    title="Your profit if you buy at 'Sell price' and sell at 'Buy price', after GE tax (2% rounded down, capped at 5M gp)."
                     on:click={() => sortable && sortBy && sortBy('postTaxProfit')}
                 >
                     Post-tax profit
@@ -280,12 +289,12 @@
                     {/if}
                     {#if columnVisibility.breakEvenPrice}
                         <td class="p-2 text-right">
-                            {#if calculateBreakEvenPrice(r.buyPrice, r.sellPrice) == null}
+                            {#if calculateBreakEvenPrice(r.buyPrice, r.sellPrice, r.id) == null}
                                 <span title="No break-even price data available for this item" class="cursor-help"
                                     >—</span
                                 >
                             {:else}
-                                {formatInt(calculateBreakEvenPrice(r.buyPrice, r.sellPrice))}
+                                {formatInt(calculateBreakEvenPrice(r.buyPrice, r.sellPrice, r.id))}
                             {/if}
                         </td>
                     {/if}
@@ -305,17 +314,17 @@
                     {#if columnVisibility.postTaxProfit}
                         <td
                             class="p-2 text-right"
-                            class:red-text={getPostTaxProfitValue(r.buyPrice, r.sellPrice) !== null &&
-                                getPostTaxProfitValue(r.buyPrice, r.sellPrice)! < 0}
-                            class:green-text={getPostTaxProfitValue(r.buyPrice, r.sellPrice) !== null &&
-                                getPostTaxProfitValue(r.buyPrice, r.sellPrice)! >= 0}
+                            class:red-text={getPostTaxProfitValue(r.buyPrice, r.sellPrice, r.id) !== null &&
+                                getPostTaxProfitValue(r.buyPrice, r.sellPrice, r.id)! < 0}
+                            class:green-text={getPostTaxProfitValue(r.buyPrice, r.sellPrice, r.id) !== null &&
+                                getPostTaxProfitValue(r.buyPrice, r.sellPrice, r.id)! >= 0}
                         >
-                            {#if calculatePostTaxProfit(r.buyPrice, r.sellPrice) == null}
+                            {#if calculatePostTaxProfit(r.buyPrice, r.sellPrice, r.id) == null}
                                 <span title="No post-tax profit data available for this item" class="cursor-help"
                                     >—</span
                                 >
                             {:else}
-                                {formatInt(calculatePostTaxProfit(r.buyPrice, r.sellPrice))}
+                                {formatInt(calculatePostTaxProfit(r.buyPrice, r.sellPrice, r.id))}
                             {/if}
                         </td>
                     {/if}

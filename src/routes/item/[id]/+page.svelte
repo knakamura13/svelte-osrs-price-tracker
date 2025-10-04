@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { page } from '$app/stores';
     import type { PageData } from './$types';
     import PriceChart from '$lib/components/PriceChart.svelte';
     import { formatInt } from '$lib/utils/format';
     import { secondsAgoFromUnix } from '$lib/utils/time';
+    import { calculatePostTaxProfit } from '$lib/utils/tax';
 
     export let data: PageData;
 
@@ -39,14 +39,12 @@
 
     // Calculate stats
     $: margin = item.buyPrice && item.sellPrice ? item.buyPrice - item.sellPrice : null;
-    $: taxRate = 0.02;
-    $: postTaxProfit =
-        item.buyPrice && item.sellPrice ? Math.floor(item.buyPrice * (1 - taxRate) - item.sellPrice) : null;
+    $: postTaxProfit = calculatePostTaxProfit(item.buyPrice, item.sellPrice, item.id);
     $: roi = item.sellPrice && postTaxProfit ? ((postTaxProfit / item.sellPrice) * 100).toFixed(2) : null;
     $: marginVolume = margin && item.dailyVolume ? formatInt(margin * item.dailyVolume) : null;
 
     // Check if low volume
-    $: isLowVolume = item.dailyVolume !== null && item.dailyVolume < 100;
+    $: isLowVolume = item.dailyVolume !== null && item.dailyVolume !== undefined && item.dailyVolume < 100;
 </script>
 
 <svelte:head>
@@ -71,7 +69,7 @@
         >
             <p class="font-medium">
                 This is a low volume item. The prices displayed here may fluctuate dramatically, or be somewhat
-                inaccurate given the low amount of trades per day. Take extra care when trading this item.
+                inaccurate given the low amount of trades per day.
             </p>
         </div>
     {/if}
@@ -250,4 +248,3 @@
         {/if}
     </div>
 </div>
-
