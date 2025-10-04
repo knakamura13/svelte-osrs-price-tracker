@@ -30,8 +30,8 @@
     let page = 1;
     let pageSize = 25;
     let auto = false;
-    // Default refresh interval from env or fallback to 60 seconds
-    let refreshSec = import.meta.env.PUBLIC_REFRESH_MS ? Math.floor(import.meta.env.PUBLIC_REFRESH_MS / 1000) : 60;
+    // Refresh interval is hardcoded to 60 seconds
+    const refreshSec = 60;
 
     let allRows: PriceRow[] = data?.rows ?? [];
     let lastUpdated: number | null = null;
@@ -199,15 +199,9 @@
     function handleTimeChange(key: 'buyTime' | 'sellTime', bound: 'min' | 'max', value: number | null) {
         // Reassign filters immutably so Svelte tracks the change
         if (key === 'buyTime') {
-            filters = {
-                ...filters,
-                buyTime: { ...filters.buyTime, [bound]: value }
-            } as Filters;
+            filters = { ...filters, buyTime: { ...filters.buyTime, [bound]: value } } as Filters;
         } else {
-            filters = {
-                ...filters,
-                sellTime: { ...filters.sellTime, [bound]: value }
-            } as Filters;
+            filters = { ...filters, sellTime: { ...filters.sellTime, [bound]: value } } as Filters;
         }
     }
 
@@ -250,7 +244,20 @@
     // Recompute label once per second using nowSec as a dependency
     $: {
         nowSec;
-        lastUpdatedLabel = secondsAgoFromUnix(lastUpdated ? Math.floor(lastUpdated / 1000) : null);
+        if (lastUpdated) {
+            const unixSeconds = Math.floor(lastUpdated / 1000);
+            const now = Math.floor(Date.now() / 1000);
+            const diff = Math.max(0, now - unixSeconds);
+            // Cap the displayed seconds at 59 to avoid showing the full 60-second refresh interval
+            const cappedDiff = Math.min(diff, 59);
+            if (cappedDiff < 60) {
+                lastUpdatedLabel = `${cappedDiff}s ago`;
+            } else {
+                lastUpdatedLabel = secondsAgoFromUnix(unixSeconds);
+            }
+        } else {
+            lastUpdatedLabel = '—';
+        }
         // Update retry countdown
         if (nextRetryAt !== null) {
             const remaining = nextRetryAt - nowSec;
@@ -270,15 +277,7 @@
 </svelte:head>
 
 <div class="page" id="home">
-    <HeaderControls
-        {lastUpdatedLabel}
-        {auto}
-        {refreshSec}
-        {loading}
-        onToggleAuto={(v) => (auto = v)}
-        onIntervalChange={(v) => (refreshSec = v)}
-        onRefresh={loadRows}
-    />
+    <HeaderControls {lastUpdatedLabel} {auto} onToggleAuto={(v) => (auto = v)} />
 
     <section class="px-4 pb-2 mt-4">
         <SearchBar
