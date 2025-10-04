@@ -104,9 +104,20 @@
         if (!svgElement || validData.length === 0) return;
 
         const rect = svgElement.getBoundingClientRect();
-        const x = event.clientX - rect.left - padding.left;
-        const y = event.clientY - rect.top - padding.top;
 
+        // Account for SVG viewBox scaling
+        const scaleX = chartWidth / rect.width;
+        const scaleY = chartHeight / rect.height;
+
+        // Convert client coordinates to SVG coordinates for data point detection
+        const svgX = (event.clientX - rect.left) * scaleX;
+        const svgY = (event.clientY - rect.top) * scaleY;
+
+        // Calculate coordinates relative to the inner chart area for data point detection
+        const x = svgX - padding.left;
+        const y = svgY - padding.top;
+
+        // Store actual screen coordinates (relative to the container) for tooltip positioning
         mouseX = event.clientX - rect.left;
         mouseY = event.clientY - rect.top;
 
