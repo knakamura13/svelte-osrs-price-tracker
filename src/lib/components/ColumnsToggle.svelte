@@ -42,7 +42,10 @@
 </script>
 
 <div class="mb-4">
-    <div class="bg-gray-100 dark:bg-gray-800 rounded-t-lg border border-gray-300 dark:border-gray-600" class:rounded-lg={!expanded}>
+    <div
+        class="bg-gray-100 dark:bg-gray-800 rounded-t-lg border border-gray-300 dark:border-gray-600"
+        class:rounded-lg={!expanded}
+    >
         <div class="flex items-center justify-between p-3">
             <button
                 class="accordion-trigger text-left flex-1 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
@@ -59,10 +62,12 @@
                     Reset
                 </button>
                 <button
-                    class="transform transition-transform {expanded ? 'rotate-180' : ''} cursor-pointer bg-transparent border-none p-0 text-inherit"
+                    class="transform transition-transform {expanded
+                        ? 'rotate-180'
+                        : ''} cursor-pointer bg-transparent border-none p-0 text-inherit"
                     on:click={() => onToggle && onToggle()}
-                    aria-label="Toggle columns panel"
-                >▼</button>
+                    aria-label="Toggle columns panel">▼</button
+                >
             </div>
         </div>
     </div>

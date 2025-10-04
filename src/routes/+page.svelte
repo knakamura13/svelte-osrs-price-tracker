@@ -336,23 +336,24 @@
             {columnVisibility}
             onToggle={() => (columnsExpanded = !columnsExpanded)}
             onChange={(k, checked) => (columnVisibility = { ...columnVisibility, [k]: checked })}
-            onReset={() => (columnVisibility = {
-                name: true,
-                buyLimit: true,
-                buyPrice: true,
-                buyTime: true,
-                sellPrice: true,
-                sellTime: true,
-                breakEvenPrice: true,
-                margin: true,
-                postTaxProfit: true,
-                dailyVolume: true,
-                dailyLow: true,
-                dailyHigh: true,
-                averageBuy: true,
-                averageSell: true,
-                potentialProfit: true
-            })}
+            onReset={() =>
+                (columnVisibility = {
+                    name: true,
+                    buyLimit: true,
+                    buyPrice: true,
+                    buyTime: true,
+                    sellPrice: true,
+                    sellTime: true,
+                    breakEvenPrice: true,
+                    margin: true,
+                    postTaxProfit: true,
+                    dailyVolume: true,
+                    dailyLow: true,
+                    dailyHigh: true,
+                    averageBuy: true,
+                    averageSell: true,
+                    potentialProfit: true
+                })}
         />
 
         <FiltersPanel

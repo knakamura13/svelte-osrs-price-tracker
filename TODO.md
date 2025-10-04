@@ -1,6 +1,3 @@
-- Make the prices table horizontally scrollable with the minimum width specified (CSS layout fix)
-- Add a 'Reset' button to the Toggle columns panel (re-enables all columns) (UI enhancement)
-- Move the 'Search for an item' search bar to be below the filters panel and right above the prices table (layout adjustment)
 - Re-order the prices table columns in the most logical arrangement. Ensure the order is the same across the toggle columns panel, apply filters panel, the prices table, and on the item details page (slug route) (consistency across components)
 - On the price history chart, extend the price lines all the way to the y-axis to prevent "floating datapoints" from appearing, making it easier for the user to tell that the price hasn't changed from the beginning of the time series til that datapoint (chart visualization improvement)
 - Add more e2e tests, at least one per component (test coverage expansion)
