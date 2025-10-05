@@ -306,7 +306,7 @@
                     >
                         <td class="h-4 w-4">
                             {#if r.icon}
-                                <img class="object-contain" src={r.icon} alt={r.name} />
+                                <img class="object-contain" src={r.icon} alt={r.name} loading="lazy" />
                             {/if}
                         </td>
                         {#if columnVisibility.name}

@@ -79,7 +79,7 @@
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
         <div class="flex items-start gap-4">
             {#if item.icon}
-                <img src={item.icon} alt={item.name} class="w-16 h-16 object-contain" />
+                <img src={item.icon} alt={item.name} class="w-16 h-16 object-contain" loading="lazy" />
             {/if}
             <div class="flex-1">
                 <div class="flex items-center gap-3 mb-2">
