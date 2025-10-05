@@ -7,6 +7,7 @@
         calculatePostTaxProfit as calcPostTaxProfit
     } from '$lib/utils/tax';
     import PaginationControls from './PaginationControls.svelte';
+    import { ChevronUp, ChevronDown, Minus, BookOpen } from 'lucide-svelte';
 
     export let rows: PriceRow[] = [];
     export let sortable: boolean = false;
@@ -45,11 +46,11 @@
     // Calculate visible column count for colspan
     $: visibleColumnCount = Object.values(columnVisibility).filter(Boolean).length + 1; // +1 for image column
 
-    let sortIcon: (key: string) => string = () => '';
-    $: sortIcon = (key: string): string => {
-        if (!sortable) return '';
-        if (sortKey === key) return sortDir === 'asc' ? '▲' : '▼';
-        return '↕';
+    let sortIcon: (key: string) => any = () => null;
+    $: sortIcon = (key: string) => {
+        if (!sortable) return null;
+        if (sortKey === key) return sortDir === 'asc' ? ChevronUp : ChevronDown;
+        return Minus;
     };
 
     // Wrapper functions for break-even and post-tax profit calculations
@@ -96,7 +97,7 @@
                         title="The name of the item"
                         on:click={() => sortable && sortBy && sortBy('name')}
                     >
-                        Name <span class="ml-1 opacity-60 select-none">{sortIcon('name')}</span>
+                        Name <span class="ml-1 opacity-60 select-none">{#if sortIcon('name')}<svelte:component this={sortIcon('name')} class="w-3 h-3" />{/if}</span>
                     </th>
                 {/if}
                 {#if columnVisibility.buyLimit}
@@ -107,7 +108,7 @@
                         title="The maximum number of items you can buy in 4 hours"
                         on:click={() => sortable && sortBy && sortBy('buyLimit')}
                     >
-                        Buy limit <span class="ml-1 opacity-60 select-none">{sortIcon('buyLimit')}</span>
+                        Buy limit <span class="ml-1 opacity-60 select-none">{#if sortIcon('buyLimit')}<svelte:component this={sortIcon('buyLimit')} class="w-3 h-3" />{/if}</span>
                     </th>
                 {/if}
 
@@ -120,7 +121,7 @@
                         title="The current insta-buy price for this item from the Grand Exchange"
                         on:click={() => sortable && sortBy && sortBy('buyPrice')}
                     >
-                        Insta-buy price <span class="ml-1 opacity-60 select-none">{sortIcon('buyPrice')}</span>
+                        Insta-buy price <span class="ml-1 opacity-60 select-none">{#if sortIcon('buyPrice')}<svelte:component this={sortIcon('buyPrice')} class="w-3 h-3" />{/if}</span>
                     </th>
                 {/if}
                 {#if columnVisibility.buyTime}
@@ -129,7 +130,7 @@
                         title="When the last buy transaction occurred"
                         on:click={() => sortable && sortBy && sortBy('buyTime')}
                     >
-                        Last buy <span class="ml-1 opacity-60 select-none">{sortIcon('buyTime')}</span>
+                        Last buy <span class="ml-1 opacity-60 select-none">{#if sortIcon('buyTime')}<svelte:component this={sortIcon('buyTime')} class="w-3 h-3" />{/if}</span>
                     </th>
                 {/if}
                 {#if columnVisibility.sellPrice}
@@ -140,7 +141,7 @@
                         title="The current insta-sell price for this item on the Grand Exchange"
                         on:click={() => sortable && sortBy && sortBy('sellPrice')}
                     >
-                        Insta-sell price <span class="ml-1 opacity-60 select-none">{sortIcon('sellPrice')}</span>
+                        Insta-sell price <span class="ml-1 opacity-60 select-none">{#if sortIcon('sellPrice')}<svelte:component this={sortIcon('sellPrice')} class="w-3 h-3" />{/if}</span>
                     </th>
                 {/if}
                 {#if columnVisibility.sellTime}
@@ -151,7 +152,7 @@
                         title="When the last sell transaction occurred"
                         on:click={() => sortable && sortBy && sortBy('sellTime')}
                     >
-                        Last sell <span class="ml-1 opacity-60 select-none">{sortIcon('sellTime')}</span>
+                        Last sell <span class="ml-1 opacity-60 select-none">{#if sortIcon('sellTime')}<svelte:component this={sortIcon('sellTime')} class="w-3 h-3" />{/if}</span>
                     </th>
                 {/if}
 
@@ -164,7 +165,7 @@
                         title="The profit margin (sell price - buy price)"
                         on:click={() => sortable && sortBy && sortBy('margin')}
                     >
-                        Margin <span class="ml-1 opacity-60 select-none">{sortIcon('margin')}</span>
+                        Margin <span class="ml-1 opacity-60 select-none">{#if sortIcon('margin')}<svelte:component this={sortIcon('margin')} class="w-3 h-3" />{/if}</span>
                     </th>
                 {/if}
                 {#if columnVisibility.breakEvenPrice}
@@ -181,7 +182,7 @@
                             style="font-size: 0.75em; vertical-align: super; top: -0.2em;"
                             aria-label="Break-even Price tooltip">?</span
                         >
-                        <span class="ml-1 opacity-60 select-none">{sortIcon('breakEvenPrice')}</span>
+                        <span class="ml-1 opacity-60 select-none">{#if sortIcon('breakEvenPrice')}<svelte:component this={sortIcon('breakEvenPrice')} class="w-3 h-3" />{/if}</span>
                     </th>
                 {/if}
                 {#if columnVisibility.postTaxProfit}
@@ -198,7 +199,7 @@
                             style="font-size: 0.75em; vertical-align: super; top: -0.2em;"
                             aria-label="Post-tax Profit tooltip">?</span
                         >
-                        <span class="ml-1 opacity-60 select-none">{sortIcon('postTaxProfit')}</span>
+                        <span class="ml-1 opacity-60 select-none">{#if sortIcon('postTaxProfit')}<svelte:component this={sortIcon('postTaxProfit')} class="w-3 h-3" />{/if}</span>
                     </th>
                 {/if}
                 {#if columnVisibility.potentialProfit}
@@ -215,7 +216,7 @@
                             style="font-size: 0.75em; vertical-align: super; top: -0.2em;"
                             aria-label="Potential Profit tooltip">?</span
                         >
-                        <span class="ml-1 opacity-60 select-none">{sortIcon('potentialProfit')}</span>
+                        <span class="ml-1 opacity-60 select-none">{#if sortIcon('potentialProfit')}<svelte:component this={sortIcon('potentialProfit')} class="w-3 h-3" />{/if}</span>
                     </th>
                 {/if}
 
@@ -228,7 +229,7 @@
                         title="The number of items traded in the last 24 hours."
                         on:click={() => sortable && sortBy && sortBy('dailyVolume')}
                     >
-                        Daily volume <span class="ml-1 opacity-60 select-none">{sortIcon('dailyVolume')}</span>
+                        Daily volume <span class="ml-1 opacity-60 select-none">{#if sortIcon('dailyVolume')}<svelte:component this={sortIcon('dailyVolume')} class="w-3 h-3" />{/if}</span>
                     </th>
                 {/if}
                 {#if columnVisibility.dailyLow}
@@ -239,7 +240,7 @@
                         title="The lowest price the item was traded for in the past 24 hours."
                         on:click={() => sortable && sortBy && sortBy('dailyLow')}
                     >
-                        Daily low <span class="ml-1 opacity-60 select-none">{sortIcon('dailyLow')}</span>
+                        Daily low <span class="ml-1 opacity-60 select-none">{#if sortIcon('dailyLow')}<svelte:component this={sortIcon('dailyLow')} class="w-3 h-3" />{/if}</span>
                     </th>
                 {/if}
                 {#if columnVisibility.dailyHigh}
@@ -250,7 +251,7 @@
                         title="The highest price the item was traded for in the past 24 hours."
                         on:click={() => sortable && sortBy && sortBy('dailyHigh')}
                     >
-                        Daily high <span class="ml-1 opacity-60 select-none">{sortIcon('dailyHigh')}</span>
+                        Daily high <span class="ml-1 opacity-60 select-none">{#if sortIcon('dailyHigh')}<svelte:component this={sortIcon('dailyHigh')} class="w-3 h-3" />{/if}</span>
                     </th>
                 {/if}
                 {#if columnVisibility.averageBuy}
@@ -261,7 +262,7 @@
                         title="The mean of all insta-buy price values in the past 24 hours."
                         on:click={() => sortable && sortBy && sortBy('averageBuy')}
                     >
-                        Avg buy <span class="ml-1 opacity-60 select-none">{sortIcon('averageBuy')}</span>
+                        Avg buy <span class="ml-1 opacity-60 select-none">{#if sortIcon('averageBuy')}<svelte:component this={sortIcon('averageBuy')} class="w-3 h-3" />{/if}</span>
                     </th>
                 {/if}
                 {#if columnVisibility.averageSell}
@@ -272,7 +273,7 @@
                         title="The mean of all insta-sell price values in the past 24 hours."
                         on:click={() => sortable && sortBy && sortBy('averageSell')}
                     >
-                        Avg sell <span class="ml-1 opacity-60 select-none">{sortIcon('averageSell')}</span>
+                        Avg sell <span class="ml-1 opacity-60 select-none">{#if sortIcon('averageSell')}<svelte:component this={sortIcon('averageSell')} class="w-3 h-3" />{/if}</span>
                     </th>
                 {/if}
             </tr>
@@ -328,10 +329,10 @@
                                             href={r.wikiUrl}
                                             target="_blank"
                                             rel="noreferrer"
-                                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xs"
+                                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xs flex items-center"
                                             title="View on OSRS Wiki"
                                         >
-                                            📖
+                                            <BookOpen class="w-3 h-3" />
                                         </a>
                                     {/if}
                                 </div>

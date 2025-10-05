@@ -1,5 +1,6 @@
 <script lang="ts">
     import { slide } from 'svelte/transition';
+    import { ChevronDown, RefreshCw } from 'lucide-svelte';
 
     export let expanded: boolean = false;
     export let columnVisibility: {
@@ -48,7 +49,7 @@
         on:click={() => onToggle && onToggle()}
     >
         <span class="font-medium">Toggle columns</span>
-        <span class="transform transition-transform {expanded ? 'rotate-180' : ''}">▼</span>
+        <ChevronDown class="w-4 h-4 transform transition-transform {expanded ? 'rotate-180' : ''}" />
     </button>
 
     {#if expanded}
@@ -232,11 +233,12 @@
             </div>
             <div class="mt-4 flex justify-end">
                 <button
-                    class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors"
+                    class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors flex items-center gap-2"
                     on:click={() => onReset && onReset()}
                     title="Reset all columns to visible"
                 >
-                    🔄 Reset columns
+                    <RefreshCw class="w-4 h-4" />
+                    Reset columns
                 </button>
             </div>
         </div>

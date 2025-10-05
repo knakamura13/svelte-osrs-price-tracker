@@ -3,6 +3,7 @@
     import type { Filters, FilterStats } from '$lib/types';
     import { isPositive } from '$lib/utils/filters';
     import { secondsFromParts, partsFromSeconds } from '$lib/utils/duration';
+    import { ChevronDown } from 'lucide-svelte';
 
     export let expanded: boolean = false;
     export let filters: Filters;
@@ -176,7 +177,7 @@
                 ({`${activeFiltersCount} ${activeFiltersCount === 1 ? 'filter' : 'filters'} active`})
             </span>
         </span>
-        <span class="transform transition-transform {expanded ? 'rotate-180' : ''}">▼</span>
+        <ChevronDown class="w-4 h-4 transform transition-transform {expanded ? 'rotate-180' : ''}" />
     </button>
 
     {#if expanded}

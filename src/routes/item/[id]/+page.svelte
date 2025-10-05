@@ -5,6 +5,7 @@
     import { secondsAgoFromUnix } from '$lib/utils/time';
     import { calculatePostTaxProfit } from '$lib/utils/tax';
     import { settingsStore } from '$lib/utils/settings';
+    import { Star, DollarSign } from 'lucide-svelte';
 
     export let data: PageData;
 
@@ -90,7 +91,7 @@
                 <div class="flex items-center gap-3 mb-2">
                     <h1 class="text-3xl font-bold">{item.name}</h1>
                     {#if item.members}
-                        <span class="text-yellow-500" title="Members only">⭐</span>
+                        <Star class="w-5 h-5 text-yellow-500" title="Members only" />
                     {/if}
                 </div>
                 <p class="text-sm text-gray-600 dark:text-gray-400">Item ID: {item.id}</p>
@@ -129,7 +130,7 @@
                 <!-- Buy price -->
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <span class="text-lg">💰</span>
+                        <DollarSign class="w-5 h-5" />
                         <span class="text-sm text-gray-600 dark:text-gray-400">Insta-buy price:</span>
                     </div>
                     <div class="text-right">
@@ -149,7 +150,7 @@
                 <!-- Sell price -->
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <span class="text-lg">💰</span>
+                        <DollarSign class="w-5 h-5" />
                         <span class="text-sm text-gray-600 dark:text-gray-400">Insta-sell price:</span>
                     </div>
                     <div class="text-right">
@@ -306,9 +307,9 @@
                     <span class="text-sm text-gray-600 dark:text-gray-400">Members:</span>
                     <div class="text-lg">
                         {#if item.members}
-                            <span class="text-yellow-500">⭐</span>
+                            <Star class="w-5 h-5 text-yellow-500" />
                         {:else}
-                            <span class="grayscale">⭐</span>
+                            <Star class="w-5 h-5 grayscale opacity-50" />
                         {/if}
                     </div>
                 </div>

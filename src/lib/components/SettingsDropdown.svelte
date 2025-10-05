@@ -1,5 +1,6 @@
 <script lang="ts">
     import { settingsStore, getSystemDarkMode } from '$lib/utils/settings';
+    import { ChevronUp, ChevronDown } from 'lucide-svelte';
 
     let isOpen = false;
     let dropdownRef: HTMLElement;
@@ -184,7 +185,7 @@
                                     }}
                                     aria-label="Increase decimal places"
                                 >
-                                    ▲
+                                    <ChevronUp class="w-4 h-3" />
                                 </button>
                                 <button
                                     type="button"
@@ -197,7 +198,7 @@
                                     }}
                                     aria-label="Decrease decimal places"
                                 >
-                                    ▼
+                                    <ChevronDown class="w-4 h-3" />
                                 </button>
                             </div>
                         </div>
