@@ -42,35 +42,14 @@
 </script>
 
 <div class="mb-4">
-    <div
-        class="bg-gray-100 dark:bg-gray-800 rounded-t-lg border border-gray-300 dark:border-gray-600"
-        class:rounded-lg={!expanded}
+    <button
+        class="accordion-trigger w-full text-left p-3 bg-gray-100 dark:bg-gray-800 rounded-t-lg border border-gray-300 dark:border-gray-600 flex items-center justify-between hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+        class:rounded-b-lg={!expanded}
+        on:click={() => onToggle && onToggle()}
     >
-        <div class="flex items-center justify-between p-3">
-            <button
-                class="accordion-trigger text-left flex-1 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                on:click={() => onToggle && onToggle()}
-            >
-                <span class="font-medium">Toggle columns</span>
-            </button>
-            <div class="flex items-center gap-2">
-                <button
-                    class="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
-                    on:click={() => onReset && onReset()}
-                    title="Reset all columns to visible"
-                >
-                    Reset
-                </button>
-                <button
-                    class="transform transition-transform {expanded
-                        ? 'rotate-180'
-                        : ''} cursor-pointer bg-transparent border-none p-0 text-inherit"
-                    on:click={() => onToggle && onToggle()}
-                    aria-label="Toggle columns panel">▼</button
-                >
-            </div>
-        </div>
-    </div>
+        <span class="font-medium">Toggle columns</span>
+        <span class="transform transition-transform {expanded ? 'rotate-180' : ''}">▼</span>
+    </button>
 
     {#if expanded}
         <div
@@ -250,6 +229,15 @@
                         </label>
                     </div>
                 </div>
+            </div>
+            <div class="mt-4 flex justify-end">
+                <button
+                    class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors"
+                    on:click={() => onReset && onReset()}
+                    title="Reset all columns to visible"
+                >
+                    🔄 Reset columns
+                </button>
             </div>
         </div>
     {/if}

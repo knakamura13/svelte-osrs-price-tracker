@@ -29,7 +29,7 @@
 </script>
 
 <input
-    class="border rounded p-2 w-full md:w-80"
+    class="border rounded p-2 w-full md:w-1/2"
     {placeholder}
     value={draft}
     on:input={handleInput}

@@ -367,16 +367,14 @@
             onTimeChange={handleTimeChange}
         />
 
-        <section class="px-4 pb-2">
-            <SearchBar
-                value={search}
-                placeholder="Search for an item..."
-                onInput={(v) => {
-                    search = v;
-                    page = 1;
-                }}
-            />
-        </section>
+        <SearchBar
+            value={search}
+            placeholder="Search for an item..."
+            onInput={(v) => {
+                search = v;
+                page = 1;
+            }}
+        />
 
         {#if loading}
             <LoadingSkeleton rows={pageSize} columns={Object.values(columnVisibility).filter(Boolean).length + 1} />

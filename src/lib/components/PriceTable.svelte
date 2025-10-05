@@ -80,7 +80,7 @@
 <!-- Pagination Controls (Top) -->
 <PaginationControls {page} {pageSize} {totalRows} {onPageChange} {onPageSizeChange} />
 
-<div class="overflow-x-auto min-w-[1200px]">
+<div class="overflow-x-auto min-w-[90rem]">
     <table class="w-full text-sm">
         <thead class="bg-gray-50 dark:bg-[#2a3138] dark:text-gray-200 sticky top-0">
             <tr>
