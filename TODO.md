@@ -4,4 +4,3 @@
     3. 'Decimal places' field (greyed out/disabled by default; when 'Decimal View' is enabled, the number the user specifies in the 'Decimal places' field sets the number of decimal places we'll render for all prices. Default value, when enabled, is 2 decimal places)
     4. Light/Dark mode toggle (try to default the value to the browser/OS preference, otherwise default to dark mode)
     - ensure settings are always preserved after page reload/navigation using local storage or cookies (comprehensive settings system)
-- Investigate potential issue with page load times; navigating to either route (root or slug route) sometimes takes many seconds with no indication as to what is causing the delay. Consider implementing pre-fetching/pre-loading when user hovers over a link that would cause navigation to occur (performance optimization and debugging)

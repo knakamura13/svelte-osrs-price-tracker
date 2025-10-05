@@ -21,7 +21,8 @@
     import { setupAutoRefreshWithBackoff, calculateBackoff } from '$lib/utils/autoRefresh';
     import type { PriceRow, Filters, SortKey, FilterStats } from '$lib/types';
 
-    export let data: { rows: PriceRow[] };
+    // Data prop is now optional since we load data client-side for better UX
+    export let data: { rows?: PriceRow[] } = {};
 
     let search: string = '';
     let sortKey: SortKey | null = 'name';
@@ -42,7 +43,7 @@
     let lastUpdatedLabel: string = '—';
     let errorMsg: string | null = null;
     let failCount = 0;
-    let loading = false;
+    let loading = true; // Start with loading true for initial load
     let nextRetryAt: number | null = null; // Unix timestamp in seconds
     let nextRetryIn: number | null = null; // Countdown in seconds
     let toastVisible = false;
@@ -183,11 +184,8 @@
     // filteredSorted is imported from $lib/utils/filters
 
     onMount(() => {
-        if (!allRows?.length) {
-            loadRows();
-        } else {
-            lastUpdated = Date.now();
-        }
+        // Always load data on mount for fresh data and better UX
+        loadRows();
         // Hydrate prefs once
         const loaded = loadPrefs(Math.floor(Date.now() / 1000));
         if (loaded) {
@@ -389,7 +387,7 @@
             />
         </section>
 
-        {#if loading && allRows.length === 0}
+        {#if loading}
             <LoadingSkeleton rows={pageSize} columns={Object.values(columnVisibility).filter(Boolean).length + 1} />
         {:else}
             <PriceTable
