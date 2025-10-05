@@ -1,14 +1,16 @@
 <script lang="ts">
     import type { PageData } from './$types';
     import PriceChart from '$lib/components/PriceChart.svelte';
-    import { formatInt } from '$lib/utils/format';
+    import { formatInt, formatPrice } from '$lib/utils/format';
     import { secondsAgoFromUnix } from '$lib/utils/time';
     import { calculatePostTaxProfit } from '$lib/utils/tax';
+    import { settingsStore } from '$lib/utils/settings';
 
     export let data: PageData;
 
     $: item = data.item;
     $: timeseries = data.timeseries;
+    $: settings = $settingsStore;
 
     // Time range state
     let timeRange: '5m' | '1h' | '6h' | '1y' = '5m'; // 5m = 24h, 1h = 7d, 6h = 30d, 1y = 1 year
@@ -41,7 +43,10 @@
     $: margin = item.buyPrice && item.sellPrice ? item.buyPrice - item.sellPrice : null;
     $: postTaxProfit = calculatePostTaxProfit(item.buyPrice, item.sellPrice, item.id);
     $: roi = item.sellPrice && postTaxProfit ? ((postTaxProfit / item.sellPrice) * 100).toFixed(2) : null;
-    $: marginVolume = margin && item.dailyVolume ? formatInt(margin * item.dailyVolume) : null;
+    $: marginVolume =
+        margin && item.dailyVolume
+            ? formatPrice(margin * item.dailyVolume, settings.decimalView, settings.decimalPlaces)
+            : null;
     $: buyLimitProfit = item.buyLimit && postTaxProfit ? item.buyLimit * postTaxProfit : null;
 
     // Check if low volume
@@ -129,7 +134,9 @@
                     </div>
                     <div class="text-right">
                         <div class="text-lg font-bold text-orange-600 dark:text-orange-400">
-                            {item.buyPrice !== null ? formatInt(item.buyPrice) : '—'}
+                            {item.buyPrice !== null
+                                ? formatPrice(item.buyPrice, settings.decimalView, settings.decimalPlaces)
+                                : '—'}
                         </div>
                         {#if item.buyTime}
                             <div class="text-xs text-gray-500">
@@ -147,7 +154,9 @@
                     </div>
                     <div class="text-right">
                         <div class="text-lg font-bold text-green-600 dark:text-green-400">
-                            {item.sellPrice !== null ? formatInt(item.sellPrice) : '—'}
+                            {item.sellPrice !== null
+                                ? formatPrice(item.sellPrice, settings.decimalView, settings.decimalPlaces)
+                                : '—'}
                         </div>
                         {#if item.sellTime}
                             <div class="text-xs text-gray-500">
@@ -165,7 +174,9 @@
                     <span class="text-sm text-gray-600 dark:text-gray-400">Daily volume:</span>
                     <div class="text-right">
                         <div class="text-lg font-bold text-orange-600 dark:text-orange-400">
-                            {item.dailyVolume !== null ? formatInt(item.dailyVolume) : '—'}
+                            {item.dailyVolume !== null
+                                ? formatPrice(item.dailyVolume, settings.decimalView, settings.decimalPlaces)
+                                : '—'}
                         </div>
                     </div>
                 </div>
@@ -174,7 +185,9 @@
                 <div class="flex items-center justify-between">
                     <span class="text-sm text-gray-600 dark:text-gray-400">Potential profit:</span>
                     <div class="text-lg font-bold text-green-600 dark:text-green-400">
-                        {postTaxProfit !== null ? formatInt(postTaxProfit) : '—'}
+                        {postTaxProfit !== null
+                            ? formatPrice(postTaxProfit, settings.decimalView, settings.decimalPlaces)
+                            : '—'}
                     </div>
                 </div>
 
@@ -198,7 +211,9 @@
                 <div class="flex items-center justify-between">
                     <span class="text-sm text-gray-600 dark:text-gray-400">Buy limit profit:</span>
                     <div class="text-lg font-bold text-green-600 dark:text-green-400">
-                        {buyLimitProfit !== null ? formatInt(buyLimitProfit) : '—'}
+                        {buyLimitProfit !== null
+                            ? formatPrice(buyLimitProfit, settings.decimalView, settings.decimalPlaces)
+                            : '—'}
                     </div>
                 </div>
 
@@ -206,7 +221,9 @@
                 <div class="flex items-center justify-between">
                     <span class="text-sm text-gray-600 dark:text-gray-400">Daily low:</span>
                     <div class="text-lg font-bold text-blue-600 dark:text-blue-400">
-                        {item.dailyLow !== null && item.dailyLow !== undefined ? formatInt(item.dailyLow) : '—'}
+                        {item.dailyLow !== null && item.dailyLow !== undefined
+                            ? formatPrice(item.dailyLow, settings.decimalView, settings.decimalPlaces)
+                            : '—'}
                     </div>
                 </div>
 
@@ -214,7 +231,9 @@
                 <div class="flex items-center justify-between">
                     <span class="text-sm text-gray-600 dark:text-gray-400">Daily high:</span>
                     <div class="text-lg font-bold text-blue-600 dark:text-blue-400">
-                        {item.dailyHigh !== null && item.dailyHigh !== undefined ? formatInt(item.dailyHigh) : '—'}
+                        {item.dailyHigh !== null && item.dailyHigh !== undefined
+                            ? formatPrice(item.dailyHigh, settings.decimalView, settings.decimalPlaces)
+                            : '—'}
                     </div>
                 </div>
 
@@ -222,7 +241,9 @@
                 <div class="flex items-center justify-between">
                     <span class="text-sm text-gray-600 dark:text-gray-400">Avg buy (24h):</span>
                     <div class="text-lg font-bold text-purple-600 dark:text-purple-400">
-                        {item.averageBuy !== null && item.averageBuy !== undefined ? formatInt(item.averageBuy) : '—'}
+                        {item.averageBuy !== null && item.averageBuy !== undefined
+                            ? formatPrice(item.averageBuy, settings.decimalView, settings.decimalPlaces)
+                            : '—'}
                     </div>
                 </div>
 
@@ -231,7 +252,7 @@
                     <span class="text-sm text-gray-600 dark:text-gray-400">Avg sell (24h):</span>
                     <div class="text-lg font-bold text-purple-600 dark:text-purple-400">
                         {item.averageSell !== null && item.averageSell !== undefined
-                            ? formatInt(item.averageSell)
+                            ? formatPrice(item.averageSell, settings.decimalView, settings.decimalPlaces)
                             : '—'}
                     </div>
                 </div>
@@ -243,7 +264,9 @@
                 <div class="flex items-center justify-between">
                     <span class="text-sm text-gray-600 dark:text-gray-400">Buy limit:</span>
                     <div class="text-lg font-bold">
-                        {item.buyLimit !== null ? formatInt(item.buyLimit) : '∞'}
+                        {item.buyLimit !== null
+                            ? formatPrice(item.buyLimit, settings.decimalView, settings.decimalPlaces)
+                            : '∞'}
                     </div>
                 </div>
 
@@ -252,11 +275,17 @@
                     <span class="text-sm text-gray-600 dark:text-gray-400">High alch:</span>
                     <div class="text-right">
                         <div class="text-lg font-bold">
-                            {item.highalch !== null ? formatInt(item.highalch) : '—'}
+                            {item.highalch !== null
+                                ? formatPrice(item.highalch, settings.decimalView, settings.decimalPlaces)
+                                : '—'}
                         </div>
                         {#if item.highalch !== null && item.highalch !== undefined && item.sellPrice !== null}
                             <div class="text-xs text-red-600 dark:text-red-400">
-                                ({formatInt(item.highalch - item.sellPrice)})
+                                ({formatPrice(
+                                    item.highalch - item.sellPrice,
+                                    settings.decimalView,
+                                    settings.decimalPlaces
+                                )})
                             </div>
                         {/if}
                     </div>
@@ -266,7 +295,9 @@
                 <div class="flex items-center justify-between">
                     <span class="text-sm text-gray-600 dark:text-gray-400">Low alch:</span>
                     <div class="text-lg font-bold">
-                        {item.lowalch !== null ? formatInt(item.lowalch) : '—'}
+                        {item.lowalch !== null
+                            ? formatPrice(item.lowalch, settings.decimalView, settings.decimalPlaces)
+                            : '—'}
                     </div>
                 </div>
 

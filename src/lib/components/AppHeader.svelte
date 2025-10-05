@@ -1,4 +1,6 @@
 <script lang="ts">
+    import SettingsDropdown from './SettingsDropdown.svelte';
+
     export let title: string = 'OSRS Price Tracker';
 </script>
 
@@ -8,6 +10,10 @@
     <div class="flex gap-3 items-center">
         <img alt="Site logo" class="h-5" src="/icons/logo.svg" title="Site logo" loading="lazy" />
         <a class="font-bold uppercase tracking-wide hover:underline" href="/">{title}</a>
+    </div>
+
+    <div class="flex items-center">
+        <SettingsDropdown />
     </div>
 </header>
 

@@ -9,6 +9,15 @@ export type Prefs = {
     filters: Filters;
 };
 
+export type Settings = {
+    autoRefresh: boolean;
+    decimalView: boolean;
+    decimalPlaces: number;
+    darkMode: 'light' | 'dark' | 'auto';
+};
+
+export type AllPrefs = Prefs & Settings;
+
 const STORAGE_KEY = 'osrs:prefs';
 
 export function loadPrefs(nowSeconds: number): Partial<Prefs> | null {

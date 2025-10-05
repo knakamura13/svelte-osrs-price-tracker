@@ -19,6 +19,8 @@
     } from '$lib/utils/filters';
     import { loadPrefs, savePrefs } from '$lib/utils/preferences';
     import { setupAutoRefreshWithBackoff, calculateBackoff } from '$lib/utils/autoRefresh';
+    import { settingsStore } from '$lib/utils/settings';
+    import { formatPrice } from '$lib/utils/format';
     import type { PriceRow, Filters, SortKey, FilterStats } from '$lib/types';
 
     // Data prop is now optional since we load data client-side for better UX
@@ -30,7 +32,8 @@
     let lastSortKey: SortKey | null = 'name';
     let page = 1;
     let pageSize = 25;
-    let auto = false;
+    // Auto-refresh is now managed by settings store
+    let autoRefresh = false;
     // Refresh interval is hardcoded to 60 seconds
     const refreshSec = 60;
     // Throttle instant refreshes to prevent abuse (minimum 1 second between refreshes)
@@ -163,13 +166,13 @@
             errorMsg = err?.message ?? 'Failed to load prices';
 
             // Schedule next retry with backoff if auto-refresh is enabled
-            if (auto) {
+            if (autoRefresh) {
                 const backoffDelay = calculateBackoff(failCount, refreshSec);
                 nextRetryAt = Math.floor(Date.now() / 1000) + backoffDelay;
 
                 // Disable auto-refresh after 5 consecutive failures
                 if (failCount >= 5) {
-                    auto = false;
+                    settingsStore.set({ ...settings, autoRefresh: false });
                     nextRetryAt = null;
                 }
             }
@@ -178,8 +181,12 @@
         }
     }
 
+    // Subscribe to settings store for auto-refresh
+    $: settings = $settingsStore;
+    $: autoRefresh = settings.autoRefresh;
+
     // Track previous auto state to detect when it changes from false to true
-    let prevAuto = false;
+    let prevAutoRefresh = false;
 
     // filteredSorted is imported from $lib/utils/filters
 
@@ -203,7 +210,7 @@
 
     let timer: any;
     let tickTimer: any;
-    $: timer = setupAutoRefreshWithBackoff(timer, auto, refreshSec, failCount, loadRows);
+    $: timer = setupAutoRefreshWithBackoff(timer, autoRefresh, refreshSec, failCount, loadRows);
 
     onDestroy(() => {
         clearInterval(timer);
@@ -288,7 +295,7 @@
 
             // Only cap the display when auto-refresh is enabled and we're close to refresh time
             // This prevents showing "60s ago" before immediately showing "0s ago"
-            if (auto && diff >= 59) {
+            if (autoRefresh && diff >= 59) {
                 lastUpdatedLabel = '59s ago';
             } else {
                 lastUpdatedLabel = secondsAgoFromUnix(unixSeconds);
@@ -315,23 +322,7 @@
 </svelte:head>
 
 <div class="page" id="home">
-    <HeaderControls
-        {lastUpdatedLabel}
-        {auto}
-        onToggleAuto={(v) => {
-            auto = v;
-            // If auto-refresh was just enabled and we're not currently loading, trigger immediate refresh
-            if (auto && !prevAuto && !loading) {
-                const now = Date.now();
-                // Throttle refreshes to prevent abuse (minimum 1 second between refreshes)
-                if (now - lastRefreshTime >= MIN_REFRESH_INTERVAL) {
-                    lastRefreshTime = now;
-                    loadRows();
-                }
-            }
-            prevAuto = auto;
-        }}
-    />
+    <HeaderControls {lastUpdatedLabel} />
 
     <ErrorAlert message={errorMsg} {failCount} {nextRetryIn} autoDisabled={failCount >= 5} />
 
@@ -402,6 +393,8 @@
                 {totalRows}
                 {onPageChange}
                 {onPageSizeChange}
+                decimalView={settings.decimalView}
+                decimalPlaces={settings.decimalPlaces}
             />
         {/if}
     </section>

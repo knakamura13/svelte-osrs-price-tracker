@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { PriceRow } from '$lib/types';
     import { secondsAgoFromUnix } from '$lib/utils/time';
-    import { formatInt } from '$lib/utils/format';
+    import { formatPrice } from '$lib/utils/format';
     import {
         calculateBreakEvenPrice as calcBreakEven,
         calculatePostTaxProfit as calcPostTaxProfit
@@ -30,6 +30,10 @@
         averageSell: true,
         potentialProfit: true
     };
+
+    // Settings props for decimal formatting
+    export let decimalView: boolean = false;
+    export let decimalPlaces: number = 2;
 
     // Pagination props
     export let page: number = 1;
@@ -349,7 +353,7 @@
                                         >—</span
                                     >
                                 {:else}
-                                    {formatInt(r.buyPrice)}
+                                    {formatPrice(r.buyPrice, decimalView, decimalPlaces)}
                                 {/if}
                             </td>
                         {/if}
@@ -363,7 +367,7 @@
                                         >—</span
                                     >
                                 {:else}
-                                    {formatInt(r.sellPrice)}
+                                    {formatPrice(r.sellPrice, decimalView, decimalPlaces)}
                                 {/if}
                             </td>
                         {/if}
@@ -379,7 +383,7 @@
                                 {#if r.margin == null}
                                     <span title="No margin data available for this item" class="cursor-help">—</span>
                                 {:else}
-                                    {formatInt(r.margin)}
+                                    {formatPrice(r.margin, decimalView, decimalPlaces)}
                                 {/if}
                             </td>
                         {/if}
@@ -396,7 +400,7 @@
                                         class="cursor-help text-red-500">ERROR</span
                                     >
                                 {:else}
-                                    {formatInt(breakEvenPrice)}
+                                    {formatPrice(breakEvenPrice, decimalView, decimalPlaces)}
                                 {/if}
                             </td>
                         {/if}
@@ -413,7 +417,11 @@
                                         >—</span
                                     >
                                 {:else}
-                                    {formatInt(calculatePostTaxProfit(r.buyPrice, r.sellPrice, r.id))}
+                                    {formatPrice(
+                                        calculatePostTaxProfit(r.buyPrice, r.sellPrice, r.id),
+                                        decimalView,
+                                        decimalPlaces
+                                    )}
                                 {/if}
                             </td>
                         {/if}
@@ -428,14 +436,14 @@
                                         >—</span
                                     >
                                 {:else}
-                                    {formatInt(r.potentialProfit)}
+                                    {formatPrice(r.potentialProfit, decimalView, decimalPlaces)}
                                 {/if}
                             </td>
                         {/if}
                         {#if columnVisibility.dailyVolume}
                             <td class="p-2 text-right">
                                 {#if r.dailyVolume !== null && r.dailyVolume !== undefined && r.dailyVolume > 0}
-                                    {formatInt(r.dailyVolume)}
+                                    {formatPrice(r.dailyVolume, decimalView, decimalPlaces)}
                                 {:else}
                                     <span
                                         title="No volume data available for this item"
@@ -448,7 +456,7 @@
                         {#if columnVisibility.dailyLow}
                             <td class="p-2 text-right">
                                 {#if r.dailyLow !== null && r.dailyLow !== undefined}
-                                    {formatInt(r.dailyLow)}
+                                    {formatPrice(r.dailyLow, decimalView, decimalPlaces)}
                                 {:else}
                                     <span title="No daily low data available for this item" class="cursor-help">—</span>
                                 {/if}
@@ -457,7 +465,7 @@
                         {#if columnVisibility.dailyHigh}
                             <td class="p-2 text-right">
                                 {#if r.dailyHigh !== null && r.dailyHigh !== undefined}
-                                    {formatInt(r.dailyHigh)}
+                                    {formatPrice(r.dailyHigh, decimalView, decimalPlaces)}
                                 {:else}
                                     <span title="No daily high data available for this item" class="cursor-help">—</span
                                     >
@@ -467,7 +475,7 @@
                         {#if columnVisibility.averageBuy}
                             <td class="p-2 text-right">
                                 {#if r.averageBuy !== null && r.averageBuy !== undefined}
-                                    {formatInt(r.averageBuy)}
+                                    {formatPrice(r.averageBuy, decimalView, decimalPlaces)}
                                 {:else}
                                     <span title="No average buy data available for this item" class="cursor-help"
                                         >—</span
@@ -478,7 +486,7 @@
                         {#if columnVisibility.averageSell}
                             <td class="p-2 text-right">
                                 {#if r.averageSell !== null && r.averageSell !== undefined}
-                                    {formatInt(r.averageSell)}
+                                    {formatPrice(r.averageSell, decimalView, decimalPlaces)}
                                 {:else}
                                     <span title="No average sell data available for this item" class="cursor-help"
                                         >—</span

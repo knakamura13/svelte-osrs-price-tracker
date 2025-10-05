@@ -1,7 +1,5 @@
 <script lang="ts">
     export let lastUpdatedLabel: string = '—';
-    export let auto: boolean = false;
-    export let onToggleAuto: ((v: boolean) => void) | undefined;
 </script>
 
 <section class="intro p-4 flex gap-4 items-end flex-wrap">
@@ -21,17 +19,5 @@
                 Last updated: <span class="text-blue-600 dark:text-blue-400">{lastUpdatedLabel}</span>
             </p>
         </div>
-    </div>
-    <div class="flex gap-3 items-center">
-        <label class="flex gap-1 text-sm items-center">
-            Auto-refresh
-            <input
-                type="checkbox"
-                class="cursor-pointer"
-                bind:checked={auto}
-                on:change={() => onToggleAuto && onToggleAuto(auto)}
-            />
-        </label>
-        <span class="text-sm opacity-80">Every 60s</span>
     </div>
 </section>
