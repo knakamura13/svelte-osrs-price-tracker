@@ -40,29 +40,81 @@ export const GET: RequestHandler = async ({ fetch }) => {
         return `https://oldschool.runescape.wiki/images/${d1}/${d2}/${encodeURIComponent(normalized)}`;
     }
 
-    // Helper function to calculate daily volume from timeseries data
-    async function getVolumeFromTimeseries(itemId: number): Promise<number | null> {
+    // Helper function to get volume and daily metrics from timeseries data
+    async function getTimeseriesData(itemId: number): Promise<{
+        dailyVolume: number | null;
+        dailyMetrics: {
+            dailyLow: number | null;
+            dailyHigh: number | null;
+            averageBuy: number | null;
+            averageSell: number | null;
+        } | null;
+    }> {
         try {
             const timeseriesRes = await fetch(`/api/timeseries?id=${itemId}&timestep=5m`);
-            if (!timeseriesRes.ok) return null;
+            if (!timeseriesRes.ok) {
+                return { dailyVolume: null, dailyMetrics: null };
+            }
 
             const timeseriesData = await timeseriesRes.json();
             const dataPoints = timeseriesData.data || [];
 
-            // Sum up all volume data points
+            if (dataPoints.length === 0) {
+                return { dailyVolume: null, dailyMetrics: null };
+            }
+
+            // Calculate daily volume from all data points
             const totalVolume = dataPoints.reduce((sum: number, point: any) => {
                 return sum + (point.highPriceVolume || 0) + (point.lowPriceVolume || 0);
             }, 0);
 
-            return totalVolume > 0 ? totalVolume : null;
+            // Calculate daily metrics from price data
+            const buyPrices: number[] = [];
+            const sellPrices: number[] = [];
+
+            for (const point of dataPoints) {
+                if (point.avgHighPrice !== null && point.avgHighPrice !== undefined) {
+                    buyPrices.push(point.avgHighPrice);
+                }
+                if (point.avgLowPrice !== null && point.avgLowPrice !== undefined) {
+                    sellPrices.push(point.avgLowPrice);
+                }
+            }
+
+            const dailyMetrics = {
+                dailyLow: sellPrices.length > 0 ? Math.min(...sellPrices) : null,
+                dailyHigh: buyPrices.length > 0 ? Math.max(...buyPrices) : null,
+                averageBuy:
+                    buyPrices.length > 0
+                        ? Math.round(buyPrices.reduce((sum, price) => sum + price, 0) / buyPrices.length)
+                        : null,
+                averageSell:
+                    sellPrices.length > 0
+                        ? Math.round(sellPrices.reduce((sum, price) => sum + price, 0) / sellPrices.length)
+                        : null
+            };
+
+            return {
+                dailyVolume: totalVolume > 0 ? totalVolume : null,
+                dailyMetrics
+            };
         } catch (error) {
             console.error(`Failed to fetch timeseries for item ${itemId}:`, error);
-            return null;
+            return { dailyVolume: null, dailyMetrics: null };
         }
     }
 
-    const rows: PriceRow[] = await Promise.all(
-        mapping.map(async (m) => {
+    // Process items in chunks to avoid overwhelming the API with too many concurrent requests
+    const CHUNK_SIZE = 50; // Process 50 items at a time
+    const chunks = [];
+    for (let i = 0; i < mapping.length; i += CHUNK_SIZE) {
+        chunks.push(mapping.slice(i, i + CHUNK_SIZE));
+    }
+
+    const rows: PriceRow[] = [];
+
+    for (const chunk of chunks) {
+        const chunkPromises = chunk.map(async (m) => {
             const l = latestMap[String(m.id)];
             let high = l?.high ?? null;
             let low = l?.low ?? null;
@@ -73,7 +125,9 @@ export const GET: RequestHandler = async ({ fetch }) => {
 
             // First try to get volume from 24h API
             let dailyVolume: number | null = null;
+            let dailyMetrics = null;
             const volEntry = volumeMap[String(m.id)];
+
             if (volEntry) {
                 const highVol = volEntry.highPriceVolume ?? 0;
                 const lowVol = volEntry.lowPriceVolume ?? 0;
@@ -81,50 +135,26 @@ export const GET: RequestHandler = async ({ fetch }) => {
                 if (totalVol > 0) {
                     dailyVolume = totalVol;
                 }
-            }
-
-            // If no volume data from 24h API, try to calculate from timeseries
-            if (dailyVolume === null) {
-                dailyVolume = await getVolumeFromTimeseries(m.id);
-            }
-
-            // Calculate daily metrics from timeseries data
-            let dailyMetrics = null;
-            try {
-                const timeseriesRes = await fetch(`/api/timeseries?id=${m.id}&timestep=5m`);
-                if (timeseriesRes.ok) {
-                    const timeseriesData = await timeseriesRes.json();
-                    const dataPoints = timeseriesData.data || [];
-
-                    if (dataPoints.length > 0) {
-                        const buyPrices: number[] = [];
-                        const sellPrices: number[] = [];
-
-                        for (const point of dataPoints) {
-                            if (point.avgHighPrice !== null && point.avgHighPrice !== undefined) {
-                                buyPrices.push(point.avgHighPrice);
-                            }
-                            if (point.avgLowPrice !== null && point.avgLowPrice !== undefined) {
-                                sellPrices.push(point.avgLowPrice);
-                            }
-                        }
-
-                        dailyMetrics = {
-                            dailyLow: sellPrices.length > 0 ? Math.min(...sellPrices) : null,
-                            dailyHigh: buyPrices.length > 0 ? Math.max(...buyPrices) : null,
-                            averageBuy:
-                                buyPrices.length > 0
-                                    ? Math.round(buyPrices.reduce((sum, price) => sum + price, 0) / buyPrices.length)
-                                    : null,
-                            averageSell:
-                                sellPrices.length > 0
-                                    ? Math.round(sellPrices.reduce((sum, price) => sum + price, 0) / sellPrices.length)
-                                    : null
-                        };
-                    }
+                // Use daily metrics from 24h API if available
+                if (volEntry.dailyLow !== undefined || volEntry.dailyHigh !== undefined) {
+                    dailyMetrics = {
+                        dailyLow: volEntry.dailyLow ?? null,
+                        dailyHigh: volEntry.dailyHigh ?? null,
+                        averageBuy: volEntry.averageBuy ?? null,
+                        averageSell: volEntry.averageSell ?? null
+                    };
                 }
-            } catch (error) {
-                console.error(`Failed to calculate daily metrics for item ${m.id}:`, error);
+            }
+
+            // If no volume data from 24h API, fetch from timeseries
+            if (dailyVolume === null) {
+                const timeseriesData = await getTimeseriesData(m.id);
+                if (timeseriesData.dailyVolume !== null) {
+                    dailyVolume = timeseriesData.dailyVolume;
+                }
+                if (timeseriesData.dailyMetrics !== null) {
+                    dailyMetrics = timeseriesData.dailyMetrics;
+                }
             }
 
             // Calculate margin (buy price - sell price)
@@ -159,8 +189,19 @@ export const GET: RequestHandler = async ({ fetch }) => {
                 lowalch: m.lowalch ?? null,
                 value: m.value ?? null
             };
-        })
-    );
+        });
+
+        const chunkResults = await Promise.allSettled(chunkPromises);
+
+        // Process results and filter out any failures
+        for (const result of chunkResults) {
+            if (result.status === 'fulfilled') {
+                rows.push(result.value);
+            } else {
+                console.error('Failed to process item:', result.reason);
+            }
+        }
+    }
 
     const payload = { rows };
     cache.set(cacheKey, payload);
