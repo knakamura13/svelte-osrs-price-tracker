@@ -200,6 +200,251 @@
             hasHelpIcon: false
         }
     ];
+
+    // Helper functions for rendering cell content
+    const renderCellContent = (r: PriceRow, column: any) => {
+        const { key, renderer } = column;
+
+        if (renderer === 'name') {
+            return renderNameCell(r);
+        }
+
+        if (renderer === 'simple') {
+            return renderSimpleCell(r, key);
+        }
+
+        if (renderer === 'price') {
+            return renderPriceCell(r, key);
+        }
+
+        if (renderer === 'time') {
+            return renderTimeCell(r, key);
+        }
+
+        if (renderer.startsWith('complex.')) {
+            const complexType = renderer.split('.')[1];
+            return renderComplexCell(r, complexType);
+        }
+
+        return '—';
+    };
+
+    const renderNameCell = (r: PriceRow) => {
+        return {
+            content: `
+                <div class="flex gap-2 items-center">
+                    <a
+                        href="/item/{r.id}"
+                        class="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                        title={r.examine ?? r.name}
+                    >
+                        {r.name}
+                    </a>
+                    {#if r.wikiUrl}
+                        <a
+                            href={r.wikiUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xs flex items-center"
+                            title="View on OSRS Wiki"
+                        >
+                            <BookOpen class="w-3 h-3" />
+                        </a>
+                    {/if}
+                </div>
+            `,
+            raw: true
+        };
+    };
+
+    const renderSimpleCell = (r: PriceRow, key: string) => {
+        const value = r[key as keyof PriceRow];
+        if (key === 'buyLimit' && value === null) {
+            return { content: '∞', title: 'This item has no buy limit' };
+        }
+        return { content: value, title: value ? null : `No ${key} data available for this item` };
+    };
+
+    const renderPriceCell = (r: PriceRow, key: string) => {
+        const value = r[key as keyof PriceRow] as number | null;
+        if (value == null) {
+            return { content: '—', title: `No ${key} data available for this item` };
+        }
+        return { content: formatPrice(value, decimalView, decimalPlaces) };
+    };
+
+    const renderTimeCell = (r: PriceRow, key: string) => {
+        const value = r[key as keyof PriceRow] as number | null;
+        if (value) {
+            return { content: secondsAgoFromUnix(value) };
+        }
+        return { content: '—', title: `No ${key} data available for this item` };
+    };
+
+    const renderComplexCell = (r: PriceRow, type: string) => {
+        switch (type) {
+            case 'breakEvenPrice':
+                const breakEvenPrice = calculateBreakEvenPrice(r.sellPrice, r.id);
+                if (breakEvenPrice == null) {
+                    return { content: '—', title: 'No break-even price data available for this item' };
+                }
+                if (breakEvenPrice <= 0) {
+                    return {
+                        content: 'ERROR',
+                        title: 'Unexpected negative break-even price - please report this bug',
+                        class: 'text-red-500'
+                    };
+                }
+                return { content: formatPrice(breakEvenPrice, decimalView, decimalPlaces) };
+
+            case 'postTaxProfit':
+                const profit = calculatePostTaxProfit(r.buyPrice, r.sellPrice, r.id);
+                if (profit == null) {
+                    return { content: '—', title: 'No post-tax profit data available for this item' };
+                }
+                return { content: formatPrice(profit, decimalView, decimalPlaces) };
+
+            case 'potentialProfit':
+                const potentialProfit = r.potentialProfit;
+                if (potentialProfit == null) {
+                    return { content: '—', title: 'No potential profit data available for this item' };
+                }
+                return { content: formatPrice(potentialProfit, decimalView, decimalPlaces) };
+
+            case 'dailyVolume':
+                const volume = r.dailyVolume;
+                if (volume !== null && volume !== undefined && volume > 0) {
+                    return { content: formatPrice(volume, decimalView, decimalPlaces) };
+                }
+                return { content: '—', title: 'No volume data available for this item', class: 'red-text' };
+
+            default:
+                return { content: '—' };
+        }
+    };
+
+    const getConditionalClass = (r: PriceRow, column: any) => {
+        if (!column.conditionalClass) return null;
+        return column.conditionalClass(r);
+    };
+
+    // Column configuration for tbody content
+    const tbodyColumnConfig = [
+        {
+            key: 'name',
+            renderer: 'name',
+            class: 'p-2',
+            conditionalClass: null
+        },
+        {
+            key: 'buyLimit',
+            renderer: 'simple',
+            class: 'p-2 text-right',
+            conditionalClass: null
+        },
+        {
+            key: 'buyPrice',
+            renderer: 'price',
+            class: 'p-2 text-right',
+            conditionalClass: null,
+            rendererOptions: { fallbackText: 'No insta-buy price data available for this item' }
+        },
+        {
+            key: 'buyTime',
+            renderer: 'time',
+            class: 'p-2 text-right opacity-70',
+            conditionalClass: null
+        },
+        {
+            key: 'sellPrice',
+            renderer: 'price',
+            class: 'p-2 text-right',
+            conditionalClass: null,
+            rendererOptions: { fallbackText: 'No insta-sell price data available for this item' }
+        },
+        {
+            key: 'sellTime',
+            renderer: 'time',
+            class: 'p-2 text-right opacity-70',
+            conditionalClass: null
+        },
+        {
+            key: 'margin',
+            renderer: 'price',
+            class: 'p-2 text-right',
+            conditionalClass: (r: PriceRow) => {
+                const margin = r.margin;
+                if (margin !== null && margin < 0) return 'red-text';
+                if (margin !== null && margin >= 0) return 'green-text';
+                return null;
+            },
+            rendererOptions: { fallbackText: 'No margin data available for this item' }
+        },
+        {
+            key: 'breakEvenPrice',
+            renderer: 'complex.breakEvenPrice',
+            class: 'p-2 text-right',
+            conditionalClass: null
+        },
+        {
+            key: 'postTaxProfit',
+            renderer: 'complex.postTaxProfit',
+            class: 'p-2 text-right',
+            conditionalClass: (r: PriceRow) => {
+                const profit = getPostTaxProfitValue(r.buyPrice, r.sellPrice, r.id);
+                if (profit !== null && profit < 0) return 'red-text';
+                if (profit !== null && profit >= 0) return 'green-text';
+                return null;
+            },
+            rendererOptions: { fallbackText: 'No post-tax profit data available for this item' }
+        },
+        {
+            key: 'potentialProfit',
+            renderer: 'complex.potentialProfit',
+            class: 'p-2 text-right',
+            conditionalClass: (r: PriceRow) => {
+                const profit = r.potentialProfit;
+                if (profit !== null && profit < 0) return 'red-text';
+                if (profit !== null && profit >= 0) return 'green-text';
+                return null;
+            },
+            rendererOptions: { fallbackText: 'No potential profit data available for this item' }
+        },
+        {
+            key: 'dailyVolume',
+            renderer: 'complex.dailyVolume',
+            class: 'p-2 text-right',
+            conditionalClass: null
+        },
+        {
+            key: 'dailyLow',
+            renderer: 'price',
+            class: 'p-2 text-right',
+            conditionalClass: null,
+            rendererOptions: { fallbackText: 'No daily low data available for this item' }
+        },
+        {
+            key: 'dailyHigh',
+            renderer: 'price',
+            class: 'p-2 text-right',
+            conditionalClass: null,
+            rendererOptions: { fallbackText: 'No daily high data available for this item' }
+        },
+        {
+            key: 'averageBuy',
+            renderer: 'price',
+            class: 'p-2 text-right',
+            conditionalClass: null,
+            rendererOptions: { fallbackText: 'No average buy data available for this item' }
+        },
+        {
+            key: 'averageSell',
+            renderer: 'price',
+            class: 'p-2 text-right',
+            conditionalClass: null,
+            rendererOptions: { fallbackText: 'No average sell data available for this item' }
+        }
+    ];
 </script>
 
 <!-- Pagination Controls (Top) -->
@@ -223,7 +468,7 @@
                             on:click={() => sortable && sortBy && sortBy(column.key)}
                         >
                             <div
-                                class="inline-flex items-center gap-1 {column.align === 'left'
+                                class="inline-flex items-center justify-between gap-1 {column.align === 'left'
                                     ? ''
                                     : 'justify-end w-full'}"
                             >
@@ -283,187 +528,25 @@
                                 <img class="object-contain" src={r.icon} alt={r.name} loading="lazy" />
                             {/if}
                         </td>
-                        {#if columnVisibility.name}
-                            <td class="p-2">
-                                <div class="flex gap-2 items-center">
-                                    <a
-                                        href="/item/{r.id}"
-                                        class="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                                        title={r.examine ?? r.name}
-                                    >
-                                        {r.name}
-                                    </a>
-                                    {#if r.wikiUrl}
-                                        <a
-                                            href={r.wikiUrl}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xs flex items-center"
-                                            title="View on OSRS Wiki"
+                        {#each tbodyColumnConfig as column}
+                            {#if columnVisibility[column.key]}
+                                {@const cellResult = renderCellContent(r, column)}
+                                {@const conditionalClass = getConditionalClass(r, column)}
+                                <td class="{column.class} {conditionalClass || ''}">
+                                    {#if cellResult.raw}
+                                        {@html cellResult.content}
+                                    {:else if cellResult.title}
+                                        <span title={cellResult.title} class="cursor-help">{cellResult.content}</span>
+                                    {:else if cellResult.class}
+                                        <span class="cursor-help {cellResult.class}" title={cellResult.title}
+                                            >{cellResult.content}</span
                                         >
-                                            <BookOpen class="w-3 h-3" />
-                                        </a>
+                                    {:else}
+                                        {cellResult.content}
                                     {/if}
-                                </div>
-                            </td>
-                        {/if}
-                        {#if columnVisibility.buyLimit}
-                            <td class="p-2 text-right">
-                                {#if r.buyLimit !== null}
-                                    {r.buyLimit}
-                                {:else}
-                                    <span title="This item has no buy limit" class="cursor-help">∞</span>
-                                {/if}
-                            </td>
-                        {/if}
-                        {#if columnVisibility.buyPrice}
-                            <td class="p-2 text-right">
-                                {#if r.buyPrice == null}
-                                    <span title="No insta-buy price data available for this item" class="cursor-help"
-                                        >—</span
-                                    >
-                                {:else}
-                                    {formatPrice(r.buyPrice, decimalView, decimalPlaces)}
-                                {/if}
-                            </td>
-                        {/if}
-                        {#if columnVisibility.buyTime}
-                            <td class="p-2 text-right opacity-70">{secondsAgoFromUnix(r.buyTime)}</td>
-                        {/if}
-                        {#if columnVisibility.sellPrice}
-                            <td class="p-2 text-right">
-                                {#if r.sellPrice == null}
-                                    <span title="No insta-sell price data available for this item" class="cursor-help"
-                                        >—</span
-                                    >
-                                {:else}
-                                    {formatPrice(r.sellPrice, decimalView, decimalPlaces)}
-                                {/if}
-                            </td>
-                        {/if}
-                        {#if columnVisibility.sellTime}
-                            <td class="p-2 text-right opacity-70">{secondsAgoFromUnix(r.sellTime)}</td>
-                        {/if}
-                        {#if columnVisibility.margin}
-                            <td
-                                class="p-2 text-right"
-                                class:red-text={r.margin !== null && r.margin < 0}
-                                class:green-text={r.margin !== null && r.margin >= 0}
-                            >
-                                {#if r.margin == null}
-                                    <span title="No margin data available for this item" class="cursor-help">—</span>
-                                {:else}
-                                    {formatPrice(r.margin, decimalView, decimalPlaces)}
-                                {/if}
-                            </td>
-                        {/if}
-                        {#if columnVisibility.breakEvenPrice}
-                            {@const breakEvenPrice = calculateBreakEvenPrice(r.sellPrice, r.id)}
-                            <td class="p-2 text-right">
-                                {#if breakEvenPrice == null}
-                                    <span title="No break-even price data available for this item" class="cursor-help"
-                                        >—</span
-                                    >
-                                {:else if breakEvenPrice <= 0}
-                                    <span
-                                        title="Unexpected negative break-even price - please report this bug"
-                                        class="cursor-help text-red-500">ERROR</span
-                                    >
-                                {:else}
-                                    {formatPrice(breakEvenPrice, decimalView, decimalPlaces)}
-                                {/if}
-                            </td>
-                        {/if}
-                        {#if columnVisibility.postTaxProfit}
-                            <td
-                                class="p-2 text-right"
-                                class:red-text={getPostTaxProfitValue(r.buyPrice, r.sellPrice, r.id) !== null &&
-                                    getPostTaxProfitValue(r.buyPrice, r.sellPrice, r.id)! < 0}
-                                class:green-text={getPostTaxProfitValue(r.buyPrice, r.sellPrice, r.id) !== null &&
-                                    getPostTaxProfitValue(r.buyPrice, r.sellPrice, r.id)! >= 0}
-                            >
-                                {#if calculatePostTaxProfit(r.buyPrice, r.sellPrice, r.id) == null}
-                                    <span title="No post-tax profit data available for this item" class="cursor-help"
-                                        >—</span
-                                    >
-                                {:else}
-                                    {formatPrice(
-                                        calculatePostTaxProfit(r.buyPrice, r.sellPrice, r.id),
-                                        decimalView,
-                                        decimalPlaces
-                                    )}
-                                {/if}
-                            </td>
-                        {/if}
-                        {#if columnVisibility.potentialProfit}
-                            <td
-                                class="p-2 text-right"
-                                class:red-text={r.potentialProfit !== null && r.potentialProfit! < 0}
-                                class:green-text={r.potentialProfit !== null && r.potentialProfit! >= 0}
-                            >
-                                {#if r.potentialProfit == null}
-                                    <span title="No potential profit data available for this item" class="cursor-help"
-                                        >—</span
-                                    >
-                                {:else}
-                                    {formatPrice(r.potentialProfit, decimalView, decimalPlaces)}
-                                {/if}
-                            </td>
-                        {/if}
-                        {#if columnVisibility.dailyVolume}
-                            <td class="p-2 text-right">
-                                {#if r.dailyVolume !== null && r.dailyVolume !== undefined && r.dailyVolume > 0}
-                                    {formatPrice(r.dailyVolume, decimalView, decimalPlaces)}
-                                {:else}
-                                    <span
-                                        title="No volume data available for this item"
-                                        class="cursor-help"
-                                        class:red-text={true}>—</span
-                                    >
-                                {/if}
-                            </td>
-                        {/if}
-                        {#if columnVisibility.dailyLow}
-                            <td class="p-2 text-right">
-                                {#if r.dailyLow !== null && r.dailyLow !== undefined}
-                                    {formatPrice(r.dailyLow, decimalView, decimalPlaces)}
-                                {:else}
-                                    <span title="No daily low data available for this item" class="cursor-help">—</span>
-                                {/if}
-                            </td>
-                        {/if}
-                        {#if columnVisibility.dailyHigh}
-                            <td class="p-2 text-right">
-                                {#if r.dailyHigh !== null && r.dailyHigh !== undefined}
-                                    {formatPrice(r.dailyHigh, decimalView, decimalPlaces)}
-                                {:else}
-                                    <span title="No daily high data available for this item" class="cursor-help">—</span
-                                    >
-                                {/if}
-                            </td>
-                        {/if}
-                        {#if columnVisibility.averageBuy}
-                            <td class="p-2 text-right">
-                                {#if r.averageBuy !== null && r.averageBuy !== undefined}
-                                    {formatPrice(r.averageBuy, decimalView, decimalPlaces)}
-                                {:else}
-                                    <span title="No average buy data available for this item" class="cursor-help"
-                                        >—</span
-                                    >
-                                {/if}
-                            </td>
-                        {/if}
-                        {#if columnVisibility.averageSell}
-                            <td class="p-2 text-right">
-                                {#if r.averageSell !== null && r.averageSell !== undefined}
-                                    {formatPrice(r.averageSell, decimalView, decimalPlaces)}
-                                {:else}
-                                    <span title="No average sell data available for this item" class="cursor-help"
-                                        >—</span
-                                    >
-                                {/if}
-                            </td>
-                        {/if}
+                                </td>
+                            {/if}
+                        {/each}
                     </tr>
                 {/each}
             {/if}
