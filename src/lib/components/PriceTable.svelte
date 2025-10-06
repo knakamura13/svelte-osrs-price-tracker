@@ -410,25 +410,25 @@
                             title={column.title}
                             on:click={() => sortable && sortBy && sortBy(column.key)}
                         >
-                            <div
-                                class="inline-flex items-center gap-1 {column.align === 'left'
-                                    ? ''
-                                    : 'justify-end w-full'}"
-                            >
-                                {column.label}
-                                {#if column.hasHelpIcon}
-                                    <span
-                                        class="mr-1 text-xs opacity-70 cursor-help inline-block align-top relative"
-                                        style="font-size: 0.75em; vertical-align: super; top: -0.2em;"
-                                        aria-label="{column.label} tooltip">?</span
+                            <div class="inline-flex items-center gap-1 w-full">
+                                <span class="flex-1 {column.align === 'left' ? 'text-left' : 'text-right'}">
+                                    {column.label}
+                                    {#if column.hasHelpIcon}
+                                        <span
+                                            class="ml-1 text-xs opacity-70 cursor-help inline-block align-top relative"
+                                            style="font-size: 0.75em; vertical-align: super; top: -0.2em;"
+                                            aria-label="{column.label} tooltip">?</span
+                                        >
+                                    {/if}
+                                </span>
+                                {#if sortable}
+                                    <span class="opacity-60 select-none flex-shrink-0"
+                                        >{#if sortIcon(column.key)}<svelte:component
+                                                this={sortIcon(column.key)}
+                                                class="w-3 h-3"
+                                            />{/if}</span
                                     >
                                 {/if}
-                                <span class="opacity-60 select-none"
-                                    >{#if sortIcon(column.key)}<svelte:component
-                                            this={sortIcon(column.key)}
-                                            class="w-3 h-3"
-                                        />{/if}</span
-                                >
                             </div>
                         </th>
                     {/if}
