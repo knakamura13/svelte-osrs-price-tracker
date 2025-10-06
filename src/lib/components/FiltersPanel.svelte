@@ -19,17 +19,31 @@
 
     type FilterKey = keyof Filters;
 
+    // OSRS integer limits
+    const OSRS_MIN_INTEGER = -2147483647;
+    const OSRS_MAX_INTEGER = 2147483647;
+
     // Define filter groups in logical table column order
     const filterGroups: Array<{
         title: string;
-        filters: Array<{ key: FilterKey; label: string; type: 'numeric' | 'time' }>;
+        filters: Array<{
+            key: FilterKey;
+            label: string;
+            type: 'numeric' | 'time';
+            min?: string | number;
+            max?: string | number;
+            step?: string | number;
+        }>;
     }> = [
-        { title: 'Item Info', filters: [{ key: 'buyLimit', label: 'Buy limit', type: 'numeric' }] },
+        {
+            title: 'Item Info',
+            filters: [{ key: 'buyLimit', label: 'Buy limit', type: 'numeric', min: '0', step: '1' }]
+        },
         {
             title: 'Current Trading',
             filters: [
-                { key: 'buyPrice', label: 'Insta-buy price', type: 'numeric' },
-                { key: 'sellPrice', label: 'Insta-sell price', type: 'numeric' },
+                { key: 'buyPrice', label: 'Insta-buy price', type: 'numeric', min: '0', step: '1' },
+                { key: 'sellPrice', label: 'Insta-sell price', type: 'numeric', min: '0', step: '1' },
                 { key: 'buyTime', label: 'Last buy', type: 'time' },
                 { key: 'sellTime', label: 'Last sell', type: 'time' }
             ]
@@ -37,20 +51,41 @@
         {
             title: 'Profit Analysis',
             filters: [
-                { key: 'margin', label: 'Margin', type: 'numeric' },
-                { key: 'breakEvenPrice', label: 'Break-even price', type: 'numeric' },
-                { key: 'postTaxProfit', label: 'Post-tax profit', type: 'numeric' },
-                { key: 'potentialProfit', label: 'Potential profit', type: 'numeric' }
+                {
+                    key: 'margin',
+                    label: 'Margin',
+                    type: 'numeric',
+                    min: OSRS_MIN_INTEGER,
+                    max: OSRS_MAX_INTEGER,
+                    step: '1'
+                },
+                { key: 'breakEvenPrice', label: 'Break-even price', type: 'numeric', min: '0', step: '1' },
+                {
+                    key: 'postTaxProfit',
+                    label: 'Post-tax profit',
+                    type: 'numeric',
+                    min: OSRS_MIN_INTEGER,
+                    max: OSRS_MAX_INTEGER,
+                    step: '1'
+                },
+                {
+                    key: 'potentialProfit',
+                    label: 'Potential profit',
+                    type: 'numeric',
+                    min: OSRS_MIN_INTEGER,
+                    max: OSRS_MAX_INTEGER,
+                    step: '1'
+                }
             ]
         },
         {
             title: 'Historical Data',
             filters: [
-                { key: 'dailyVolume', label: 'Daily volume', type: 'numeric' },
-                { key: 'dailyLow', label: 'Daily low', type: 'numeric' },
-                { key: 'dailyHigh', label: 'Daily high', type: 'numeric' },
-                { key: 'averageBuy', label: 'Avg buy', type: 'numeric' },
-                { key: 'averageSell', label: 'Avg sell', type: 'numeric' }
+                { key: 'dailyVolume', label: 'Daily volume', type: 'numeric', min: '0', step: '1' },
+                { key: 'dailyLow', label: 'Daily low', type: 'numeric', min: '0', step: '1' },
+                { key: 'dailyHigh', label: 'Daily high', type: 'numeric', min: '0', step: '1' },
+                { key: 'averageBuy', label: 'Avg buy', type: 'numeric', min: '0', step: '1' },
+                { key: 'averageSell', label: 'Avg sell', type: 'numeric', min: '0', step: '1' }
             ]
         }
     ];
@@ -227,6 +262,9 @@
                                                             'min',
                                                             (e.currentTarget as HTMLInputElement).value
                                                         )}
+                                                    min={f.min}
+                                                    max={f.max}
+                                                    step={f.step}
                                                 />
                                                 <input
                                                     type="number"
@@ -243,6 +281,9 @@
                                                             'max',
                                                             (e.currentTarget as HTMLInputElement).value
                                                         )}
+                                                    min={f.min}
+                                                    max={f.max}
+                                                    step={f.step}
                                                 />
                                             </div>
                                         {/if}
@@ -280,11 +321,12 @@
                                                         <input
                                                             type="number"
                                                             min="0"
+                                                            max="999"
                                                             placeholder="0"
                                                             class="w-14 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                                             bind:value={buyMinDays}
                                                         />
-                                                        <span class="opacity-60">d:</span>
+                                                        <span class="opacity-60">d :</span>
                                                         <input
                                                             type="number"
                                                             min="0"
@@ -293,7 +335,7 @@
                                                             class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                                             bind:value={buyMinHours}
                                                         />
-                                                        <span class="opacity-60">h:</span>
+                                                        <span class="opacity-60">h :</span>
                                                         <input
                                                             type="number"
                                                             min="0"
@@ -302,7 +344,7 @@
                                                             class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                                             bind:value={buyMinMinutes}
                                                         />
-                                                        <span class="opacity-60">m:</span>
+                                                        <span class="opacity-60">m :</span>
                                                         <input
                                                             type="number"
                                                             min="0"
@@ -318,11 +360,12 @@
                                                         <input
                                                             type="number"
                                                             min="0"
+                                                            max="999"
                                                             placeholder="0"
                                                             class="w-14 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                                             bind:value={buyMaxDays}
                                                         />
-                                                        <span class="opacity-60">d:</span>
+                                                        <span class="opacity-60">d :</span>
                                                         <input
                                                             type="number"
                                                             min="0"
@@ -340,7 +383,7 @@
                                                             class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                                             bind:value={buyMaxMinutes}
                                                         />
-                                                        <span class="opacity-60">m:</span>
+                                                        <span class="opacity-60">m :</span>
                                                         <input
                                                             type="number"
                                                             min="0"
@@ -360,11 +403,12 @@
                                                         <input
                                                             type="number"
                                                             min="0"
+                                                            max="999"
                                                             placeholder="0"
                                                             class="w-14 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                                             bind:value={sellMinDays}
                                                         />
-                                                        <span class="opacity-60">d:</span>
+                                                        <span class="opacity-60">d :</span>
                                                         <input
                                                             type="number"
                                                             min="0"
@@ -373,7 +417,7 @@
                                                             class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                                             bind:value={sellMinHours}
                                                         />
-                                                        <span class="opacity-60">h:</span>
+                                                        <span class="opacity-60">h :</span>
                                                         <input
                                                             type="number"
                                                             min="0"
@@ -382,7 +426,7 @@
                                                             class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                                             bind:value={sellMinMinutes}
                                                         />
-                                                        <span class="opacity-60">m:</span>
+                                                        <span class="opacity-60">m :</span>
                                                         <input
                                                             type="number"
                                                             min="0"
@@ -398,11 +442,12 @@
                                                         <input
                                                             type="number"
                                                             min="0"
+                                                            max="999"
                                                             placeholder="0"
                                                             class="w-14 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                                             bind:value={sellMaxDays}
                                                         />
-                                                        <span class="opacity-60">d:</span>
+                                                        <span class="opacity-60">d :</span>
                                                         <input
                                                             type="number"
                                                             min="0"
@@ -411,7 +456,7 @@
                                                             class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                                             bind:value={sellMaxHours}
                                                         />
-                                                        <span class="opacity-60">h:</span>
+                                                        <span class="opacity-60">h :</span>
                                                         <input
                                                             type="number"
                                                             min="0"
@@ -420,7 +465,7 @@
                                                             class="w-12 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                                                             bind:value={sellMaxMinutes}
                                                         />
-                                                        <span class="opacity-60">m:</span>
+                                                        <span class="opacity-60">m :</span>
                                                         <input
                                                             type="number"
                                                             min="0"
