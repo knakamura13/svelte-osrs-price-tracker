@@ -201,248 +201,191 @@
         }
     ];
 
-    // Helper functions for rendering cell content
-    const renderCellContent = (r: PriceRow, column: any) => {
-        const { key, renderer } = column;
+    // Column rendering configuration for tbody
+    type CellData =
+        | {
+              content: string;
+              title?: string;
+              class?: string;
+          }
+        | {
+              content: string;
+              isSpecial: true;
+              link: string;
+              wikiUrl?: string;
+              examine?: string;
+          };
 
-        if (renderer === 'name') {
-            return renderNameCell(r);
-        }
-
-        if (renderer === 'simple') {
-            return renderSimpleCell(r, key);
-        }
-
-        if (renderer === 'price') {
-            return renderPriceCell(r, key);
-        }
-
-        if (renderer === 'time') {
-            return renderTimeCell(r, key);
-        }
-
-        if (renderer.startsWith('complex.')) {
-            const complexType = renderer.split('.')[1];
-            return renderComplexCell(r, complexType);
-        }
-
-        return '—';
-    };
-
-    const renderNameCell = (r: PriceRow) => {
-        return {
-            content: `
-                <div class="flex gap-2 items-center">
-                    <a
-                        href="/item/{r.id}"
-                        class="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                        title={r.examine ?? r.name}
-                    >
-                        {r.name}
-                    </a>
-                    {#if r.wikiUrl}
-                        <a
-                            href={r.wikiUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xs flex items-center"
-                            title="View on OSRS Wiki"
-                        >
-                            <BookOpen class="w-3 h-3" />
-                        </a>
-                    {/if}
-                </div>
-            `,
-            raw: true
-        };
-    };
-
-    const renderSimpleCell = (r: PriceRow, key: string) => {
-        const value = r[key as keyof PriceRow];
-        if (key === 'buyLimit' && value === null) {
-            return { content: '∞', title: 'This item has no buy limit' };
-        }
-        return { content: value, title: value ? null : `No ${key} data available for this item` };
-    };
-
-    const renderPriceCell = (r: PriceRow, key: string) => {
-        const value = r[key as keyof PriceRow] as number | null;
-        if (value == null) {
-            return { content: '—', title: `No ${key} data available for this item` };
-        }
-        return { content: formatPrice(value, decimalView, decimalPlaces) };
-    };
-
-    const renderTimeCell = (r: PriceRow, key: string) => {
-        const value = r[key as keyof PriceRow] as number | null;
-        if (value) {
-            return { content: secondsAgoFromUnix(value) };
-        }
-        return { content: '—', title: `No ${key} data available for this item` };
-    };
-
-    const renderComplexCell = (r: PriceRow, type: string) => {
-        switch (type) {
-            case 'breakEvenPrice':
-                const breakEvenPrice = calculateBreakEvenPrice(r.sellPrice, r.id);
+    const tbodyColumnConfig = [
+        {
+            key: 'name',
+            render: (row: PriceRow) => ({
+                content: row.name,
+                isSpecial: true, // Special handling needed for name column
+                link: `/item/${row.id}`,
+                wikiUrl: row.wikiUrl,
+                examine: row.examine
+            })
+        },
+        {
+            key: 'buyLimit',
+            render: (row: PriceRow) => ({
+                content: row.buyLimit !== null ? row.buyLimit.toString() : '∞',
+                title: row.buyLimit !== null ? undefined : 'This item has no buy limit',
+                class: row.buyLimit === null ? 'cursor-help' : undefined
+            })
+        },
+        {
+            key: 'buyPrice',
+            render: (row: PriceRow) => ({
+                content: row.buyPrice == null ? '—' : formatPrice(row.buyPrice, decimalView, decimalPlaces),
+                title: row.buyPrice == null ? 'No insta-buy price data available for this item' : undefined,
+                class: row.buyPrice == null ? 'cursor-help' : undefined
+            })
+        },
+        {
+            key: 'buyTime',
+            render: (row: PriceRow) => ({
+                content: row.buyTime ? secondsAgoFromUnix(row.buyTime) : '—',
+                class: 'opacity-70'
+            })
+        },
+        {
+            key: 'sellPrice',
+            render: (row: PriceRow) => ({
+                content: row.sellPrice == null ? '—' : formatPrice(row.sellPrice, decimalView, decimalPlaces),
+                title: row.sellPrice == null ? 'No insta-sell price data available for this item' : undefined,
+                class: row.sellPrice == null ? 'cursor-help' : undefined
+            })
+        },
+        {
+            key: 'sellTime',
+            render: (row: PriceRow) => ({
+                content: row.sellTime ? secondsAgoFromUnix(row.sellTime) : '—',
+                class: 'opacity-70'
+            })
+        },
+        {
+            key: 'margin',
+            render: (row: PriceRow) => ({
+                content: row.margin == null ? '—' : formatPrice(row.margin, decimalView, decimalPlaces),
+                title: row.margin == null ? 'No margin data available for this item' : undefined,
+                class: row.margin == null ? 'cursor-help' : row.margin < 0 ? 'red-text' : 'green-text'
+            })
+        },
+        {
+            key: 'breakEvenPrice',
+            render: (row: PriceRow) => {
+                const breakEvenPrice = calculateBreakEvenPrice(row.sellPrice, row.id);
                 if (breakEvenPrice == null) {
-                    return { content: '—', title: 'No break-even price data available for this item' };
+                    return {
+                        content: '—',
+                        title: 'No break-even price data available for this item',
+                        class: 'cursor-help'
+                    };
                 }
                 if (breakEvenPrice <= 0) {
                     return {
                         content: 'ERROR',
                         title: 'Unexpected negative break-even price - please report this bug',
-                        class: 'text-red-500'
+                        class: 'cursor-help text-red-500'
                     };
                 }
-                return { content: formatPrice(breakEvenPrice, decimalView, decimalPlaces) };
-
-            case 'postTaxProfit':
-                const profit = calculatePostTaxProfit(r.buyPrice, r.sellPrice, r.id);
-                if (profit == null) {
-                    return { content: '—', title: 'No post-tax profit data available for this item' };
-                }
-                return { content: formatPrice(profit, decimalView, decimalPlaces) };
-
-            case 'potentialProfit':
-                const potentialProfit = r.potentialProfit;
-                if (potentialProfit == null) {
-                    return { content: '—', title: 'No potential profit data available for this item' };
-                }
-                return { content: formatPrice(potentialProfit, decimalView, decimalPlaces) };
-
-            case 'dailyVolume':
-                const volume = r.dailyVolume;
-                if (volume !== null && volume !== undefined && volume > 0) {
-                    return { content: formatPrice(volume, decimalView, decimalPlaces) };
-                }
-                return { content: '—', title: 'No volume data available for this item', class: 'red-text' };
-
-            default:
-                return { content: '—' };
-        }
-    };
-
-    const getConditionalClass = (r: PriceRow, column: any) => {
-        if (!column.conditionalClass) return null;
-        return column.conditionalClass(r);
-    };
-
-    // Column configuration for tbody content
-    const tbodyColumnConfig = [
-        {
-            key: 'name',
-            renderer: 'name',
-            class: 'p-2',
-            conditionalClass: null
-        },
-        {
-            key: 'buyLimit',
-            renderer: 'simple',
-            class: 'p-2 text-right',
-            conditionalClass: null
-        },
-        {
-            key: 'buyPrice',
-            renderer: 'price',
-            class: 'p-2 text-right',
-            conditionalClass: null,
-            rendererOptions: { fallbackText: 'No insta-buy price data available for this item' }
-        },
-        {
-            key: 'buyTime',
-            renderer: 'time',
-            class: 'p-2 text-right opacity-70',
-            conditionalClass: null
-        },
-        {
-            key: 'sellPrice',
-            renderer: 'price',
-            class: 'p-2 text-right',
-            conditionalClass: null,
-            rendererOptions: { fallbackText: 'No insta-sell price data available for this item' }
-        },
-        {
-            key: 'sellTime',
-            renderer: 'time',
-            class: 'p-2 text-right opacity-70',
-            conditionalClass: null
-        },
-        {
-            key: 'margin',
-            renderer: 'price',
-            class: 'p-2 text-right',
-            conditionalClass: (r: PriceRow) => {
-                const margin = r.margin;
-                if (margin !== null && margin < 0) return 'red-text';
-                if (margin !== null && margin >= 0) return 'green-text';
-                return null;
-            },
-            rendererOptions: { fallbackText: 'No margin data available for this item' }
-        },
-        {
-            key: 'breakEvenPrice',
-            renderer: 'complex.breakEvenPrice',
-            class: 'p-2 text-right',
-            conditionalClass: null
+                return {
+                    content: formatPrice(breakEvenPrice, decimalView, decimalPlaces)
+                };
+            }
         },
         {
             key: 'postTaxProfit',
-            renderer: 'complex.postTaxProfit',
-            class: 'p-2 text-right',
-            conditionalClass: (r: PriceRow) => {
-                const profit = getPostTaxProfitValue(r.buyPrice, r.sellPrice, r.id);
-                if (profit !== null && profit < 0) return 'red-text';
-                if (profit !== null && profit >= 0) return 'green-text';
-                return null;
-            },
-            rendererOptions: { fallbackText: 'No post-tax profit data available for this item' }
+            render: (row: PriceRow) => {
+                const profitValue = getPostTaxProfitValue(row.buyPrice, row.sellPrice, row.id);
+                if (profitValue == null) {
+                    return {
+                        content: '—',
+                        title: 'No post-tax profit data available for this item',
+                        class: 'cursor-help'
+                    };
+                }
+                return {
+                    content: formatPrice(profitValue, decimalView, decimalPlaces),
+                    class: profitValue < 0 ? 'red-text' : 'green-text'
+                };
+            }
         },
         {
             key: 'potentialProfit',
-            renderer: 'complex.potentialProfit',
-            class: 'p-2 text-right',
-            conditionalClass: (r: PriceRow) => {
-                const profit = r.potentialProfit;
-                if (profit !== null && profit < 0) return 'red-text';
-                if (profit !== null && profit >= 0) return 'green-text';
-                return null;
-            },
-            rendererOptions: { fallbackText: 'No potential profit data available for this item' }
+            render: (row: PriceRow) => ({
+                content:
+                    row.potentialProfit == null ? '—' : formatPrice(row.potentialProfit, decimalView, decimalPlaces),
+                title: row.potentialProfit == null ? 'No potential profit data available for this item' : undefined,
+                class: row.potentialProfit == null ? 'cursor-help' : row.potentialProfit < 0 ? 'red-text' : 'green-text'
+            })
         },
         {
             key: 'dailyVolume',
-            renderer: 'complex.dailyVolume',
-            class: 'p-2 text-right',
-            conditionalClass: null
+            render: (row: PriceRow) => {
+                if (row.dailyVolume !== null && row.dailyVolume !== undefined && row.dailyVolume > 0) {
+                    return { content: formatPrice(row.dailyVolume, decimalView, decimalPlaces) };
+                }
+                return {
+                    content: '—',
+                    title: 'No volume data available for this item',
+                    class: 'cursor-help red-text'
+                };
+            }
         },
         {
             key: 'dailyLow',
-            renderer: 'price',
-            class: 'p-2 text-right',
-            conditionalClass: null,
-            rendererOptions: { fallbackText: 'No daily low data available for this item' }
+            render: (row: PriceRow) => ({
+                content:
+                    row.dailyLow !== null && row.dailyLow !== undefined
+                        ? formatPrice(row.dailyLow, decimalView, decimalPlaces)
+                        : '—',
+                title: !(row.dailyLow !== null && row.dailyLow !== undefined)
+                    ? 'No daily low data available for this item'
+                    : undefined,
+                class: !(row.dailyLow !== null && row.dailyLow !== undefined) ? 'cursor-help' : undefined
+            })
         },
         {
             key: 'dailyHigh',
-            renderer: 'price',
-            class: 'p-2 text-right',
-            conditionalClass: null,
-            rendererOptions: { fallbackText: 'No daily high data available for this item' }
+            render: (row: PriceRow) => ({
+                content:
+                    row.dailyHigh !== null && row.dailyHigh !== undefined
+                        ? formatPrice(row.dailyHigh, decimalView, decimalPlaces)
+                        : '—',
+                title: !(row.dailyHigh !== null && row.dailyHigh !== undefined)
+                    ? 'No daily high data available for this item'
+                    : undefined,
+                class: !(row.dailyHigh !== null && row.dailyHigh !== undefined) ? 'cursor-help' : undefined
+            })
         },
         {
             key: 'averageBuy',
-            renderer: 'price',
-            class: 'p-2 text-right',
-            conditionalClass: null,
-            rendererOptions: { fallbackText: 'No average buy data available for this item' }
+            render: (row: PriceRow) => ({
+                content:
+                    row.averageBuy !== null && row.averageBuy !== undefined
+                        ? formatPrice(row.averageBuy, decimalView, decimalPlaces)
+                        : '—',
+                title: !(row.averageBuy !== null && row.averageBuy !== undefined)
+                    ? 'No average buy data available for this item'
+                    : undefined,
+                class: !(row.averageBuy !== null && row.averageBuy !== undefined) ? 'cursor-help' : undefined
+            })
         },
         {
             key: 'averageSell',
-            renderer: 'price',
-            class: 'p-2 text-right',
-            conditionalClass: null,
-            rendererOptions: { fallbackText: 'No average sell data available for this item' }
+            render: (row: PriceRow) => ({
+                content:
+                    row.averageSell !== null && row.averageSell !== undefined
+                        ? formatPrice(row.averageSell, decimalView, decimalPlaces)
+                        : '—',
+                title: !(row.averageSell !== null && row.averageSell !== undefined)
+                    ? 'No average sell data available for this item'
+                    : undefined,
+                class: !(row.averageSell !== null && row.averageSell !== undefined) ? 'cursor-help' : undefined
+            })
         }
     ];
 </script>
@@ -468,7 +411,7 @@
                             on:click={() => sortable && sortBy && sortBy(column.key)}
                         >
                             <div
-                                class="inline-flex items-center justify-between gap-1 {column.align === 'left'
+                                class="inline-flex items-center gap-1 {column.align === 'left'
                                     ? ''
                                     : 'justify-end w-full'}"
                             >
@@ -530,19 +473,37 @@
                         </td>
                         {#each tbodyColumnConfig as column}
                             {#if columnVisibility[column.key]}
-                                {@const cellResult = renderCellContent(r, column)}
-                                {@const conditionalClass = getConditionalClass(r, column)}
-                                <td class="{column.class} {conditionalClass || ''}">
-                                    {#if cellResult.raw}
-                                        {@html cellResult.content}
-                                    {:else if cellResult.title}
-                                        <span title={cellResult.title} class="cursor-help">{cellResult.content}</span>
-                                    {:else if cellResult.class}
-                                        <span class="cursor-help {cellResult.class}" title={cellResult.title}
-                                            >{cellResult.content}</span
-                                        >
+                                {@const cellData = column.render(r)}
+                                <td class="p-2 text-right">
+                                    {#if 'isSpecial' in cellData}
+                                        <!-- Special handling for name column -->
+                                        <div class="flex gap-2 items-center">
+                                            <a
+                                                href={cellData.link}
+                                                class="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                                                title={cellData.examine ?? cellData.content}
+                                            >
+                                                {cellData.content}
+                                            </a>
+                                            {#if cellData.wikiUrl}
+                                                <a
+                                                    href={cellData.wikiUrl}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xs flex items-center"
+                                                    title="View on OSRS Wiki"
+                                                >
+                                                    <BookOpen class="w-3 h-3" />
+                                                </a>
+                                            {/if}
+                                        </div>
                                     {:else}
-                                        {cellResult.content}
+                                        <span
+                                            class={cellData.class || ''}
+                                            title={'title' in cellData ? cellData.title : undefined}
+                                        >
+                                            {cellData.content}
+                                        </span>
                                     {/if}
                                 </td>
                             {/if}
