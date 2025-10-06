@@ -217,11 +217,11 @@ export function setSort(
     lastKey: SortKey | null,
     nextKey: SortKey
 ): { sortKey: SortKey | null; sortDir: 'asc' | 'desc'; lastSortKey: SortKey | null } {
-    // If clicking on a different column, start with descending sort (except for name which starts with ascending)
+    // If clicking on a different column, start with descending sort
     if (currentKey !== nextKey) {
         return {
             sortKey: nextKey,
-            sortDir: nextKey === 'name' ? 'asc' : 'desc',
+            sortDir: 'desc',
             lastSortKey: nextKey
         };
     }
@@ -248,7 +248,7 @@ export function setSort(
     // Fallback: if somehow in an unexpected state, start fresh with descending sort
     return {
         sortKey: nextKey,
-        sortDir: nextKey === 'name' ? 'asc' : 'desc',
+        sortDir: 'desc',
         lastSortKey: nextKey
     };
 }

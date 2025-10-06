@@ -403,15 +403,19 @@
                 {#each columnConfig as column}
                     {#if columnVisibility[column.key]}
                         <th
-                            class="p-2 select-none hover:text-white transition-colors whitespace-nowrap {column.align ===
-                            'left'
-                                ? 'text-left'
-                                : 'text-right'} {sortable ? 'cursor-pointer' : ''}"
+                            class="p-2 select-none hover:text-white transition-colors whitespace-nowrap"
+                            class:text-left={column.align === 'left'}
+                            class:text-right={column.align === 'right'}
+                            class:cursor-pointer={sortable}
                             title={column.title}
                             on:click={() => sortable && sortBy && sortBy(column.key)}
                         >
                             <div class="inline-flex items-center gap-1 w-full">
-                                <span class="flex-1 {column.align === 'left' ? 'text-left' : 'text-right'}">
+                                <span
+                                    class="flex-1"
+                                    class:text-left={column.align === 'left'}
+                                    class:text-right={column.align === 'right'}
+                                >
                                     {column.label}
                                     {#if column.hasHelpIcon}
                                         <span
@@ -422,12 +426,11 @@
                                     {/if}
                                 </span>
                                 {#if sortable}
-                                    <span class="opacity-60 select-none flex-shrink-0"
-                                        >{#if sortIcon(column.key)}<svelte:component
-                                                this={sortIcon(column.key)}
-                                                class="w-3 h-3"
-                                            />{/if}</span
-                                    >
+                                    <span class="opacity-60 select-none flex-shrink-0">
+                                        {#if sortIcon(column.key)}
+                                            <svelte:component this={sortIcon(column.key)} class="w-3 h-3" />
+                                        {/if}
+                                    </span>
                                 {/if}
                             </div>
                         </th>
@@ -474,7 +477,11 @@
                         {#each tbodyColumnConfig as column}
                             {#if columnVisibility[column.key]}
                                 {@const cellData = column.render(r)}
-                                <td class="p-2 text-right">
+                                <td
+                                    class="p-2"
+                                    class:text-left={column.key === 'name'}
+                                    class:text-right={column.key !== 'name'}
+                                >
                                     {#if 'isSpecial' in cellData}
                                         <!-- Special handling for name column -->
                                         <div class="flex gap-2 items-center">
