@@ -3,7 +3,7 @@
     import type { Filters, FilterStats } from '$lib/types';
     import { isPositive } from '$lib/utils/filters';
     import { secondsFromParts, partsFromSeconds } from '$lib/utils/duration';
-    import { ChevronDown } from 'lucide-svelte';
+    import { ChevronDown, Trash2 } from 'lucide-svelte';
 
     export let expanded: boolean = false;
     export let filters: Filters;
@@ -447,7 +447,7 @@
                     disabled={!hasActiveFilters}
                     on:click={() => onClear && onClear()}
                 >
-                    🗑️ Clear filters
+                    <Trash2 class="w-4 h-4 mr-1 inline" /> Clear filters
                 </button>
             </div>
         </div>
