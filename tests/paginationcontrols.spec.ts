@@ -54,44 +54,47 @@ test.describe('PaginationControls component', () => {
     });
 
     test('should render all navigation buttons', async ({ page }) => {
-        // Should have First button (<<) - use first instance
-        const firstButton = page.locator('button').filter({ hasText: '<<' }).first();
+        // Should have First button - use title attribute for identification (use first instance)
+        const firstButton = page.locator('button[title="First page"]').first();
         await expect(firstButton).toBeVisible();
         await expect(firstButton).toHaveAttribute('title', 'First page');
 
-        // Should have Previous button (<) - use first instance (but not the first button which is <<)
-        const prevButton = page.locator('button').filter({ hasText: '<' }).nth(1);
+        // Should have Previous button - use title attribute for identification (use first instance)
+        const prevButton = page.locator('button[title="Previous page"]').first();
         await expect(prevButton).toBeVisible();
         await expect(prevButton).toHaveAttribute('title', 'Previous page');
 
-        // Should have Next button (>) - use first instance
-        const nextButton = page.locator('button').filter({ hasText: '>' }).nth(0);
+        // Should have Next button - use title attribute for identification (use first instance)
+        const nextButton = page.locator('button[title="Next page"]').first();
         await expect(nextButton).toBeVisible();
         await expect(nextButton).toHaveAttribute('title', 'Next page');
 
-        // Should have Last button (>>) - use first instance
-        const lastButton = page.locator('button').filter({ hasText: '>>' }).nth(0);
+        // Should have Last button - use title attribute for identification (use first instance)
+        const lastButton = page.locator('button[title="Last page"]').first();
         await expect(lastButton).toBeVisible();
         await expect(lastButton).toHaveAttribute('title', 'Last page');
     });
 
     test('should have proper button styling and dimensions', async ({ page }) => {
-        const buttons = page.locator('button').filter({
-            hasText: /<<|>|>>/
-        });
+        // Get all navigation buttons by their title attributes (use first instances)
+        const firstButton = page.locator('button[title="First page"]').first();
+        const prevButton = page.locator('button[title="Previous page"]').first();
+        const nextButton = page.locator('button[title="Next page"]').first();
+        const lastButton = page.locator('button[title="Last page"]').first();
+
+        const buttons = [firstButton, prevButton, nextButton, lastButton];
 
         // All buttons should have consistent styling
-        for (let i = 0; i < (await buttons.count()); i++) {
-            const button = buttons.nth(i);
-            await expect(button).toHaveClass(/border px-2 py-1 w-9 h-9/);
+        for (const button of buttons) {
+            await expect(button).toHaveClass(/border px-2 py-1 h-8/);
             await expect(button).toHaveClass(/transition-colors hover:bg-gray-600 focus:bg-gray-600/);
         }
     });
 
     test('should disable First and Previous buttons on first page', async ({ page }) => {
-        // On first page, First and Previous buttons should be disabled - use specific instances
-        const firstButton = page.locator('button').filter({ hasText: '<<' }).nth(0);
-        const prevButton = page.locator('button').filter({ hasText: '<' }).nth(1);
+        // On first page, First and Previous buttons should be disabled - use title attributes (first instances)
+        const firstButton = page.locator('button[title="First page"]').first();
+        const prevButton = page.locator('button[title="Previous page"]').first();
 
         // Check if buttons are disabled (they should be disabled on page 1)
         const firstDisabled = await firstButton.isDisabled();
@@ -119,8 +122,8 @@ test.describe('PaginationControls component', () => {
         const currentPage = parseInt(pageText?.match(/Page (\d+)/)?.[1] || '1');
         const totalPages = parseInt(pageText?.match(/of (\d+)/)?.[1] || '1');
 
-        const nextButton = page.locator('button').filter({ hasText: '>' }).first();
-        const lastButton = page.locator('button').filter({ hasText: '>>' }).first();
+        const nextButton = page.locator('button[title="Next page"]').first();
+        const lastButton = page.locator('button[title="Last page"]').first();
 
         // Next button should be disabled if on last page
         if (currentPage >= totalPages) {
@@ -201,8 +204,8 @@ test.describe('PaginationControls component', () => {
     });
 
     test('should handle button hover states correctly', async ({ page }) => {
-        // Test that buttons respond to hover (visual test) - use first instance
-        const firstButton = page.locator('button').filter({ hasText: '<<' }).first();
+        // Test that buttons respond to hover (visual test) - use title attribute (first instance)
+        const firstButton = page.locator('button[title="First page"]').first();
 
         // Button should have hover classes
         await expect(firstButton).toHaveClass(/hover:bg-gray-600/);
@@ -216,11 +219,16 @@ test.describe('PaginationControls component', () => {
 
     test('should handle focus states correctly', async ({ page }) => {
         // Test that buttons have proper focus styling
-        const buttons = page.locator('button').filter({ hasText: /<<|<|>|>>/ });
+        // Test that buttons have proper focus styling (use first instances)
+        const firstButton = page.locator('button[title="First page"]').first();
+        const prevButton = page.locator('button[title="Previous page"]').first();
+        const nextButton = page.locator('button[title="Next page"]').first();
+        const lastButton = page.locator('button[title="Last page"]').first();
+
+        const buttons = [firstButton, prevButton, nextButton, lastButton];
 
         // All buttons should have focus classes
-        for (let i = 0; i < (await buttons.count()); i++) {
-            const button = buttons.nth(i);
+        for (const button of buttons) {
             await expect(button).toHaveClass(/focus:bg-gray-600/);
         }
     });
@@ -239,9 +247,9 @@ test.describe('PaginationControls component', () => {
     });
 
     test('should handle navigation button clicks when enabled', async ({ page }) => {
-        // Test that enabled navigation buttons can be clicked - use first instances
-        const nextButton = page.locator('button').filter({ hasText: '>' }).first();
-        const lastButton = page.locator('button').filter({ hasText: '>>' }).first();
+        // Test that enabled navigation buttons can be clicked - use title attributes (first instances)
+        const nextButton = page.locator('button[title="Next page"]').first();
+        const lastButton = page.locator('button[title="Last page"]').first();
 
         // Only test clicking if buttons are enabled
         if (await nextButton.isEnabled()) {
@@ -256,9 +264,9 @@ test.describe('PaginationControls component', () => {
     });
 
     test('should handle first/previous button clicks when enabled', async ({ page }) => {
-        // Test that enabled first/previous buttons can be clicked - use first instances
-        const firstButton = page.locator('button').filter({ hasText: '<<' }).first();
-        const prevButton = page.locator('button').filter({ hasText: '<' }).first();
+        // Test that enabled first/previous buttons can be clicked - use title attributes (first instances)
+        const firstButton = page.locator('button[title="First page"]').first();
+        const prevButton = page.locator('button[title="Previous page"]').first();
 
         // Only test clicking if buttons are enabled
         if (await firstButton.isEnabled()) {
@@ -290,7 +298,12 @@ test.describe('PaginationControls component', () => {
 
     test('should show proper button grouping', async ({ page }) => {
         // Test that navigation buttons are properly grouped - find the specific button group div
-        const buttonGroup = page.locator('div.flex.gap-1').filter({ hasText: /<</ }).filter({ hasText: />>/ }).first();
+        // Test that navigation buttons are properly grouped - find the specific button group div (first instance)
+        const buttonGroup = page
+            .locator('div.flex.gap-1')
+            .filter({ has: page.locator('button[title="First page"]').first() })
+            .filter({ has: page.locator('button[title="Last page"]').first() })
+            .first();
         await expect(buttonGroup).toBeVisible();
 
         // Should have flex layout with gap
@@ -312,11 +325,11 @@ test.describe('PaginationControls component', () => {
                 const totalPages = parseInt(matches[2]);
 
                 if (currentPage === totalPages && totalPages === 1) {
-                    // On single page, all navigation should be disabled - use first instances
-                    const firstButton = page.locator('button').filter({ hasText: '<<' }).first();
-                    const prevButton = page.locator('button').filter({ hasText: '<' }).first();
-                    const nextButton = page.locator('button').filter({ hasText: '>' }).first();
-                    const lastButton = page.locator('button').filter({ hasText: '>>' }).first();
+                    // On single page, all navigation should be disabled - use title attributes (first instances)
+                    const firstButton = page.locator('button[title="First page"]').first();
+                    const prevButton = page.locator('button[title="Previous page"]').first();
+                    const nextButton = page.locator('button[title="Next page"]').first();
+                    const lastButton = page.locator('button[title="Last page"]').first();
 
                     await expect(firstButton).toBeDisabled();
                     await expect(prevButton).toBeDisabled();
@@ -329,10 +342,15 @@ test.describe('PaginationControls component', () => {
 
     test('should show proper border styling on all buttons', async ({ page }) => {
         // Test that all navigation buttons have border styling
-        const buttons = page.locator('button').filter({ hasText: /<<|<|>|>>/ });
+        // Test that all navigation buttons have border styling (use first instances)
+        const firstButton = page.locator('button[title="First page"]').first();
+        const prevButton = page.locator('button[title="Previous page"]').first();
+        const nextButton = page.locator('button[title="Next page"]').first();
+        const lastButton = page.locator('button[title="Last page"]').first();
 
-        for (let i = 0; i < (await buttons.count()); i++) {
-            const button = buttons.nth(i);
+        const buttons = [firstButton, prevButton, nextButton, lastButton];
+
+        for (const button of buttons) {
             await expect(button).toHaveClass(/border/);
         }
     });
@@ -350,11 +368,16 @@ test.describe('PaginationControls component', () => {
 
     test('should show consistent button dimensions', async ({ page }) => {
         // Test that all navigation buttons have consistent dimensions
-        const buttons = page.locator('button').filter({ hasText: /<<|<|>|>>/ });
+        // Test that all navigation buttons have consistent dimensions (use first instances)
+        const firstButton = page.locator('button[title="First page"]').first();
+        const prevButton = page.locator('button[title="Previous page"]').first();
+        const nextButton = page.locator('button[title="Next page"]').first();
+        const lastButton = page.locator('button[title="Last page"]').first();
 
-        for (let i = 0; i < (await buttons.count()); i++) {
-            const button = buttons.nth(i);
-            await expect(button).toHaveClass(/w-9 h-9/);
+        const buttons = [firstButton, prevButton, nextButton, lastButton];
+
+        for (const button of buttons) {
+            await expect(button).toHaveClass(/h-8/);
         }
     });
 
@@ -370,11 +393,11 @@ test.describe('PaginationControls component', () => {
         const pageSizeSelect = page.locator('select#page-size').first();
         await expect(pageSizeSelect).toHaveAttribute('id', 'page-size');
 
-        // All buttons should have titles - use specific instances to avoid conflicts
-        const firstButton = page.locator('button').filter({ hasText: '<<' }).nth(0);
-        const prevButton = page.locator('button').filter({ hasText: '<' }).nth(1);
-        const nextButton = page.locator('button').filter({ hasText: '>' }).nth(0);
-        const lastButton = page.locator('button').filter({ hasText: '>>' }).nth(0);
+        // All buttons should have titles - use title attributes for identification (first instances)
+        const firstButton = page.locator('button[title="First page"]').first();
+        const prevButton = page.locator('button[title="Previous page"]').first();
+        const nextButton = page.locator('button[title="Next page"]').first();
+        const lastButton = page.locator('button[title="Last page"]').first();
 
         await expect(firstButton).toHaveAttribute('title', 'First page');
         await expect(prevButton).toHaveAttribute('title', 'Previous page');
@@ -384,28 +407,51 @@ test.describe('PaginationControls component', () => {
 
     test('should handle transition effects properly', async ({ page }) => {
         // Test that buttons have transition classes for smooth interactions
-        const buttons = page.locator('button').filter({ hasText: /<<|<|>|>>/ });
+        // Test that buttons have transition classes for smooth interactions (use first instances)
+        const firstButton = page.locator('button[title="First page"]').first();
+        const prevButton = page.locator('button[title="Previous page"]').first();
+        const nextButton = page.locator('button[title="Next page"]').first();
+        const lastButton = page.locator('button[title="Last page"]').first();
 
-        for (let i = 0; i < (await buttons.count()); i++) {
-            const button = buttons.nth(i);
+        const buttons = [firstButton, prevButton, nextButton, lastButton];
+
+        for (const button of buttons) {
             await expect(button).toHaveClass(/transition-colors/);
         }
     });
 
     test('should show proper cursor styles for different states', async ({ page }) => {
         // Test cursor styling for different button states
-        const enabledButtons = page.locator('button:not(:disabled)').filter({ hasText: /<<|<|>|>>/ });
-        const disabledButtons = page.locator('button:disabled').filter({ hasText: /<<|<|>|>>/ });
+        // Test cursor styling for different button states (use first instances)
+        const firstButton = page.locator('button[title="First page"]').first();
+        const prevButton = page.locator('button[title="Previous page"]').first();
+        const nextButton = page.locator('button[title="Next page"]').first();
+        const lastButton = page.locator('button[title="Last page"]').first();
+
+        const allButtons = [firstButton, prevButton, nextButton, lastButton];
+
+        // Check which buttons are enabled/disabled
+        const enabledButtons = [];
+        const disabledButtons = [];
+
+        for (const button of allButtons) {
+            const isEnabled = await button.isEnabled();
+            if (isEnabled) {
+                enabledButtons.push(button);
+            } else {
+                disabledButtons.push(button);
+            }
+        }
 
         // Enabled buttons should have hover cursor
-        for (let i = 0; i < (await enabledButtons.count()); i++) {
-            const button = enabledButtons.nth(i);
+        for (let i = 0; i < enabledButtons.length; i++) {
+            const button = enabledButtons[i];
             await expect(button).toHaveClass(/hover:bg-gray-600/);
         }
 
         // Disabled buttons should have not-allowed cursor
-        for (let i = 0; i < (await disabledButtons.count()); i++) {
-            const button = disabledButtons.nth(i);
+        for (let i = 0; i < disabledButtons.length; i++) {
+            const button = disabledButtons[i];
             await expect(button).toHaveClass(/disabled:!cursor-default/);
         }
     });

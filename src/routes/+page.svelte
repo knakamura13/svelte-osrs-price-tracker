@@ -326,7 +326,7 @@
 
     <ErrorAlert message={errorMsg} {failCount} {nextRetryIn} autoDisabled={failCount >= 5} />
 
-    <section class="px-4 mt-2">
+    <section class="px-4 mt-4">
         <ColumnsToggle
             expanded={columnsExpanded}
             {columnVisibility}

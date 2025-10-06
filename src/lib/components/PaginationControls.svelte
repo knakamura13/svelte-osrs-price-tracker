@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from 'lucide-svelte';
+
     export let page: number = 1;
     export let pageSize: number = 25;
     export let totalRows: number = 0;
@@ -51,38 +53,38 @@
             </span>
             <div class="flex gap-1">
                 <button
-                    class="border px-2 py-1 w-9 h-9 transition-colors hover:bg-gray-600 focus:bg-gray-600 disabled:!cursor-default disabled:hover:!bg-transparent disabled:focus:!bg-transparent"
+                    class="border px-2 py-1 h-8 transition-colors hover:bg-gray-600 focus:bg-gray-600 disabled:!cursor-default disabled:hover:!bg-transparent disabled:focus:!bg-transparent"
                     class:!cursor-default={page === 1}
                     on:click={goToFirstPage}
                     disabled={page === 1}
                     title="First page"
                 >
-                    {'<<'}
+                    <ChevronsLeft size={16} />
                 </button>
                 <button
-                    class="border px-2 py-1 w-9 h-9 transition-colors hover:bg-gray-600 focus:bg-gray-600 disabled:!cursor-default disabled:hover:!bg-transparent disabled:focus:!bg-transparent"
+                    class="border px-2 py-1 h-8 transition-colors hover:bg-gray-600 focus:bg-gray-600 disabled:!cursor-default disabled:hover:!bg-transparent disabled:focus:!bg-transparent"
                     class:!cursor-default={page === 1}
                     on:click={goToPreviousPage}
                     disabled={page === 1}
                     title="Previous page"
                 >
-                    {'<'}
+                    <ChevronLeft size={16} />
                 </button>
                 <button
-                    class="border px-2 py-1 w-9 h-9 transition-colors hover:bg-gray-600 focus:bg-gray-600 disabled:!cursor-default disabled:hover:!bg-transparent disabled:focus:!bg-transparent"
+                    class="border px-2 py-1 h-8 transition-colors hover:bg-gray-600 focus:bg-gray-600 disabled:!cursor-default disabled:hover:!bg-transparent disabled:focus:!bg-transparent"
                     on:click={goToNextPage}
                     disabled={page === totalPages}
                     title="Next page"
                 >
-                    {'>'}
+                    <ChevronRight size={16} />
                 </button>
                 <button
-                    class="border px-2 py-1 w-9 h-9 transition-colors hover:bg-gray-600 focus:bg-gray-600 disabled:!cursor-default disabled:hover:!bg-transparent disabled:focus:!bg-transparent"
+                    class="border px-2 py-1 h-8 transition-colors hover:bg-gray-600 focus:bg-gray-600 disabled:!cursor-default disabled:hover:!bg-transparent disabled:focus:!bg-transparent"
                     on:click={goToLastPage}
                     disabled={page === totalPages}
                     title="Last page"
                 >
-                    {'>>'}
+                    <ChevronsRight size={16} />
                 </button>
             </div>
         </div>
