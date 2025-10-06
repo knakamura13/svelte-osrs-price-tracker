@@ -525,7 +525,7 @@
 </div>
 
 <!-- Pagination Controls (Bottom) -->
-<PaginationControls {page} {pageSize} {totalRows} {onPageChange} {onPageSizeChange} />
+<PaginationControls {page} {pageSize} {totalRows} {onPageChange} {onPageSizeChange} id="page-size-2" />
 
 <style lang="scss">
     .red-text {

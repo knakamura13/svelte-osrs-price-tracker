@@ -35,7 +35,7 @@
     onDestroy(() => clearTimeout(timer));
 </script>
 
-<div class="relative inline-block w-full md:w-1/2">
+<div class="relative inline-block w-full lg:w-1/3">
     <input
         id="search-input"
         name="search"

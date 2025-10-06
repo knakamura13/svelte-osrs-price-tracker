@@ -6,6 +6,7 @@
     export let totalRows: number = 0;
     export let onPageChange: ((page: number) => void) | undefined;
     export let onPageSizeChange: ((pageSize: number) => void) | undefined;
+    export let id: string = 'page-size';
 
     // Only show pagination if we have data and callbacks
     $: showPagination = onPageChange && onPageSizeChange && totalRows > 0;
@@ -34,9 +35,9 @@
 {#if showPagination}
     <div class="flex items-center justify-between py-2">
         <div class="flex gap-2 items-center text-sm">
-            <label for="page-size">Rows per page</label>
+            <label for={id}>Rows per page</label>
             <select
-                id="page-size"
+                {id}
                 class="border p-1"
                 bind:value={pageSize}
                 on:change={() => onPageSizeChange && onPageSizeChange(pageSize)}
