@@ -43,6 +43,9 @@
     export let onPageChange: ((page: number) => void) | undefined;
     export let onPageSizeChange: ((pageSize: number) => void) | undefined;
 
+    // Background refresh indicator
+    export let backgroundRefreshing: boolean = false;
+
     // Calculate visible column count for colspan
     $: visibleColumnCount = Object.values(columnVisibility).filter(Boolean).length + 1; // +1 for image column
 
@@ -393,7 +396,19 @@
 <!-- Pagination Controls (Top) -->
 <PaginationControls {page} {pageSize} {totalRows} {onPageChange} {onPageSizeChange} />
 
-<div class="overflow-x-auto">
+<div class="overflow-x-auto relative">
+    {#if backgroundRefreshing}
+        <div class="absolute top-2 right-2 z-10">
+            <div
+                class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-md text-xs text-blue-600 dark:text-blue-400"
+            >
+                <div
+                    class="animate-spin rounded-full h-3 w-3 border border-blue-600 dark:border-blue-400 border-t-transparent"
+                ></div>
+                <span>Refreshing...</span>
+            </div>
+        </div>
+    {/if}
     <table class="w-full text-sm">
         <thead class="bg-gray-50 dark:bg-[#2a3138] dark:text-gray-200 sticky top-0">
             <tr>

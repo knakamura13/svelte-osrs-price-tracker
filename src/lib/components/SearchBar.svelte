@@ -29,6 +29,8 @@
 </script>
 
 <input
+    id="search-input"
+    name="search"
     class="border rounded p-2 w-full md:w-1/2"
     {placeholder}
     value={draft}

@@ -37,7 +37,6 @@
     const refreshSec = 60;
     // Throttle instant refreshes to prevent abuse (minimum 1 second between refreshes)
     let lastRefreshTime = 0;
-    const MIN_REFRESH_INTERVAL = 1000; // 1 second
 
     let allRows: PriceRow[] = data?.rows ?? [];
     let lastUpdated: number | null = null;
@@ -46,6 +45,7 @@
     let errorMsg: string | null = null;
     let failCount = 0;
     let loading = true; // Start with loading true for initial load
+    let backgroundRefreshing = false; // Separate state for auto-refresh loading
     let nextRetryAt: number | null = null; // Unix timestamp in seconds
     let nextRetryIn: number | null = null; // Countdown in seconds
     let toastVisible = false;
@@ -141,9 +141,13 @@
         return isFiniteNumber(v);
     }).length;
 
-    async function loadRows() {
+    async function loadRows(isInitialLoad: boolean = false) {
         try {
-            loading = true;
+            if (isInitialLoad) {
+                loading = true;
+            } else {
+                backgroundRefreshing = true;
+            }
             errorMsg = null;
             nextRetryAt = null;
             nextRetryIn = null;
@@ -155,7 +159,12 @@
             lastUpdated = Date.now();
             lastRefreshTime = Date.now(); // Update throttle timestamp
             failCount = 0; // Reset fail count on success
-            page = 1;
+
+            // Only reset page to 1 on initial load, not on auto-refresh
+            if (isInitialLoad) {
+                page = 1;
+            }
+
             // Show success toast
             toastMessage = `Updated ${rows.length} items`;
             toastType = 'success';
@@ -176,7 +185,11 @@
                 }
             }
         } finally {
-            loading = false;
+            if (isInitialLoad) {
+                loading = false;
+            } else {
+                backgroundRefreshing = false;
+            }
         }
     }
 
@@ -191,7 +204,7 @@
 
     onMount(() => {
         // Always load data on mount for fresh data and better UX
-        loadRows();
+        loadRows(true);
         // Hydrate prefs once
         const loaded = loadPrefs(Math.floor(Date.now() / 1000));
         if (loaded) {
@@ -321,7 +334,7 @@
 </svelte:head>
 
 <div class="page" id="home">
-    <HeaderControls {lastUpdatedLabel} />
+    <HeaderControls {lastUpdatedLabel} {backgroundRefreshing} />
 
     <ErrorAlert message={errorMsg} {failCount} {nextRetryIn} autoDisabled={failCount >= 5} />
 
@@ -392,6 +405,7 @@
                 {onPageSizeChange}
                 decimalView={settings.decimalView}
                 decimalPlaces={settings.decimalPlaces}
+                {backgroundRefreshing}
             />
         {/if}
     </section>
