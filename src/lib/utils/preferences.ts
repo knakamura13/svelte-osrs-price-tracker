@@ -13,7 +13,6 @@ export type Settings = {
     autoRefresh: boolean;
     decimalView: boolean;
     decimalPlaces: number;
-    darkMode: 'light' | 'dark' | 'auto';
 };
 
 export type AllPrefs = Prefs & Settings;

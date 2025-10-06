@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { settingsStore, getSystemDarkMode } from '$lib/utils/settings';
+    import { settingsStore } from '$lib/utils/settings';
     import { ChevronUp, ChevronDown } from 'lucide-svelte';
 
     let isOpen = false;
@@ -54,11 +54,6 @@
             // Invalid value, reset to current value
             target.value = settings.decimalPlaces.toString();
         }
-    }
-
-    function handleDarkModeChange(mode: 'light' | 'dark' | 'auto') {
-        settingsStore.setDarkMode(mode);
-        settingsStore.save();
     }
 </script>
 
@@ -203,57 +198,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Dark Mode Toggle -->
-                <div class="space-y-2">
-                    <div id="theme-label" class="text-sm font-medium text-gray-900 dark:text-gray-100">Theme</div>
-                    <div class="grid grid-cols-3 gap-2" role="group" aria-labelledby="theme-label">
-                        <button
-                            class="px-3 py-2 text-sm rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                            class:bg-blue-600={!settings.darkMode || settings.darkMode === 'auto'
-                                ? 'text-white'
-                                : 'text-gray-700 dark:text-gray-300'}
-                            class:text-gray-700={settings.darkMode === 'light'}
-                            class:text-gray-400={settings.darkMode === 'dark'}
-                            on:click={() => handleDarkModeChange('auto')}
-                            aria-pressed={settings.darkMode === 'auto'}
-                            aria-label="Use system theme preference"
-                        >
-                            Auto
-                        </button>
-                        <button
-                            class="px-3 py-2 text-sm rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                            class:bg-blue-600={settings.darkMode === 'light'
-                                ? 'text-white'
-                                : 'text-gray-700 dark:text-gray-300'}
-                            class:text-gray-400={settings.darkMode === 'auto'}
-                            class:text-gray-700={settings.darkMode === 'dark'}
-                            on:click={() => handleDarkModeChange('light')}
-                            aria-pressed={settings.darkMode === 'light'}
-                            aria-label="Use light theme"
-                        >
-                            Light
-                        </button>
-                        <button
-                            class="px-3 py-2 text-sm rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                            class:bg-blue-600={settings.darkMode === 'dark'
-                                ? 'text-white'
-                                : 'text-gray-700 dark:text-gray-300'}
-                            class:text-gray-400={settings.darkMode === 'auto'}
-                            class:text-gray-700={settings.darkMode === 'light'}
-                            on:click={() => handleDarkModeChange('dark')}
-                            aria-pressed={settings.darkMode === 'dark'}
-                            aria-label="Use dark theme"
-                        >
-                            Dark
-                        </button>
-                    </div>
-                    {#if settings.darkMode === 'auto'}
-                        <p class="text-xs text-gray-500 dark:text-gray-400">
-                            Currently: {getSystemDarkMode() ? 'Dark' : 'Light'} (system preference)
-                        </p>
-                    {/if}
                 </div>
             </div>
         </div>

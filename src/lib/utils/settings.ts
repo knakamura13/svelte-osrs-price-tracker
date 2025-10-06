@@ -5,8 +5,7 @@ import type { Settings } from './preferences';
 const defaultSettings: Settings = {
     autoRefresh: true, // enabled by default
     decimalView: false, // disabled by default
-    decimalPlaces: 2, // default 2 decimal places
-    darkMode: 'auto' // auto-detect by default
+    decimalPlaces: 2 // default 2 decimal places
 };
 
 // Settings store
@@ -34,7 +33,6 @@ function createSettingsStore() {
         toggleAutoRefresh: () => update((settings) => ({ ...settings, autoRefresh: !settings.autoRefresh })),
         toggleDecimalView: () => update((settings) => ({ ...settings, decimalView: !settings.decimalView })),
         setDecimalPlaces: (places: number) => update((settings) => ({ ...settings, decimalPlaces: places })),
-        setDarkMode: (mode: 'light' | 'dark' | 'auto') => update((settings) => ({ ...settings, darkMode: mode })),
         // Save to localStorage whenever settings change
         save: () =>
             update((settings) => {
@@ -52,24 +50,10 @@ function createSettingsStore() {
 
 export const settingsStore = createSettingsStore();
 
-// Initialize dark mode on load
+// Initialize dark mode on load - always use dark mode
 if (typeof window !== 'undefined') {
     settingsStore.subscribe((settings) => {
-        // Apply dark mode class to document
-        const shouldDark =
-            settings.darkMode === 'dark' ||
-            (settings.darkMode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-
-        if (shouldDark) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
+        // Always apply dark mode class to document
+        document.documentElement.classList.add('dark');
     });
-}
-
-// Helper function to get system preference
-export function getSystemDarkMode(): boolean {
-    if (typeof window === 'undefined') return false;
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
