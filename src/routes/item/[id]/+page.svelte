@@ -5,7 +5,7 @@
     import { secondsAgoFromUnix } from '$lib/utils/time';
     import { calculatePostTaxProfit } from '$lib/utils/tax';
     import { settingsStore } from '$lib/utils/settings';
-    import { Star, DollarSign } from 'lucide-svelte';
+    import { Star, DollarSign, ArrowLeft, ChevronDown } from 'lucide-svelte';
 
     export let data: PageData;
 
@@ -62,9 +62,7 @@
     <!-- Back navigation -->
     <div class="mb-4">
         <a href="/" class="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
+            <ArrowLeft class="w-4 h-4" />
             Back to all items
         </a>
     </div>
@@ -91,7 +89,7 @@
                 <div class="flex items-center gap-3 mb-2">
                     <h1 class="text-3xl font-bold">{item.name}</h1>
                     {#if item.members}
-                        <Star class="w-5 h-5 text-yellow-500" title="Members only" />
+                        <Star class="w-5 h-5 text-yellow-500" />
                     {/if}
                 </div>
                 <p class="text-sm text-gray-600 dark:text-gray-400">Item ID: {item.id}</p>
@@ -350,14 +348,7 @@
                     <option value="1y">1 Year</option>
                 </select>
                 <div class="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                    <svg
-                        class="w-4 h-4 text-gray-600 dark:text-gray-300"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                    </svg>
+                    <ChevronDown class="w-4 h-4 text-gray-600 dark:text-gray-300" />
                 </div>
             </div>
         </div>

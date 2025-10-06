@@ -7,7 +7,7 @@
         calculatePostTaxProfit as calcPostTaxProfit
     } from '$lib/utils/tax';
     import PaginationControls from './PaginationControls.svelte';
-    import { ChevronUp, ChevronDown, Minus, BookOpen } from 'lucide-svelte';
+    import { ChevronUp, ChevronDown, Minus, BookOpen, SearchX } from 'lucide-svelte';
 
     export let rows: PriceRow[] = [];
     export let sortable: boolean = false;
@@ -458,20 +458,7 @@
                 <tr>
                     <td colspan={visibleColumnCount} class="p-8 text-center">
                         <div class="flex flex-col items-center gap-3 opacity-60">
-                            <svg
-                                class="w-12 h-12"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                aria-hidden="true"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                />
-                            </svg>
+                            <SearchX class="w-12 h-12" aria-hidden="true" />
                             <div>
                                 <p class="font-medium text-base">No items match your filters</p>
                                 <p class="text-sm mt-1">Try adjusting your search or filter criteria</p>
