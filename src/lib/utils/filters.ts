@@ -217,31 +217,40 @@ export function setSort(
     lastKey: SortKey | null,
     nextKey: SortKey
 ) {
-    let sortKey: SortKey | null = currentKey;
-    let sortDir: 'asc' | 'desc' = currentDir;
-    let lastSortKey: SortKey | null = lastKey;
-
-    if (sortKey === nextKey) {
-        if (sortDir === 'asc') {
-            sortDir = 'desc';
-        } else if (sortDir === 'desc') {
-            sortKey = null; // unsorted
-            sortDir = 'asc';
-            lastSortKey = nextKey;
-        } else {
-            sortKey = nextKey;
-            sortDir = 'asc';
-        }
-    } else if (lastSortKey === nextKey && sortKey === null) {
-        sortKey = nextKey;
-        sortDir = 'asc';
-    } else {
-        sortKey = nextKey;
-        sortDir = nextKey === 'name' ? 'asc' : 'desc';
-        lastSortKey = nextKey;
+    // If clicking on a different column, start with descending sort (except for name which starts with ascending)
+    if (currentKey !== nextKey) {
+        return {
+            sortKey: nextKey,
+            sortDir: nextKey === 'name' ? 'asc' : 'desc',
+            lastSortKey: nextKey
+        };
     }
 
-    return { sortKey, sortDir, lastSortKey };
+    // If clicking on the same column, cycle through: descending → ascending → unsorted → descending
+    if (currentKey === nextKey) {
+        if (currentDir === 'desc') {
+            // Currently descending, switch to ascending
+            return {
+                sortKey: nextKey,
+                sortDir: 'asc',
+                lastSortKey: nextKey
+            };
+        } else if (currentDir === 'asc') {
+            // Currently ascending, switch to unsorted
+            return {
+                sortKey: null,
+                sortDir: 'asc',
+                lastSortKey: nextKey
+            };
+        }
+    }
+
+    // Fallback: if somehow in an unexpected state, start fresh with descending sort
+    return {
+        sortKey: nextKey,
+        sortDir: nextKey === 'name' ? 'asc' : 'desc',
+        lastSortKey: nextKey
+    };
 }
 
 export function computeFilterStats(allRows: PriceRow[]): FilterStats {

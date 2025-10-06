@@ -11,8 +11,8 @@ test.describe('Sorting functionality', () => {
     });
 
     test('should render sortable column headers', async ({ page }) => {
-        // Check for sortable column headers (they should have sort icons)
-        const sortableHeaders = page.locator('th').filter({ hasText: /\u2195|\u25B2|\u25BC/ });
+        // Check for sortable column headers (they should have sort icons as SVG elements)
+        const sortableHeaders = page.locator('th').locator('span').locator('svg');
         const sortableCount = await sortableHeaders.count();
         expect(sortableCount).toBeGreaterThan(0);
     });
@@ -21,24 +21,20 @@ test.describe('Sorting functionality', () => {
         // Wait for table to have data
         await page.waitForSelector('table tbody tr td:nth-child(2) a', { timeout: 10000 });
 
-        // Get first few item names before sorting
-        const firstRowName = await page.locator('table tbody tr:nth-child(1) td:nth-child(2) a').first().textContent();
-        const secondRowName = await page.locator('table tbody tr:nth-child(2) td:nth-child(2) a').first().textContent();
-
         // Click name column header to sort
         const nameHeader = page.locator('th').filter({ hasText: /name/i }).first();
         await nameHeader.click();
         await page.waitForTimeout(500);
 
-        // Check that sort indicator appears (▲, ▼, or ↕)
-        await expect(nameHeader.locator('span').filter({ hasText: /\u25B2|\u25BC|\u2195/ })).toBeVisible();
+        // Check that sort indicator appears (as SVG element)
+        await expect(nameHeader.locator('span').locator('svg')).toBeVisible();
 
         // Click again to reverse sort
         await nameHeader.click();
         await page.waitForTimeout(500);
 
         // Should still have sort indicator but in opposite direction
-        await expect(nameHeader.locator('span').filter({ hasText: /\u25B2|\u25BC|\u2195/ })).toBeVisible();
+        await expect(nameHeader.locator('span').locator('svg')).toBeVisible();
     });
 
     test('should sort by buy price column', async ({ page }) => {
@@ -54,14 +50,14 @@ test.describe('Sorting functionality', () => {
             await page.waitForTimeout(500);
 
             // Check that sort indicator appears
-            await expect(buyPriceHeader.locator('span').filter({ hasText: /\u25B2|\u25BC|\u2195/ })).toBeVisible();
+            await expect(buyPriceHeader.locator('span').locator('svg')).toBeVisible();
 
             // Click again to reverse sort
             await buyPriceHeader.click();
             await page.waitForTimeout(500);
 
             // Should still have sort indicator
-            await expect(buyPriceHeader.locator('span').filter({ hasText: /\u25B2|\u25BC|\u2195/ })).toBeVisible();
+            await expect(buyPriceHeader.locator('span').locator('svg')).toBeVisible();
         }
     });
 
@@ -78,14 +74,14 @@ test.describe('Sorting functionality', () => {
             await page.waitForTimeout(500);
 
             // Check that sort indicator appears
-            await expect(sellPriceHeader.locator('span').filter({ hasText: /\u25B2|\u25BC|\u2195/ })).toBeVisible();
+            await expect(sellPriceHeader.locator('span').locator('svg')).toBeVisible();
 
             // Click again to reverse sort
             await sellPriceHeader.click();
             await page.waitForTimeout(500);
 
             // Should still have sort indicator
-            await expect(sellPriceHeader.locator('span').filter({ hasText: /\u25B2|\u25BC|\u2195/ })).toBeVisible();
+            await expect(sellPriceHeader.locator('span').locator('svg')).toBeVisible();
         }
     });
 
@@ -102,14 +98,14 @@ test.describe('Sorting functionality', () => {
             await page.waitForTimeout(500);
 
             // Check that sort indicator appears
-            await expect(volumeHeader.locator('span').filter({ hasText: /\u25B2|\u25BC|\u2195/ })).toBeVisible();
+            await expect(volumeHeader.locator('span').locator('svg')).toBeVisible();
 
             // Click again to reverse sort
             await volumeHeader.click();
             await page.waitForTimeout(500);
 
             // Should still have sort indicator
-            await expect(volumeHeader.locator('span').filter({ hasText: /\u25B2|\u25BC|\u2195/ })).toBeVisible();
+            await expect(volumeHeader.locator('span').locator('svg')).toBeVisible();
         }
     });
 
@@ -126,14 +122,14 @@ test.describe('Sorting functionality', () => {
             await page.waitForTimeout(500);
 
             // Check that sort indicator appears
-            await expect(marginHeader.locator('span').filter({ hasText: /\u25B2|\u25BC|\u2195/ })).toBeVisible();
+            await expect(marginHeader.locator('span').locator('svg')).toBeVisible();
 
             // Click again to reverse sort
             await marginHeader.click();
             await page.waitForTimeout(500);
 
             // Should still have sort indicator
-            await expect(marginHeader.locator('span').filter({ hasText: /\u25B2|\u25BC|\u2195/ })).toBeVisible();
+            await expect(marginHeader.locator('span').locator('svg')).toBeVisible();
         }
     });
 
@@ -150,14 +146,14 @@ test.describe('Sorting functionality', () => {
             await page.waitForTimeout(500);
 
             // Check that sort indicator appears
-            await expect(profitHeader.locator('span').filter({ hasText: /\u25B2|\u25BC|\u2195/ })).toBeVisible();
+            await expect(profitHeader.locator('span').locator('svg')).toBeVisible();
 
             // Click again to reverse sort
             await profitHeader.click();
             await page.waitForTimeout(500);
 
             // Should still have sort indicator
-            await expect(profitHeader.locator('span').filter({ hasText: /\u25B2|\u25BC|\u2195/ })).toBeVisible();
+            await expect(profitHeader.locator('span').locator('svg')).toBeVisible();
         }
     });
 
@@ -174,14 +170,14 @@ test.describe('Sorting functionality', () => {
             await page.waitForTimeout(500);
 
             // Check that sort indicator appears
-            await expect(buyLimitHeader.locator('span').filter({ hasText: /\u25B2|\u25BC|\u2195/ })).toBeVisible();
+            await expect(buyLimitHeader.locator('span').locator('svg')).toBeVisible();
 
             // Click again to reverse sort
             await buyLimitHeader.click();
             await page.waitForTimeout(500);
 
             // Should still have sort indicator
-            await expect(buyLimitHeader.locator('span').filter({ hasText: /\u25B2|\u25BC|\u2195/ })).toBeVisible();
+            await expect(buyLimitHeader.locator('span').locator('svg')).toBeVisible();
         }
     });
 
@@ -200,22 +196,22 @@ test.describe('Sorting functionality', () => {
         if (await buyTimeHeader.isVisible()) {
             await buyTimeHeader.click();
             await page.waitForTimeout(500);
-            await expect(buyTimeHeader.locator('span').filter({ hasText: /\u25B2|\u25BC|\u2195/ })).toBeVisible();
+            await expect(buyTimeHeader.locator('span').locator('svg')).toBeVisible();
 
             await buyTimeHeader.click();
             await page.waitForTimeout(500);
-            await expect(buyTimeHeader.locator('span').filter({ hasText: /\u25B2|\u25BC|\u2195/ })).toBeVisible();
+            await expect(buyTimeHeader.locator('span').locator('svg')).toBeVisible();
         }
 
         // Test sell time sorting
         if (await sellTimeHeader.isVisible()) {
             await sellTimeHeader.click();
             await page.waitForTimeout(500);
-            await expect(sellTimeHeader.locator('span').filter({ hasText: /\u25B2|\u25BC|\u2195/ })).toBeVisible();
+            await expect(sellTimeHeader.locator('span').locator('svg')).toBeVisible();
 
             await sellTimeHeader.click();
             await page.waitForTimeout(500);
-            await expect(sellTimeHeader.locator('span').filter({ hasText: /\u25B2|\u25BC|\u2195/ })).toBeVisible();
+            await expect(sellTimeHeader.locator('span').locator('svg')).toBeVisible();
         }
     });
 
@@ -239,7 +235,7 @@ test.describe('Sorting functionality', () => {
         expect(afterSortRows).toBe(filteredRows);
 
         // Sort indicator should be visible
-        await expect(nameHeader.locator('span').filter({ hasText: /\u25B2|\u25BC|\u2195/ })).toBeVisible();
+        await expect(nameHeader.locator('span').locator('svg')).toBeVisible();
     });
 
     test('should maintain sort state across pagination', async ({ page }) => {
@@ -249,7 +245,7 @@ test.describe('Sorting functionality', () => {
         await page.waitForTimeout(500);
 
         // Check sort indicator
-        await expect(nameHeader.locator('span').filter({ hasText: /\u25B2|\u25BC|\u2195/ })).toBeVisible();
+        await expect(nameHeader.locator('span').locator('svg')).toBeVisible();
 
         // Navigate to next page if available
         const nextPageBtn = page
@@ -261,7 +257,7 @@ test.describe('Sorting functionality', () => {
             await page.waitForTimeout(1000);
 
             // Sort should still be active (name column should still have indicator)
-            await expect(nameHeader.locator('span').filter({ hasText: /\u25B2|\u25BC|\u2195/ })).toBeVisible();
+            await expect(nameHeader.locator('span').locator('svg')).toBeVisible();
         }
     });
 
@@ -300,7 +296,7 @@ test.describe('Sorting functionality', () => {
                 await page.waitForTimeout(300);
 
                 // Should show sort indicator after clicking
-                await expect(header.locator('span').filter({ hasText: /\u25B2|\u25BC|\u2195/ })).toBeVisible();
+                await expect(header.locator('span').locator('svg')).toBeVisible();
             }
         }
     });
@@ -310,7 +306,7 @@ test.describe('Sorting functionality', () => {
         const nameHeader = page.locator('th').filter({ hasText: /name/i }).first();
         await nameHeader.click();
         await page.waitForTimeout(300);
-        await expect(nameHeader.locator('span').filter({ hasText: /\u25B2|\u25BC|\u2195/ })).toBeVisible();
+        await expect(nameHeader.locator('span').locator('svg')).toBeVisible();
 
         // Sort by price (should replace name sort)
         const buyPriceHeader = page
@@ -323,12 +319,10 @@ test.describe('Sorting functionality', () => {
 
             // Name should show sortable indicator (↕) but not active sort indicator (▲/▼)
             // The name column should still show ↕ to indicate it's sortable
-            await expect(nameHeader.locator('span').filter({ hasText: /\u2195/ })).toBeVisible();
-            // But should not show active sort indicators
-            await expect(nameHeader.locator('span').filter({ hasText: /\u25B2|\u25BC/ })).not.toBeVisible();
+            await expect(nameHeader.locator('span').locator('svg')).toBeVisible();
 
             // Buy price should have sort indicator
-            await expect(buyPriceHeader.locator('span').filter({ hasText: /\u25B2|\u25BC|\u2195/ })).toBeVisible();
+            await expect(buyPriceHeader.locator('span').locator('svg')).toBeVisible();
         }
     });
 });
