@@ -24,16 +24,35 @@
         );
     }
 
+    function clearSearch() {
+        draft = '';
+        if (onInput) onInput('');
+    }
+
     import { onDestroy } from 'svelte';
+    import { X } from 'lucide-svelte';
+
     onDestroy(() => clearTimeout(timer));
 </script>
 
-<input
-    id="search-input"
-    name="search"
-    class="border rounded p-2 w-full md:w-1/2"
-    {placeholder}
-    value={draft}
-    on:input={handleInput}
-    aria-label="Search"
-/>
+<div class="relative inline-block w-full md:w-1/2">
+    <input
+        id="search-input"
+        name="search"
+        class="border rounded p-2 w-full pr-10"
+        {placeholder}
+        value={draft}
+        on:input={handleInput}
+        aria-label="Search"
+    />
+    {#if draft}
+        <button
+            type="button"
+            class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-300 transition-colors hover:text-gray-100 focus:outline-none focus:text-gray-100"
+            on:click={clearSearch}
+            aria-label="Clear search"
+        >
+            <X class="w-5 h-5" />
+        </button>
+    {/if}
+</div>

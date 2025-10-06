@@ -99,4 +99,36 @@ test.describe('SearchBar functionality', () => {
         const rows = await page.locator('table tbody tr').count();
         expect(rows).toBeGreaterThan(0);
     });
+
+    test('should show clear button when input has content', async ({ page }) => {
+        const searchInput = page.getByPlaceholder('Search for an item...');
+
+        // Initially, clear button should not be visible
+        await expect(page.locator('[aria-label="Clear search"]')).not.toBeVisible();
+
+        // Type into the search bar
+        await searchInput.fill('dragon');
+
+        // Clear button should now be visible
+        await expect(page.locator('[aria-label="Clear search"]')).toBeVisible();
+    });
+
+    test('should clear input when clear button is clicked', async ({ page }) => {
+        const searchInput = page.getByPlaceholder('Search for an item...');
+
+        // Type into the search bar
+        await searchInput.fill('dragon');
+
+        // Verify input has value
+        await expect(searchInput).toHaveValue('dragon');
+
+        // Click the clear button
+        await page.locator('[aria-label="Clear search"]').click();
+
+        // Input should be empty
+        await expect(searchInput).toHaveValue('');
+
+        // Clear button should no longer be visible
+        await expect(page.locator('[aria-label="Clear search"]')).not.toBeVisible();
+    });
 });
