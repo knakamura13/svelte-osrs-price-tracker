@@ -20,7 +20,6 @@
     import { loadPrefs, savePrefs } from '$lib/utils/preferences';
     import { setupAutoRefreshWithBackoff, calculateBackoff } from '$lib/utils/autoRefresh';
     import { settingsStore } from '$lib/utils/settings';
-    import { formatPrice } from '$lib/utils/format';
     import type { PriceRow, Filters, SortKey, FilterStats } from '$lib/types';
 
     // Data prop is now optional since we load data client-side for better UX

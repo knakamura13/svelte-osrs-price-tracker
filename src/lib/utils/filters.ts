@@ -216,7 +216,7 @@ export function setSort(
     currentDir: 'asc' | 'desc',
     lastKey: SortKey | null,
     nextKey: SortKey
-) {
+): { sortKey: SortKey | null; sortDir: 'asc' | 'desc'; lastSortKey: SortKey | null } {
     // If clicking on a different column, start with descending sort (except for name which starts with ascending)
     if (currentKey !== nextKey) {
         return {
