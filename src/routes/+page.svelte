@@ -270,12 +270,14 @@
             breakEvenPrice: { min: null, max: null },
             margin: { min: null, max: null },
             postTaxProfit: { min: null, max: null },
+            postTaxProfitAvg: { min: null, max: null },
             dailyVolume: { min: null, max: null },
             dailyLow: { min: null, max: null },
             dailyHigh: { min: null, max: null },
             averageBuy: { min: null, max: null },
             averageSell: { min: null, max: null },
-            potentialProfit: { min: null, max: null }
+            potentialProfit: { min: null, max: null },
+            potentialProfitAvg: { min: null, max: null }
         };
         page = 1;
     }
@@ -359,12 +361,14 @@
                     breakEvenPrice: true,
                     margin: true,
                     postTaxProfit: true,
+                    postTaxProfitAvg: true,
                     dailyVolume: true,
                     dailyLow: true,
                     dailyHigh: true,
                     averageBuy: true,
                     averageSell: true,
-                    potentialProfit: true
+                    potentialProfit: true,
+                    potentialProfitAvg: true
                 })}
         />
 
