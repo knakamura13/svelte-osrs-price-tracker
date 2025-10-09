@@ -63,12 +63,14 @@ export type Filters = {
     breakEvenPrice: NumericFilter;
     margin: NumericFilter;
     postTaxProfit: NumericFilter;
+    postTaxProfitAvg: NumericFilter;
     dailyVolume: NumericFilter;
     dailyLow: NumericFilter;
     dailyHigh: NumericFilter;
     averageBuy: NumericFilter;
     averageSell: NumericFilter;
     potentialProfit: NumericFilter;
+    potentialProfitAvg: NumericFilter;
 };
 
 export type SortKey =
@@ -79,12 +81,14 @@ export type SortKey =
     | 'margin'
     | 'breakEvenPrice'
     | 'postTaxProfit'
+    | 'postTaxProfitAvg'
     | 'dailyVolume'
     | 'dailyLow'
     | 'dailyHigh'
     | 'averageBuy'
     | 'averageSell'
     | 'potentialProfit'
+    | 'potentialProfitAvg'
     | 'buyTime'
     | 'sellTime';
 
@@ -101,8 +105,10 @@ export type FilterStats = {
     averageBuy: NumericFilter;
     averageSell: NumericFilter;
     potentialProfit: NumericFilter;
+    potentialProfitAvg: NumericFilter;
     breakEvenPrice: NumericFilter;
     postTaxProfit: NumericFilter;
+    postTaxProfitAvg: NumericFilter;
 };
 
 // Error handling types

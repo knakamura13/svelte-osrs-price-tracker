@@ -19,21 +19,24 @@
             'The current insta-buy price for this item from the Grand Exchange. This is also sometimes referred to as the "Slow-sell price", since it is the highest price you could currently sell the item for.',
         'insta-sell-price':
             'The current insta-sell price for this item on the Grand Exchange. This is also sometimes referred to as the "Slow-buy price", since it is the lowest price you could currently buy the item for.',
-        'daily-volume': 'The number of items traded in the last 24 hours',
+        'daily-volume': 'The number of items traded in the last 24 hours.',
+        'post-tax-profit':
+            "Your profit if you buy at 'Insta-sell price' and sell at 'Insta-buy price', after GE tax (2% rounded down, capped at 5M gp).",
+        'post-tax-profit-avg':
+            "Your profit if you buy at 'Avg sell (24h)' and sell at 'Avg buy (24h)', after GE tax (2% rounded down, capped at 5M gp).",
         'potential-profit':
-            'Your profit if you buy at the insta-sell (slow-buy) price and then sell at the insta-buy (slow-sell) price, after GE tax (2% rounded down, capped at 5M gp)',
-        roi: 'Return on investment percentage calculated as (post-tax profit / insta-sell price) x 100, showing the percentage return if you buy at insta-sell and sell at insta-buy prices',
-        'buy-limit-profit':
-            'The total profit if you buy and sell at the buy limit quantity, calculated using insta-buy/sell prices after GE tax (2% rounded down, capped at 5M gp)',
-        'daily-low': 'The lowest price the item was traded for in the past 24 hours',
-        'daily-high': 'The highest price the item was traded for in the past 24 hours',
-        'avg-buy-24h': 'The mean of all insta-buy price values in the past 24 hours',
-        'avg-sell-24h': 'The mean of all insta-sell price values in the past 24 hours',
-        'buy-limit': 'The maximum number of items you can buy in 4 hours',
-        'high-alch': 'The price you receive when using High Level Alchemy on this item',
-        'low-alch': 'The price you receive when using Low Level Alchemy on this item',
-        members: 'Whether this item is members-only or available to free-to-play players',
-        examine: 'The examine text for this item as it appears in-game'
+            'The total profit if you buy and sell at the buy limit quantity, calculated using insta-buy/sell prices after GE tax (2% rounded down, capped at 5M gp).',
+        'potential-profit-avg':
+            'The total profit using daily volume x post-tax profit (avg), calculated using average buy/sell prices after GE tax (2% rounded down, capped at 5M gp).',
+        'daily-low': 'The lowest price the item was traded for in the past 24 hours.',
+        'daily-high': 'The highest price the item was traded for in the past 24 hours.',
+        'avg-buy-24h': 'The mean of all insta-buy price values in the past 24 hours.',
+        'avg-sell-24h': 'The mean of all insta-sell price values in the past 24 hours.',
+        'buy-limit': 'The maximum number of items you can buy in 4 hours.',
+        'high-alch': 'The price you receive when using High Level Alchemy on this item.',
+        'low-alch': 'The price you receive when using Low Level Alchemy on this item.',
+        members: 'Whether this item is members-only or available to free-to-play players.',
+        examine: 'The examine text for this item as it appears in-game.'
     };
 
     // Time range state
@@ -64,14 +67,10 @@
     }
 
     // Calculate stats
-    $: margin = item.buyPrice && item.sellPrice ? item.buyPrice - item.sellPrice : null;
     $: postTaxProfit = calculatePostTaxProfit(item.buyPrice, item.sellPrice, item.id);
-    $: roi = item.sellPrice && postTaxProfit ? ((postTaxProfit / item.sellPrice) * 100).toFixed(2) : null;
-    $: marginVolume =
-        margin && item.dailyVolume
-            ? formatPrice(margin * item.dailyVolume, settings.decimalView, settings.decimalPlaces)
-            : null;
-    $: buyLimitProfit = item.buyLimit && postTaxProfit ? item.buyLimit * postTaxProfit : null;
+    $: potentialProfit = item.buyLimit && postTaxProfit ? item.buyLimit * postTaxProfit : null;
+    $: postTaxProfitAvg = calculatePostTaxProfit(item.averageBuy ?? null, item.averageSell ?? null, item.id);
+    $: potentialProfitAvg = postTaxProfitAvg && item.dailyVolume ? postTaxProfitAvg * item.dailyVolume : null;
 
     // Check if low volume
     $: isLowVolume = item.dailyVolume !== null && item.dailyVolume !== undefined && item.dailyVolume < 100;
@@ -221,6 +220,21 @@
                     </div>
                 </div>
 
+                <!-- Post-tax profit -->
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400" title={statTitles['post-tax-profit']}
+                        >Post-tax profit:</span
+                    >
+                    <div
+                        class="text-lg font-bold text-green-600 dark:text-green-400"
+                        title={statTitles['post-tax-profit']}
+                    >
+                        {postTaxProfit !== null
+                            ? formatPrice(postTaxProfit, settings.decimalView, settings.decimalPlaces)
+                            : '—'}
+                    </div>
+                </div>
+
                 <!-- Potential profit -->
                 <div class="flex items-center justify-between">
                     <span class="text-sm text-gray-600 dark:text-gray-400" title={statTitles['potential-profit']}
@@ -230,31 +244,38 @@
                         class="text-lg font-bold text-green-600 dark:text-green-400"
                         title={statTitles['potential-profit']}
                     >
-                        {postTaxProfit !== null
-                            ? formatPrice(postTaxProfit, settings.decimalView, settings.decimalPlaces)
+                        {potentialProfit !== null
+                            ? formatPrice(potentialProfit, settings.decimalView, settings.decimalPlaces)
                             : '—'}
                     </div>
                 </div>
 
-                <!-- ROI -->
+                <!-- Post-tax profit (avg) -->
                 <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600 dark:text-gray-400" title={statTitles['roi']}>ROI:</span>
-                    <div class="text-lg font-bold text-green-600 dark:text-green-400" title={statTitles['roi']}>
-                        {roi !== null ? `${roi}%` : '—'}
-                    </div>
-                </div>
-
-                <!-- Buy limit profit -->
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600 dark:text-gray-400" title={statTitles['buy-limit-profit']}
-                        >Buy limit profit:</span
+                    <span class="text-sm text-gray-600 dark:text-gray-400" title={statTitles['post-tax-profit-avg']}
+                        >Post-tax profit (avg):</span
                     >
                     <div
                         class="text-lg font-bold text-green-600 dark:text-green-400"
-                        title={statTitles['buy-limit-profit']}
+                        title={statTitles['post-tax-profit-avg']}
                     >
-                        {buyLimitProfit !== null
-                            ? formatPrice(buyLimitProfit, settings.decimalView, settings.decimalPlaces)
+                        {postTaxProfitAvg !== null
+                            ? formatPrice(postTaxProfitAvg, settings.decimalView, settings.decimalPlaces)
+                            : '—'}
+                    </div>
+                </div>
+
+                <!-- Potential profit (avg) -->
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400" title={statTitles['potential-profit-avg']}
+                        >Potential profit (avg):</span
+                    >
+                    <div
+                        class="text-lg font-bold text-green-600 dark:text-green-400"
+                        title={statTitles['potential-profit-avg']}
+                    >
+                        {potentialProfitAvg !== null
+                            ? formatPrice(potentialProfitAvg, settings.decimalView, settings.decimalPlaces)
                             : '—'}
                     </div>
                 </div>

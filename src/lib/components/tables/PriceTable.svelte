@@ -24,12 +24,14 @@
         breakEvenPrice: true,
         margin: true,
         postTaxProfit: true,
+        postTaxProfitAvg: true,
         dailyVolume: true,
         dailyLow: true,
         dailyHigh: true,
         averageBuy: true,
         averageSell: true,
-        potentialProfit: true
+        potentialProfit: true,
+        potentialProfitAvg: true
     };
 
     // Settings props for decimal formatting
@@ -80,6 +82,14 @@
         return calculatePostTaxProfit(buyPrice, sellPrice, itemId);
     };
 
+    const getPostTaxProfitAvgValue = (
+        averageBuy: number | null | undefined,
+        averageSell: number | null | undefined,
+        itemId: number
+    ): number | null => {
+        return calculatePostTaxProfit(averageBuy ?? null, averageSell ?? null, itemId);
+    };
+
     // Column configuration for table headers
     const columnConfig = [
         {
@@ -101,7 +111,7 @@
         {
             key: 'buyPrice',
             label: 'Insta-buy price',
-            title: 'The current insta-buy price for this item from the Grand Exchange',
+            title: 'The current insta-buy price for this item from the Grand Exchange. This is also sometimes referred to as the "Slow-sell price", since it is the highest price you could currently sell the item for.',
             align: 'right',
             sortable: true,
             hasHelpIcon: false
@@ -117,7 +127,7 @@
         {
             key: 'sellPrice',
             label: 'Insta-sell price',
-            title: 'The current insta-sell price for this item on the Grand Exchange',
+            title: 'The current insta-sell price for this item on the Grand Exchange. This is also sometimes referred to as the "Slow-buy price", since it is the lowest price you could currently buy the item for.',
             align: 'right',
             sortable: true,
             hasHelpIcon: false
@@ -149,7 +159,15 @@
         {
             key: 'postTaxProfit',
             label: 'Post-tax profit',
-            title: "Your profit if you insta-buy at 'Insta-sell price' and insta-sell at 'Insta-buy price', after GE tax (2% rounded down, capped at 5M gp).",
+            title: "Your profit if you buy at 'Insta-sell price' and sell at 'Insta-buy price', after GE tax (2% rounded down, capped at 5M gp).",
+            align: 'right',
+            sortable: true,
+            hasHelpIcon: true
+        },
+        {
+            key: 'postTaxProfitAvg',
+            label: 'Post-tax profit (avg)',
+            title: "Your profit if you buy at 'Avg sell (24h)' and sell at 'Avg buy (24h)', after GE tax (2% rounded down, capped at 5M gp).",
             align: 'right',
             sortable: true,
             hasHelpIcon: true
@@ -157,7 +175,15 @@
         {
             key: 'potentialProfit',
             label: 'Potential profit',
-            title: "Your total profit if you buy at 'Insta-sell price' and sell at 'Insta-buy price' for the full buy limit, after GE tax (2% rounded down, capped at 5M gp).",
+            title: 'Buy limit x post-tax profit.',
+            align: 'right',
+            sortable: true,
+            hasHelpIcon: true
+        },
+        {
+            key: 'potentialProfitAvg',
+            label: 'Potential profit (avg)',
+            title: 'Daily volume x post-tax profit (avg).',
             align: 'right',
             sortable: true,
             hasHelpIcon: true
@@ -317,6 +343,23 @@
             }
         },
         {
+            key: 'postTaxProfitAvg',
+            render: (row: PriceRow) => {
+                const profitValue = getPostTaxProfitAvgValue(row.averageBuy, row.averageSell, row.id);
+                if (profitValue == null) {
+                    return {
+                        content: '—',
+                        title: 'No post-tax profit (avg) data available for this item',
+                        class: 'cursor-help'
+                    };
+                }
+                return {
+                    content: formatPrice(profitValue, decimalView, decimalPlaces),
+                    class: profitValue < 0 ? 'red-text' : 'green-text'
+                };
+            }
+        },
+        {
             key: 'potentialProfit',
             render: (row: PriceRow) => ({
                 content:
@@ -324,6 +367,24 @@
                 title: row.potentialProfit == null ? 'No potential profit data available for this item' : undefined,
                 class: row.potentialProfit == null ? 'cursor-help' : row.potentialProfit < 0 ? 'red-text' : 'green-text'
             })
+        },
+        {
+            key: 'potentialProfitAvg',
+            render: (row: PriceRow) => {
+                const postTaxProfitAvg = getPostTaxProfitAvgValue(row.averageBuy, row.averageSell, row.id);
+                if (postTaxProfitAvg == null || row.dailyVolume == null) {
+                    return {
+                        content: '—',
+                        title: 'No potential profit (avg) data available for this item',
+                        class: 'cursor-help'
+                    };
+                }
+                const potentialProfitAvg = postTaxProfitAvg * row.dailyVolume;
+                return {
+                    content: formatPrice(potentialProfitAvg, decimalView, decimalPlaces),
+                    class: potentialProfitAvg < 0 ? 'red-text' : 'green-text'
+                };
+            }
         },
         {
             key: 'dailyVolume',
