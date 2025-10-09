@@ -13,6 +13,29 @@
     $: timeseries = data.timeseries;
     $: settings = $settingsStore;
 
+    // Tooltip titles for stats
+    const statTitles = {
+        'insta-buy-price':
+            'The current insta-buy price for this item from the Grand Exchange. This is also sometimes referred to as the "Slow-sell price", since it is the highest price you could currently sell the item for.',
+        'insta-sell-price':
+            'The current insta-sell price for this item on the Grand Exchange. This is also sometimes referred to as the "Slow-buy price", since it is the lowest price you could currently buy the item for.',
+        'daily-volume': 'The number of items traded in the last 24 hours',
+        'potential-profit':
+            'Your profit if you buy at the insta-sell (slow-buy) price and then sell at the insta-buy (slow-sell) price, after GE tax (2% rounded down, capped at 5M gp)',
+        roi: 'Return on investment percentage calculated as (post-tax profit / insta-sell price) x 100, showing the percentage return if you buy at insta-sell and sell at insta-buy prices',
+        'buy-limit-profit':
+            'The total profit if you buy and sell at the buy limit quantity, calculated using insta-buy/sell prices after GE tax (2% rounded down, capped at 5M gp)',
+        'daily-low': 'The lowest price the item was traded for in the past 24 hours',
+        'daily-high': 'The highest price the item was traded for in the past 24 hours',
+        'avg-buy-24h': 'The mean of all insta-buy price values in the past 24 hours',
+        'avg-sell-24h': 'The mean of all insta-sell price values in the past 24 hours',
+        'buy-limit': 'The maximum number of items you can buy in 4 hours',
+        'high-alch': 'The price you receive when using High Level Alchemy on this item',
+        'low-alch': 'The price you receive when using Low Level Alchemy on this item',
+        members: 'Whether this item is members-only or available to free-to-play players',
+        examine: 'The examine text for this item as it appears in-game'
+    };
+
     // Time range state
     let timeRange: '5m' | '1h' | '6h' | '1y' = '5m'; // 5m = 24h, 1h = 7d, 6h = 30d, 1y = 1 year
     $: timeseriesData = timeseries; // Make reactive to initial data
@@ -120,7 +143,7 @@
         </div>
     </div>
 
-    <!-- Stats grid - 3 columns as shown in screenshot -->
+    <!-- Stats grid - 3 columns -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Left Column -->
@@ -129,10 +152,15 @@
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
                         <DollarSign class="w-5 h-5" />
-                        <span class="text-sm text-gray-600 dark:text-gray-400">Insta-buy price:</span>
+                        <span class="text-sm text-gray-600 dark:text-gray-400" title={statTitles['insta-buy-price']}
+                            >Insta-buy price:</span
+                        >
                     </div>
                     <div class="text-right">
-                        <div class="text-lg font-bold text-orange-600 dark:text-orange-400">
+                        <div
+                            class="text-lg font-bold text-orange-600 dark:text-orange-400"
+                            title={statTitles['insta-buy-price']}
+                        >
                             {item.buyPrice !== null
                                 ? formatPrice(item.buyPrice, settings.decimalView, settings.decimalPlaces)
                                 : '—'}
@@ -149,10 +177,15 @@
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
                         <DollarSign class="w-5 h-5" />
-                        <span class="text-sm text-gray-600 dark:text-gray-400">Insta-sell price:</span>
+                        <span class="text-sm text-gray-600 dark:text-gray-400" title={statTitles['insta-sell-price']}
+                            >Insta-sell price:</span
+                        >
                     </div>
                     <div class="text-right">
-                        <div class="text-lg font-bold text-green-600 dark:text-green-400">
+                        <div
+                            class="text-lg font-bold text-green-600 dark:text-green-400"
+                            title={statTitles['insta-sell-price']}
+                        >
                             {item.sellPrice !== null
                                 ? formatPrice(item.sellPrice, settings.decimalView, settings.decimalPlaces)
                                 : '—'}
@@ -166,13 +199,21 @@
                 </div>
             </div>
 
+            <!-- Divider -->
+            <div class="w-full h-px bg-gray-200 dark:bg-gray-700 lg:hidden"></div>
+
             <!-- Middle Column -->
             <div class="space-y-3">
                 <!-- Daily volume -->
                 <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Daily volume:</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-400" title={statTitles['daily-volume']}
+                        >Daily volume:</span
+                    >
                     <div class="text-right">
-                        <div class="text-lg font-bold text-orange-600 dark:text-orange-400">
+                        <div
+                            class="text-lg font-bold text-orange-600 dark:text-orange-400"
+                            title={statTitles['daily-volume']}
+                        >
                             {item.dailyVolume !== null
                                 ? formatPrice(item.dailyVolume, settings.decimalView, settings.decimalPlaces)
                                 : '—'}
@@ -182,34 +223,36 @@
 
                 <!-- Potential profit -->
                 <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Potential profit:</span>
-                    <div class="text-lg font-bold text-green-600 dark:text-green-400">
+                    <span class="text-sm text-gray-600 dark:text-gray-400" title={statTitles['potential-profit']}
+                        >Potential profit:</span
+                    >
+                    <div
+                        class="text-lg font-bold text-green-600 dark:text-green-400"
+                        title={statTitles['potential-profit']}
+                    >
                         {postTaxProfit !== null
                             ? formatPrice(postTaxProfit, settings.decimalView, settings.decimalPlaces)
                             : '—'}
                     </div>
                 </div>
 
-                <!-- Margin × volume -->
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Margin × volume:</span>
-                    <div class="text-lg font-bold text-green-600 dark:text-green-400">
-                        {marginVolume || '—'}
-                    </div>
-                </div>
-
                 <!-- ROI -->
                 <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">ROI:</span>
-                    <div class="text-lg font-bold text-green-600 dark:text-green-400">
+                    <span class="text-sm text-gray-600 dark:text-gray-400" title={statTitles['roi']}>ROI:</span>
+                    <div class="text-lg font-bold text-green-600 dark:text-green-400" title={statTitles['roi']}>
                         {roi !== null ? `${roi}%` : '—'}
                     </div>
                 </div>
 
                 <!-- Buy limit profit -->
                 <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Buy limit profit:</span>
-                    <div class="text-lg font-bold text-green-600 dark:text-green-400">
+                    <span class="text-sm text-gray-600 dark:text-gray-400" title={statTitles['buy-limit-profit']}
+                        >Buy limit profit:</span
+                    >
+                    <div
+                        class="text-lg font-bold text-green-600 dark:text-green-400"
+                        title={statTitles['buy-limit-profit']}
+                    >
                         {buyLimitProfit !== null
                             ? formatPrice(buyLimitProfit, settings.decimalView, settings.decimalPlaces)
                             : '—'}
@@ -218,8 +261,10 @@
 
                 <!-- Daily low -->
                 <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Daily low:</span>
-                    <div class="text-lg font-bold text-blue-600 dark:text-blue-400">
+                    <span class="text-sm text-gray-600 dark:text-gray-400" title={statTitles['daily-low']}
+                        >Daily low:</span
+                    >
+                    <div class="text-lg font-bold text-blue-600 dark:text-blue-400" title={statTitles['daily-low']}>
                         {item.dailyLow !== null && item.dailyLow !== undefined
                             ? formatPrice(item.dailyLow, settings.decimalView, settings.decimalPlaces)
                             : '—'}
@@ -228,8 +273,10 @@
 
                 <!-- Daily high -->
                 <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Daily high:</span>
-                    <div class="text-lg font-bold text-blue-600 dark:text-blue-400">
+                    <span class="text-sm text-gray-600 dark:text-gray-400" title={statTitles['daily-high']}
+                        >Daily high:</span
+                    >
+                    <div class="text-lg font-bold text-blue-600 dark:text-blue-400" title={statTitles['daily-high']}>
                         {item.dailyHigh !== null && item.dailyHigh !== undefined
                             ? formatPrice(item.dailyHigh, settings.decimalView, settings.decimalPlaces)
                             : '—'}
@@ -238,8 +285,13 @@
 
                 <!-- Average buy -->
                 <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Avg buy (24h):</span>
-                    <div class="text-lg font-bold text-purple-600 dark:text-purple-400">
+                    <span class="text-sm text-gray-600 dark:text-gray-400" title={statTitles['avg-buy-24h']}
+                        >Avg buy (24h):</span
+                    >
+                    <div
+                        class="text-lg font-bold text-purple-600 dark:text-purple-400"
+                        title={statTitles['avg-buy-24h']}
+                    >
                         {item.averageBuy !== null && item.averageBuy !== undefined
                             ? formatPrice(item.averageBuy, settings.decimalView, settings.decimalPlaces)
                             : '—'}
@@ -248,8 +300,13 @@
 
                 <!-- Average sell -->
                 <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Avg sell (24h):</span>
-                    <div class="text-lg font-bold text-purple-600 dark:text-purple-400">
+                    <span class="text-sm text-gray-600 dark:text-gray-400" title={statTitles['avg-sell-24h']}
+                        >Avg sell (24h):</span
+                    >
+                    <div
+                        class="text-lg font-bold text-purple-600 dark:text-purple-400"
+                        title={statTitles['avg-sell-24h']}
+                    >
                         {item.averageSell !== null && item.averageSell !== undefined
                             ? formatPrice(item.averageSell, settings.decimalView, settings.decimalPlaces)
                             : '—'}
@@ -257,12 +314,17 @@
                 </div>
             </div>
 
+            <!-- Divider -->
+            <div class="w-full h-px bg-gray-200 dark:bg-gray-700 lg:hidden"></div>
+
             <!-- Right Column -->
             <div class="space-y-3">
                 <!-- Buy limit -->
                 <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Buy limit:</span>
-                    <div class="text-lg font-bold">
+                    <span class="text-sm text-gray-600 dark:text-gray-400" title={statTitles['buy-limit']}
+                        >Buy limit:</span
+                    >
+                    <div class="text-lg font-bold" title={statTitles['buy-limit']}>
                         {item.buyLimit !== null
                             ? formatPrice(item.buyLimit, settings.decimalView, settings.decimalPlaces)
                             : '∞'}
@@ -271,9 +333,11 @@
 
                 <!-- High alch -->
                 <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">High alch:</span>
+                    <span class="text-sm text-gray-600 dark:text-gray-400" title={statTitles['high-alch']}
+                        >High alch:</span
+                    >
                     <div class="text-right">
-                        <div class="text-lg font-bold">
+                        <div class="text-lg font-bold" title={statTitles['high-alch']}>
                             {item.highalch !== null
                                 ? formatPrice(item.highalch, settings.decimalView, settings.decimalPlaces)
                                 : '—'}
@@ -292,8 +356,10 @@
 
                 <!-- Low alch -->
                 <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Low alch:</span>
-                    <div class="text-lg font-bold">
+                    <span class="text-sm text-gray-600 dark:text-gray-400" title={statTitles['low-alch']}
+                        >Low alch:</span
+                    >
+                    <div class="text-lg font-bold" title={statTitles['low-alch']}>
                         {item.lowalch !== null
                             ? formatPrice(item.lowalch, settings.decimalView, settings.decimalPlaces)
                             : '—'}
@@ -302,8 +368,11 @@
 
                 <!-- Members -->
                 <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Members:</span>
-                    <div class="text-lg">
+                    <span class="text-sm text-gray-600 dark:text-gray-400" title={statTitles['members']}>Members:</span>
+                    <div
+                        class="text-lg"
+                        title={item.members ? 'This is a members-only item' : 'This is a free-to-play item'}
+                    >
                         {#if item.members}
                             <Star class="w-5 h-5 text-yellow-500" />
                         {:else}
@@ -315,9 +384,11 @@
                 <!-- Examine -->
                 {#if item.examine}
                     <div class="flex items-start justify-between">
-                        <span class="text-sm text-gray-600 dark:text-gray-400">Examine:</span>
+                        <span class="text-sm text-gray-600 dark:text-gray-400" title={statTitles['examine']}
+                            >Examine:</span
+                        >
                         <div class="text-right max-w-xs">
-                            <div class="text-sm italic text-gray-700 dark:text-gray-300">
+                            <div class="text-sm italic text-gray-700 dark:text-gray-300" title={statTitles['examine']}>
                                 {item.examine}
                             </div>
                         </div>
