@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { PageData } from './$types';
-    import PriceChart from '$lib/components/PriceChart.svelte';
+    import PriceChart from '$lib/components/charts/PriceChart.svelte';
     import { formatInt, formatPrice } from '$lib/utils/format';
     import { secondsAgoFromUnix } from '$lib/utils/time';
     import { calculatePostTaxProfit } from '$lib/utils/tax';

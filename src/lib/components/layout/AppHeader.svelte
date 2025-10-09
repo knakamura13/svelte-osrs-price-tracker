@@ -1,5 +1,5 @@
 <script lang="ts">
-    import SettingsDropdown from './SettingsDropdown.svelte';
+    import SettingsDropdown from '../controls/SettingsDropdown.svelte';
 
     export let title: string = 'OSRS Price Tracker';
 </script>

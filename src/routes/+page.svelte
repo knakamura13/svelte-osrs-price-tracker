@@ -1,12 +1,12 @@
 <script lang="ts">
-    import PriceTable from '$lib/components/PriceTable.svelte';
-    import ColumnsToggle from '$lib/components/ColumnsToggle.svelte';
-    import ErrorAlert from '$lib/components/ErrorAlert.svelte';
-    import SearchBar from '$lib/components/SearchBar.svelte';
-    import FiltersPanel from '$lib/components/FiltersPanel.svelte';
-    import HeaderControls from '$lib/components/HeaderControls.svelte';
-    import LoadingSkeleton from '$lib/components/LoadingSkeleton.svelte';
-    import Toast from '$lib/components/Toast.svelte';
+    import PriceTable from '$lib/components/tables/PriceTable.svelte';
+    import ColumnsToggle from '$lib/components/forms/ColumnsToggle.svelte';
+    import ErrorAlert from '$lib/components/feedback/ErrorAlert.svelte';
+    import SearchBar from '$lib/components/forms/SearchBar.svelte';
+    import FiltersPanel from '$lib/components/controls/FiltersPanel.svelte';
+    import HeaderControls from '$lib/components/layout/HeaderControls.svelte';
+    import LoadingSkeleton from '$lib/components/layout/LoadingSkeleton.svelte';
+    import Toast from '$lib/components/feedback/Toast.svelte';
     import { onMount, onDestroy } from 'svelte';
     import { secondsAgoFromUnix } from '$lib/utils/time';
     import {

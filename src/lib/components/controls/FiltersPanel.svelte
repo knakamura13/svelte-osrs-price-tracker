@@ -4,7 +4,7 @@
     import { isPositive } from '$lib/utils/filters';
     import { secondsFromParts, partsFromSeconds } from '$lib/utils/duration';
     import { ChevronDown, Trash2 } from 'lucide-svelte';
-    import DurationInput from './DurationInput.svelte';
+    import DurationInput from '../forms/DurationInput.svelte';
 
     export let expanded: boolean = false;
     export let filters: Filters;
