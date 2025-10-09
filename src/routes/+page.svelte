@@ -63,12 +63,14 @@
         breakEvenPrice: { min: null as number | null, max: null as number | null },
         margin: { min: null as number | null, max: null as number | null },
         postTaxProfit: { min: null as number | null, max: null as number | null },
+        postTaxProfitAvg: { min: null as number | null, max: null as number | null },
         dailyVolume: { min: null as number | null, max: null as number | null },
         dailyLow: { min: null as number | null, max: null as number | null },
         dailyHigh: { min: null as number | null, max: null as number | null },
         averageBuy: { min: null as number | null, max: null as number | null },
         averageSell: { min: null as number | null, max: null as number | null },
-        potentialProfit: { min: null as number | null, max: null as number | null }
+        potentialProfit: { min: null as number | null, max: null as number | null },
+        potentialProfitAvg: { min: null as number | null, max: null as number | null }
     };
 
     // Column visibility state
@@ -83,12 +85,14 @@
         breakEvenPrice: true,
         margin: true,
         postTaxProfit: true,
+        postTaxProfitAvg: true,
         dailyVolume: true,
         dailyLow: true,
         dailyHigh: true,
         averageBuy: true,
         averageSell: true,
-        potentialProfit: true
+        potentialProfit: true,
+        potentialProfitAvg: true
     };
 
     // Normalized filters (convert NaN/undefined to null) to drive reactivity

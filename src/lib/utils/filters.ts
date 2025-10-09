@@ -66,6 +66,14 @@ export function normalizeFilters(f: Filters): Filters {
         potentialProfit: {
             min: isFiniteNumber(f.potentialProfit.min) ? f.potentialProfit.min : null,
             max: isFiniteNumber(f.potentialProfit.max) ? f.potentialProfit.max : null
+        },
+        postTaxProfitAvg: {
+            min: isFiniteNumber(f.postTaxProfitAvg.min) ? f.postTaxProfitAvg.min : null,
+            max: isFiniteNumber(f.postTaxProfitAvg.max) ? f.postTaxProfitAvg.max : null
+        },
+        potentialProfitAvg: {
+            min: isFiniteNumber(f.potentialProfitAvg.min) ? f.potentialProfitAvg.min : null,
+            max: isFiniteNumber(f.potentialProfitAvg.max) ? f.potentialProfitAvg.max : null
         }
     };
 }
@@ -268,8 +276,10 @@ export function computeFilterStats(allRows: PriceRow[]): FilterStats {
         averageBuy: { min: null, max: null },
         averageSell: { min: null, max: null },
         potentialProfit: { min: null, max: null },
+        potentialProfitAvg: { min: null, max: null },
         breakEvenPrice: { min: null, max: null },
-        postTaxProfit: { min: null, max: null }
+        postTaxProfit: { min: null, max: null },
+        postTaxProfitAvg: { min: null, max: null }
     };
 
     if (allRows.length === 0) return stats;
@@ -352,6 +362,32 @@ export function computeFilterStats(allRows: PriceRow[]): FilterStats {
     if (postTaxProfits.length) {
         stats.postTaxProfit.min = Math.min(...postTaxProfits);
         stats.postTaxProfit.max = Math.max(...postTaxProfits);
+    }
+
+    // Calculate post-tax profit (avg) using average buy/sell prices
+    const postTaxProfitAvgs: number[] = [];
+    for (const row of allRows) {
+        const postTaxAvg = calculatePostTaxProfit(row.averageBuy ?? null, row.averageSell ?? null, row.id);
+        if (postTaxAvg !== null) {
+            postTaxProfitAvgs.push(postTaxAvg);
+        }
+    }
+    if (postTaxProfitAvgs.length) {
+        stats.postTaxProfitAvg.min = Math.min(...postTaxProfitAvgs);
+        stats.postTaxProfitAvg.max = Math.max(...postTaxProfitAvgs);
+    }
+
+    // Calculate potential profit (avg) using daily volume × post-tax profit (avg)
+    const potentialProfitAvgs: number[] = [];
+    for (const row of allRows) {
+        const postTaxAvg = calculatePostTaxProfit(row.averageBuy ?? null, row.averageSell ?? null, row.id);
+        if (postTaxAvg !== null && row.dailyVolume !== null && row.dailyVolume !== undefined && row.dailyVolume > 0) {
+            potentialProfitAvgs.push(postTaxAvg * row.dailyVolume);
+        }
+    }
+    if (potentialProfitAvgs.length) {
+        stats.potentialProfitAvg.min = Math.min(...potentialProfitAvgs);
+        stats.potentialProfitAvg.max = Math.max(...potentialProfitAvgs);
     }
 
     return stats;
