@@ -14,12 +14,14 @@
         breakEvenPrice: boolean;
         margin: boolean;
         postTaxProfit: boolean;
+        postTaxProfitAvg: boolean;
         dailyVolume: boolean;
         dailyLow: boolean;
         dailyHigh: boolean;
         averageBuy: boolean;
         averageSell: boolean;
         potentialProfit: boolean;
+        potentialProfitAvg: boolean;
     } = {
         name: true,
         buyLimit: true,
@@ -30,12 +32,14 @@
         breakEvenPrice: true,
         margin: true,
         postTaxProfit: true,
+        postTaxProfitAvg: true,
         dailyVolume: true,
         dailyLow: true,
         dailyHigh: true,
         averageBuy: true,
         averageSell: true,
-        potentialProfit: true
+        potentialProfit: true,
+        potentialProfitAvg: true
     };
 
     export let onToggle: (() => void) | undefined;
@@ -64,7 +68,9 @@
                 { key: 'margin', label: 'Margin' },
                 { key: 'breakEvenPrice', label: 'Break-even price' },
                 { key: 'postTaxProfit', label: 'Post-tax profit' },
-                { key: 'potentialProfit', label: 'Potential profit' }
+                { key: 'postTaxProfitAvg', label: 'Post-tax profit (avg)' },
+                { key: 'potentialProfit', label: 'Potential profit' },
+                { key: 'potentialProfitAvg', label: 'Potential profit (avg)' }
             ]
         },
         {

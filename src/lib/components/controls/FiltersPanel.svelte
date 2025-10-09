@@ -70,8 +70,24 @@
                     step: '1'
                 },
                 {
+                    key: 'postTaxProfitAvg',
+                    label: 'Post-tax profit (avg)',
+                    type: 'numeric',
+                    min: OSRS_MIN_INTEGER,
+                    max: OSRS_MAX_INTEGER,
+                    step: '1'
+                },
+                {
                     key: 'potentialProfit',
                     label: 'Potential profit',
+                    type: 'numeric',
+                    min: OSRS_MIN_INTEGER,
+                    max: OSRS_MAX_INTEGER,
+                    step: '1'
+                },
+                {
+                    key: 'potentialProfitAvg',
+                    label: 'Potential profit (avg)',
                     type: 'numeric',
                     min: OSRS_MIN_INTEGER,
                     max: OSRS_MAX_INTEGER,
