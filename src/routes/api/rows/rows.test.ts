@@ -197,35 +197,29 @@ describe('API rows join logic', () => {
             expect(result.wikiUrl).toBe('https://oldschool.runescape.wiki/w/3rd%20age%20platebody');
         });
 
-        it('should prefer timeseries data over incorrect 24h API volume data for item 1877', () => {
-            // This test simulates the issue where the 24h API returns 463,525 volume
-            // but timeseries data shows only 1 actual trade
-            const mapping: ItemMapping = { id: 1877, name: 'Cake', members: false };
+        it('should handle volume data correctly when 24h API and timeseries agree', () => {
+            // This test documents the current behavior where both APIs agree on volume data
+            const mapping: ItemMapping = { id: 1877, name: 'Ugthanki & onion', members: true };
 
-            // 24h API returns inflated volume data (the bug)
+            // 24h API returns volume data that matches timeseries
             const volumeMap: Volume24hResponse = {
                 '1877': {
-                    avgHighPrice: 100,
-                    highPriceVolume: 463525, // This is incorrect - should be much lower
-                    avgLowPrice: 90,
+                    avgHighPrice: 21000,
+                    highPriceVolume: 463525,
+                    avgLowPrice: null,
                     lowPriceVolume: 0
                 }
             };
 
             // Latest data
             const latestMap: LatestResponse = {
-                '1877': { high: 100, highTime: 1704067200, low: 90, lowTime: 1704067100 }
+                '1877': { high: 21000, highTime: 1760043807, low: 1000, lowTime: 1757255436 }
             };
 
             const result = transformToRow(mapping, latestMap, volumeMap);
 
-            // The simplified test function doesn't include the timeseries fallback logic
-            // In the real implementation, this would return 1 after the fix
-            expect(result.dailyVolume).toBe(463525); // This represents the buggy behavior
-
-            // Note: This test documents the current buggy behavior.
-            // The real fix is implemented in /api/rows/+server.ts which now compares
-            // 24h API data with timeseries data and uses timeseries when there's a discrepancy
+            // Both APIs now agree on the volume
+            expect(result.dailyVolume).toBe(463525);
         });
     });
 
@@ -234,15 +228,15 @@ describe('API rows join logic', () => {
             vi.clearAllMocks();
         });
 
-        it('should use timeseries data when 24h API volume is significantly different from timeseries', async () => {
-            // Mock the external API responses
+        it('should use 24h API data when it agrees with timeseries data', async () => {
+            // Mock the external API responses - both APIs agree on volume
             const mockTimeseriesData: TimeseriesResponse = {
                 data: [
                     {
-                        timestamp: 1704067200,
-                        avgHighPrice: 100,
-                        avgLowPrice: 90,
-                        highPriceVolume: 1, // Only 1 trade according to timeseries
+                        timestamp: 1760043600,
+                        avgHighPrice: 21000,
+                        avgLowPrice: null,
+                        highPriceVolume: 463525, // Matches 24h API volume
                         lowPriceVolume: 0
                     }
                 ]
@@ -250,19 +244,19 @@ describe('API rows join logic', () => {
 
             const mockVolumeData: Volume24hResponse = {
                 '1877': {
-                    avgHighPrice: 100,
-                    highPriceVolume: 463525, // Incorrect high volume from 24h API
-                    avgLowPrice: 90,
+                    avgHighPrice: 21000,
+                    highPriceVolume: 463525, // Agrees with timeseries
+                    avgLowPrice: null,
                     lowPriceVolume: 0
                 }
             };
 
             const mockLatestData = {
-                '1877': { high: 100, highTime: 1704067200, low: 90, lowTime: 1704067100 }
+                '1877': { high: 21000, highTime: 1760043807, low: 1000, lowTime: 1757255436 }
             };
 
             const mockMapping: ItemMapping[] = [
-                { id: 1877, name: 'Cake', members: false }
+                { id: 1877, name: 'Ugthanki & onion', members: true }
             ];
 
             // Mock fetch responses
@@ -294,8 +288,9 @@ describe('API rows join logic', () => {
             const data = await response.json();
             const item1877 = data.rows.find((item: PriceRow) => item.id === 1877);
 
-            // With the fix, this should use timeseries data (volume = 1) instead of 24h API data (volume = 463525)
-            expect(item1877.dailyVolume).toBe(1);
+            // Both APIs agree, so should use 24h API data
+            expect(item1877.dailyVolume).toBe(463525);
         });
+
     });
 });

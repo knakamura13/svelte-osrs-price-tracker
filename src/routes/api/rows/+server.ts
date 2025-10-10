@@ -13,7 +13,7 @@ async function fetchJson(fetchFn: typeof fetch, url: string): Promise<any> {
 }
 
 export const GET: RequestHandler = async ({ fetch }) => {
-    const cacheKey = 'rows:v1';
+    const cacheKey = 'rows:v2';
     const cached = cache.get(cacheKey);
     if (cached) {
         return new Response(JSON.stringify(cached), { headers: { 'content-type': 'application/json' } });
