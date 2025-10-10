@@ -113,15 +113,23 @@ export function filteredSorted(
         if (filterSet.buyLimit.min === 0 && filterSet.buyLimit.max === 0) {
             return row.buyLimit === 0;
         }
-        if (filterSet.buyLimit.min !== null && row.buyLimit !== null && row.buyLimit < filterSet.buyLimit.min)
-            return false;
-        if (filterSet.buyLimit.max !== null && row.buyLimit !== null && row.buyLimit > filterSet.buyLimit.max)
-            return false;
+        if (filterSet.buyLimit.min !== null) {
+            if (row.buyLimit === null || row.buyLimit < filterSet.buyLimit.min)
+                return false;
+        }
+        if (filterSet.buyLimit.max !== null) {
+            if (row.buyLimit === null || row.buyLimit > filterSet.buyLimit.max)
+                return false;
+        }
 
-        if (filterSet.buyPrice.min !== null && row.buyPrice !== null && row.buyPrice < filterSet.buyPrice.min)
-            return false;
-        if (filterSet.buyPrice.max !== null && row.buyPrice !== null && row.buyPrice > filterSet.buyPrice.max)
-            return false;
+        if (filterSet.buyPrice.min !== null) {
+            if (row.buyPrice === null || row.buyPrice < filterSet.buyPrice.min)
+                return false;
+        }
+        if (filterSet.buyPrice.max !== null) {
+            if (row.buyPrice === null || row.buyPrice > filterSet.buyPrice.max)
+                return false;
+        }
 
         if ((filterSet.buyTime.min !== null || filterSet.buyTime.max !== null) && row.buyTime !== null) {
             const age = Math.max(0, nowSeconds - row.buyTime);
@@ -129,10 +137,14 @@ export function filteredSorted(
             if (filterSet.buyTime.max !== null && age > filterSet.buyTime.max) return false;
         }
 
-        if (filterSet.sellPrice.min !== null && row.sellPrice !== null && row.sellPrice < filterSet.sellPrice.min)
-            return false;
-        if (filterSet.sellPrice.max !== null && row.sellPrice !== null && row.sellPrice > filterSet.sellPrice.max)
-            return false;
+        if (filterSet.sellPrice.min !== null) {
+            if (row.sellPrice === null || row.sellPrice < filterSet.sellPrice.min)
+                return false;
+        }
+        if (filterSet.sellPrice.max !== null) {
+            if (row.sellPrice === null || row.sellPrice > filterSet.sellPrice.max)
+                return false;
+        }
 
         if ((filterSet.sellTime.min !== null || filterSet.sellTime.max !== null) && row.sellTime !== null) {
             const age = Math.max(0, nowSeconds - row.sellTime);
@@ -141,63 +153,53 @@ export function filteredSorted(
         }
 
         const breakEvenPrice = calculateBreakEvenPrice(row.sellPrice, row.id);
-        if (
-            filterSet.breakEvenPrice.min !== null &&
-            breakEvenPrice !== null &&
-            breakEvenPrice < filterSet.breakEvenPrice.min
-        )
-            return false;
-        if (
-            filterSet.breakEvenPrice.max !== null &&
-            breakEvenPrice !== null &&
-            breakEvenPrice > filterSet.breakEvenPrice.max
-        )
-            return false;
+        if (filterSet.breakEvenPrice.min !== null) {
+            if (breakEvenPrice === null || breakEvenPrice < filterSet.breakEvenPrice.min)
+                return false;
+        }
+        if (filterSet.breakEvenPrice.max !== null) {
+            if (breakEvenPrice === null || breakEvenPrice > filterSet.breakEvenPrice.max)
+                return false;
+        }
 
-        if (filterSet.margin.min !== null && row.margin !== null && row.margin < filterSet.margin.min) return false;
-        if (filterSet.margin.max !== null && row.margin !== null && row.margin > filterSet.margin.max) return false;
+        if (filterSet.margin.min !== null) {
+            if (row.margin === null || row.margin < filterSet.margin.min)
+                return false;
+        }
+        if (filterSet.margin.max !== null) {
+            if (row.margin === null || row.margin > filterSet.margin.max)
+                return false;
+        }
 
-        if (
-            filterSet.dailyVolume.min !== null &&
-            row.dailyVolume != null &&
-            row.dailyVolume < filterSet.dailyVolume.min
-        )
-            return false;
-        if (
-            filterSet.dailyVolume.max !== null &&
-            row.dailyVolume != null &&
-            row.dailyVolume > filterSet.dailyVolume.max
-        )
-            return false;
+        if (filterSet.dailyVolume.min !== null) {
+            if (row.dailyVolume === null || row.dailyVolume === undefined || row.dailyVolume < filterSet.dailyVolume.min)
+                return false;
+        }
+        if (filterSet.dailyVolume.max !== null) {
+            if (row.dailyVolume === null || row.dailyVolume === undefined || row.dailyVolume > filterSet.dailyVolume.max)
+                return false;
+        }
 
         const postTaxProfit = calculatePostTaxProfit(row.buyPrice, row.sellPrice, row.id);
-        if (
-            filterSet.postTaxProfit.min !== null &&
-            postTaxProfit !== null &&
-            postTaxProfit < filterSet.postTaxProfit.min
-        )
-            return false;
-        if (
-            filterSet.postTaxProfit.max !== null &&
-            postTaxProfit !== null &&
-            postTaxProfit > filterSet.postTaxProfit.max
-        )
-            return false;
+        if (filterSet.postTaxProfit.min !== null) {
+            if (postTaxProfit === null || postTaxProfit < filterSet.postTaxProfit.min)
+                return false;
+        }
+        if (filterSet.postTaxProfit.max !== null) {
+            if (postTaxProfit === null || postTaxProfit > filterSet.postTaxProfit.max)
+                return false;
+        }
 
         // Calculate post-tax profit (avg) using average buy/sell prices
         const postTaxProfitAvg = calculatePostTaxProfit(row.averageBuy ?? null, row.averageSell ?? null, row.id);
-        if (
-            filterSet.postTaxProfitAvg.min !== null &&
-            postTaxProfitAvg !== null &&
-            postTaxProfitAvg < filterSet.postTaxProfitAvg.min
-        )
-            return false;
-        if (
-            filterSet.postTaxProfitAvg.max !== null &&
-            postTaxProfitAvg !== null &&
-            postTaxProfitAvg > filterSet.postTaxProfitAvg.max
-        )
-            return false;
+        if (filterSet.postTaxProfitAvg.min !== null) {
+            if (postTaxProfitAvg === null || postTaxProfitAvg < filterSet.postTaxProfitAvg.min)
+                return false;
+        }
+        if (filterSet.postTaxProfitAvg.max !== null) {
+            if (postTaxProfitAvg === null || postTaxProfitAvg > filterSet.postTaxProfitAvg.max)
+                return false;
+        }
 
         // Calculate potential profit (avg) using daily volume × post-tax profit (avg)
         const potentialProfitAvg =
@@ -207,18 +209,50 @@ export function filteredSorted(
             row.dailyVolume > 0
                 ? postTaxProfitAvg * row.dailyVolume
                 : null;
-        if (
-            filterSet.potentialProfitAvg.min !== null &&
-            potentialProfitAvg !== null &&
-            potentialProfitAvg < filterSet.potentialProfitAvg.min
-        )
-            return false;
-        if (
-            filterSet.potentialProfitAvg.max !== null &&
-            potentialProfitAvg !== null &&
-            potentialProfitAvg > filterSet.potentialProfitAvg.max
-        )
-            return false;
+        if (filterSet.potentialProfitAvg.min !== null) {
+            if (potentialProfitAvg === null || potentialProfitAvg < filterSet.potentialProfitAvg.min)
+                return false;
+        }
+        if (filterSet.potentialProfitAvg.max !== null) {
+            if (potentialProfitAvg === null || potentialProfitAvg > filterSet.potentialProfitAvg.max)
+                return false;
+        }
+
+        if (filterSet.dailyLow.min !== null) {
+            if (row.dailyLow === null || row.dailyLow === undefined || row.dailyLow < filterSet.dailyLow.min)
+                return false;
+        }
+        if (filterSet.dailyLow.max !== null) {
+            if (row.dailyLow === null || row.dailyLow === undefined || row.dailyLow > filterSet.dailyLow.max)
+                return false;
+        }
+
+        if (filterSet.dailyHigh.min !== null) {
+            if (row.dailyHigh === null || row.dailyHigh === undefined || row.dailyHigh < filterSet.dailyHigh.min)
+                return false;
+        }
+        if (filterSet.dailyHigh.max !== null) {
+            if (row.dailyHigh === null || row.dailyHigh === undefined || row.dailyHigh > filterSet.dailyHigh.max)
+                return false;
+        }
+
+        if (filterSet.averageBuy.min !== null) {
+            if (row.averageBuy === null || row.averageBuy === undefined || row.averageBuy < filterSet.averageBuy.min)
+                return false;
+        }
+        if (filterSet.averageBuy.max !== null) {
+            if (row.averageBuy === null || row.averageBuy === undefined || row.averageBuy > filterSet.averageBuy.max)
+                return false;
+        }
+
+        if (filterSet.averageSell.min !== null) {
+            if (row.averageSell === null || row.averageSell === undefined || row.averageSell < filterSet.averageSell.min)
+                return false;
+        }
+        if (filterSet.averageSell.max !== null) {
+            if (row.averageSell === null || row.averageSell === undefined || row.averageSell > filterSet.averageSell.max)
+                return false;
+        }
 
         return true;
     });
