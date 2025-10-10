@@ -184,6 +184,42 @@ export function filteredSorted(
         )
             return false;
 
+        // Calculate post-tax profit (avg) using average buy/sell prices
+        const postTaxProfitAvg = calculatePostTaxProfit(row.averageBuy ?? null, row.averageSell ?? null, row.id);
+        if (
+            filterSet.postTaxProfitAvg.min !== null &&
+            postTaxProfitAvg !== null &&
+            postTaxProfitAvg < filterSet.postTaxProfitAvg.min
+        )
+            return false;
+        if (
+            filterSet.postTaxProfitAvg.max !== null &&
+            postTaxProfitAvg !== null &&
+            postTaxProfitAvg > filterSet.postTaxProfitAvg.max
+        )
+            return false;
+
+        // Calculate potential profit (avg) using daily volume × post-tax profit (avg)
+        const potentialProfitAvg =
+            postTaxProfitAvg !== null &&
+            row.dailyVolume !== null &&
+            row.dailyVolume !== undefined &&
+            row.dailyVolume > 0
+                ? postTaxProfitAvg * row.dailyVolume
+                : null;
+        if (
+            filterSet.potentialProfitAvg.min !== null &&
+            potentialProfitAvg !== null &&
+            potentialProfitAvg < filterSet.potentialProfitAvg.min
+        )
+            return false;
+        if (
+            filterSet.potentialProfitAvg.max !== null &&
+            potentialProfitAvg !== null &&
+            potentialProfitAvg > filterSet.potentialProfitAvg.max
+        )
+            return false;
+
         return true;
     });
 
