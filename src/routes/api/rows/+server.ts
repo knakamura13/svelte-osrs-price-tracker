@@ -1,5 +1,5 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import type { ItemMapping, LatestResponse, PriceRow, Volume24hResponse } from '$lib/types';
+import type { ItemMapping, LatestResponse, PriceRow, Volume24hResponse, TimeseriesResponse } from '$lib/types';
 import { TtlCache } from '$lib/server/cache';
 import { createHash } from 'node:crypto';
 import { calculatePostTaxProfit } from '$lib/utils/tax';
@@ -26,7 +26,7 @@ export const GET: RequestHandler = async ({ fetch }) => {
     ])) as [ItemMapping[], { data: LatestResponse }, { data: Volume24hResponse }];
 
     const latestMap = latest.data;
-    const basicVolumeMap = day24.data; // id -> { highPriceVolume, lowPriceVolume }
+    const basicVolumeMap = (day24 as any).data || day24; // id -> { highPriceVolume, lowPriceVolume }
 
     // For now, just use basic volume data - enhanced metrics will be calculated per-item as needed
     const volumeMap = basicVolumeMap;
@@ -50,13 +50,19 @@ export const GET: RequestHandler = async ({ fetch }) => {
             averageSell: number | null;
         } | null;
     }> {
+        const BASE = 'https://prices.runescape.wiki/api/v1/osrs';
+
         try {
-            const timeseriesRes = await fetch(`/api/timeseries?id=${itemId}&timestep=5m`);
+            // Fetch timeseries data for last 24 hours (5-minute intervals)
+            const timeseriesRes = await fetch(`${BASE}/timeseries?timestep=5m&id=${itemId}`, {
+                headers: { 'User-Agent': process.env.USER_AGENT ?? 'osrs-price-tracker (dev)' }
+            });
+
             if (!timeseriesRes.ok) {
                 return { dailyVolume: null, dailyMetrics: null };
             }
 
-            const timeseriesData = await timeseriesRes.json();
+            const timeseriesData: TimeseriesResponse = await timeseriesRes.json();
             const dataPoints = timeseriesData.data || [];
 
             if (dataPoints.length === 0) {
@@ -68,31 +74,8 @@ export const GET: RequestHandler = async ({ fetch }) => {
                 return sum + (point.highPriceVolume || 0) + (point.lowPriceVolume || 0);
             }, 0);
 
-            // Calculate daily metrics from price data
-            const buyPrices: number[] = [];
-            const sellPrices: number[] = [];
-
-            for (const point of dataPoints) {
-                if (point.avgHighPrice !== null && point.avgHighPrice !== undefined) {
-                    buyPrices.push(point.avgHighPrice);
-                }
-                if (point.avgLowPrice !== null && point.avgLowPrice !== undefined) {
-                    sellPrices.push(point.avgLowPrice);
-                }
-            }
-
-            const dailyMetrics = {
-                dailyLow: sellPrices.length > 0 ? Math.min(...sellPrices) : null,
-                dailyHigh: buyPrices.length > 0 ? Math.max(...buyPrices) : null,
-                averageBuy:
-                    buyPrices.length > 0
-                        ? Math.round(buyPrices.reduce((sum, price) => sum + price, 0) / buyPrices.length)
-                        : null,
-                averageSell:
-                    sellPrices.length > 0
-                        ? Math.round(sellPrices.reduce((sum, price) => sum + price, 0) / sellPrices.length)
-                        : null
-            };
+            // Calculate daily metrics using the same logic as /api/24h
+            const dailyMetrics = calculateDailyMetrics(dataPoints, String(itemId));
 
             return {
                 dailyVolume: totalVolume > 0 ? totalVolume : null,
@@ -102,6 +85,48 @@ export const GET: RequestHandler = async ({ fetch }) => {
             console.error(`Failed to fetch timeseries for item ${itemId}:`, error);
             return { dailyVolume: null, dailyMetrics: null };
         }
+    }
+
+    // Calculate daily metrics from timeseries data (reused from /api/24h/+server.ts)
+    function calculateDailyMetrics(
+        dataPoints: any[],
+        itemId: string
+    ): {
+        dailyLow?: number | null;
+        dailyHigh?: number | null;
+        averageBuy?: number | null;
+        averageSell?: number | null;
+    } {
+        if (dataPoints.length === 0) {
+            return { dailyLow: null, dailyHigh: null, averageBuy: null, averageSell: null };
+        }
+
+        const buyPrices: number[] = [];
+        const sellPrices: number[] = [];
+
+        for (const point of dataPoints) {
+            // Extract insta-buy/sell prices from avgHighPrice and avgLowPrice
+            // Note: The external API uses avgHighPrice for insta-buy prices and avgLowPrice for insta-sell prices
+            if (point.avgHighPrice !== null && point.avgHighPrice !== undefined) {
+                buyPrices.push(point.avgHighPrice);
+            }
+            if (point.avgLowPrice !== null && point.avgLowPrice !== undefined) {
+                sellPrices.push(point.avgLowPrice);
+            }
+        }
+
+        return {
+            dailyLow: sellPrices.length > 0 ? Math.min(...sellPrices) : null,
+            dailyHigh: buyPrices.length > 0 ? Math.max(...buyPrices) : null,
+            averageBuy:
+                buyPrices.length > 0
+                    ? Math.round(buyPrices.reduce((sum, price) => sum + price, 0) / buyPrices.length)
+                    : null,
+            averageSell:
+                sellPrices.length > 0
+                    ? Math.round(sellPrices.reduce((sum, price) => sum + price, 0) / sellPrices.length)
+                    : null
+        };
     }
 
     // Process items in chunks to avoid overwhelming the API with too many concurrent requests
@@ -135,13 +160,25 @@ export const GET: RequestHandler = async ({ fetch }) => {
                 if (totalVol > 0) {
                     dailyVolume = totalVol;
                 }
-                // Use daily metrics from 24h API if available
+
+                // Use daily metrics from 24h API if available, otherwise calculate from avg prices
                 if (volEntry.dailyLow !== undefined || volEntry.dailyHigh !== undefined) {
                     dailyMetrics = {
                         dailyLow: volEntry.dailyLow ?? null,
                         dailyHigh: volEntry.dailyHigh ?? null,
                         averageBuy: volEntry.averageBuy ?? null,
                         averageSell: volEntry.averageSell ?? null
+                    };
+                } else if (volEntry.avgHighPrice !== undefined && volEntry.avgLowPrice !== undefined) {
+                    // Calculate metrics from the average prices in 24h data
+                    const buyPrices = [volEntry.avgHighPrice].filter((p) => p !== null);
+                    const sellPrices = [volEntry.avgLowPrice].filter((p) => p !== null);
+
+                    dailyMetrics = {
+                        dailyLow: sellPrices.length > 0 ? Math.min(...sellPrices) : null,
+                        dailyHigh: buyPrices.length > 0 ? Math.max(...buyPrices) : null,
+                        averageBuy: buyPrices.length > 0 ? Math.round(buyPrices[0]) : null,
+                        averageSell: sellPrices.length > 0 ? Math.round(sellPrices[0]) : null
                     };
                 }
             }

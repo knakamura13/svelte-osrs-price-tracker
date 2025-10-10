@@ -30,8 +30,23 @@ test.describe('Feather item null values issue', () => {
         // Wait for the filtered results
         await page.waitForTimeout(1000);
 
-        // Find the Feather row (it should be the only result)
-        const featherRow = page.locator('tr').filter({ hasText: 'Feather' });
+        // Find the main Feather item (id=314) - it should have "Feather" in the name and "30000" limit
+        // We need to avoid matching "Yellow feather" or other feather variants
+        const featherRows = await page.locator('tr').filter({ hasText: 'Feather' }).all();
+        let featherRow;
+        for (const row of featherRows) {
+            const text = await row.textContent();
+            if (text && text.includes('30000') && !text.includes('Yellow')) {
+                featherRow = row;
+                break;
+            }
+        }
+
+        // If we didn't find it with the specific search, try a broader search
+        if (!featherRow) {
+            // Just find any row that contains "Feather" and "30000"
+            featherRow = page.locator('tr').filter({ hasText: 'Feather' }).filter({ hasText: '30000' }).first();
+        }
 
         // Wait for the row to be visible
         await expect(featherRow).toBeVisible();
@@ -39,35 +54,17 @@ test.describe('Feather item null values issue', () => {
         // Check that these values are NOT null (this should fail initially)
         // For a consistently traded item like Feather, these columns should have values, not '—'
 
-        // Get all table data cells in the Feather row (excluding image)
-        const dataCells = featherRow.locator('td').locator('span');
+        // Get all table data cells in the Feather row
+        const dataCells = featherRow.locator('td');
 
-        // Check that we don't have cells showing '—' in positions where we expect values for Feather
-        // We'll check specific problematic columns that should have data for this popular item
+        // Check that we don't have cells showing '—' for key metrics
+        // Instead of relying on exact positions, check that the row contains actual numbers for key columns
+        const rowText = await featherRow.textContent();
 
-        // Daily low - should not be null for actively traded item
-        const dailyLowText = await dataCells.nth(13).textContent(); // Approximate position
-        expect(dailyLowText).not.toBe('—');
-
-        // Daily high - should not be null for actively traded item
-        const dailyHighText = await dataCells.nth(14).textContent(); // Approximate position
-        expect(dailyHighText).not.toBe('—');
-
-        // Average buy (24h) - should not be null for actively traded item
-        const avgBuyText = await dataCells.nth(15).textContent(); // Approximate position
-        expect(avgBuyText).not.toBe('—');
-
-        // Average sell (24h) - should not be null for actively traded item
-        const avgSellText = await dataCells.nth(16).textContent(); // Approximate position
-        expect(avgSellText).not.toBe('—');
-
-        // Post-tax profit (avg) - should not be null for actively traded item
-        const postTaxProfitAvgText = await dataCells.nth(9).textContent(); // Approximate position
-        expect(postTaxProfitAvgText).not.toBe('—');
-
-        // Potential profit (avg) - should not be null for actively traded item
-        const potentialProfitAvgText = await dataCells.nth(11).textContent(); // Approximate position
-        expect(potentialProfitAvgText).not.toBe('—');
+        // The row should contain the daily metrics and profit calculations as numbers, not '—'
+        // We expect to see numbers like "2" and "3" for the daily metrics, and large numbers for volume
+        expect(rowText).toMatch(/\b\d+\b/); // Should contain some numbers (not just '—' placeholders)
+        expect(rowText).not.toMatch(/—/); // Should not contain any '—' placeholders for missing data
     });
 
     test('Feather item API response should include calculated metrics', async ({ request }) => {
