@@ -114,21 +114,17 @@ export function filteredSorted(
             return row.buyLimit === 0;
         }
         if (filterSet.buyLimit.min !== null) {
-            if (row.buyLimit === null || row.buyLimit < filterSet.buyLimit.min)
-                return false;
+            if (row.buyLimit === null || row.buyLimit < filterSet.buyLimit.min) return false;
         }
         if (filterSet.buyLimit.max !== null) {
-            if (row.buyLimit === null || row.buyLimit > filterSet.buyLimit.max)
-                return false;
+            if (row.buyLimit === null || row.buyLimit > filterSet.buyLimit.max) return false;
         }
 
         if (filterSet.buyPrice.min !== null) {
-            if (row.buyPrice === null || row.buyPrice < filterSet.buyPrice.min)
-                return false;
+            if (row.buyPrice === null || row.buyPrice < filterSet.buyPrice.min) return false;
         }
         if (filterSet.buyPrice.max !== null) {
-            if (row.buyPrice === null || row.buyPrice > filterSet.buyPrice.max)
-                return false;
+            if (row.buyPrice === null || row.buyPrice > filterSet.buyPrice.max) return false;
         }
 
         if ((filterSet.buyTime.min !== null || filterSet.buyTime.max !== null) && row.buyTime !== null) {
@@ -138,12 +134,10 @@ export function filteredSorted(
         }
 
         if (filterSet.sellPrice.min !== null) {
-            if (row.sellPrice === null || row.sellPrice < filterSet.sellPrice.min)
-                return false;
+            if (row.sellPrice === null || row.sellPrice < filterSet.sellPrice.min) return false;
         }
         if (filterSet.sellPrice.max !== null) {
-            if (row.sellPrice === null || row.sellPrice > filterSet.sellPrice.max)
-                return false;
+            if (row.sellPrice === null || row.sellPrice > filterSet.sellPrice.max) return false;
         }
 
         if ((filterSet.sellTime.min !== null || filterSet.sellTime.max !== null) && row.sellTime !== null) {
@@ -154,51 +148,51 @@ export function filteredSorted(
 
         const breakEvenPrice = calculateBreakEvenPrice(row.sellPrice, row.id);
         if (filterSet.breakEvenPrice.min !== null) {
-            if (breakEvenPrice === null || breakEvenPrice < filterSet.breakEvenPrice.min)
-                return false;
+            if (breakEvenPrice === null || breakEvenPrice < filterSet.breakEvenPrice.min) return false;
         }
         if (filterSet.breakEvenPrice.max !== null) {
-            if (breakEvenPrice === null || breakEvenPrice > filterSet.breakEvenPrice.max)
-                return false;
+            if (breakEvenPrice === null || breakEvenPrice > filterSet.breakEvenPrice.max) return false;
         }
 
         if (filterSet.margin.min !== null) {
-            if (row.margin === null || row.margin < filterSet.margin.min)
-                return false;
+            if (row.margin === null || row.margin < filterSet.margin.min) return false;
         }
         if (filterSet.margin.max !== null) {
-            if (row.margin === null || row.margin > filterSet.margin.max)
-                return false;
+            if (row.margin === null || row.margin > filterSet.margin.max) return false;
         }
 
         if (filterSet.dailyVolume.min !== null) {
-            if (row.dailyVolume === null || row.dailyVolume === undefined || row.dailyVolume < filterSet.dailyVolume.min)
+            if (
+                row.dailyVolume === null ||
+                row.dailyVolume === undefined ||
+                row.dailyVolume < filterSet.dailyVolume.min
+            )
                 return false;
         }
         if (filterSet.dailyVolume.max !== null) {
-            if (row.dailyVolume === null || row.dailyVolume === undefined || row.dailyVolume > filterSet.dailyVolume.max)
+            if (
+                row.dailyVolume === null ||
+                row.dailyVolume === undefined ||
+                row.dailyVolume > filterSet.dailyVolume.max
+            )
                 return false;
         }
 
         const postTaxProfit = calculatePostTaxProfit(row.buyPrice, row.sellPrice, row.id);
         if (filterSet.postTaxProfit.min !== null) {
-            if (postTaxProfit === null || postTaxProfit < filterSet.postTaxProfit.min)
-                return false;
+            if (postTaxProfit === null || postTaxProfit < filterSet.postTaxProfit.min) return false;
         }
         if (filterSet.postTaxProfit.max !== null) {
-            if (postTaxProfit === null || postTaxProfit > filterSet.postTaxProfit.max)
-                return false;
+            if (postTaxProfit === null || postTaxProfit > filterSet.postTaxProfit.max) return false;
         }
 
         // Calculate post-tax profit (avg) using average buy/sell prices
         const postTaxProfitAvg = calculatePostTaxProfit(row.averageBuy ?? null, row.averageSell ?? null, row.id);
         if (filterSet.postTaxProfitAvg.min !== null) {
-            if (postTaxProfitAvg === null || postTaxProfitAvg < filterSet.postTaxProfitAvg.min)
-                return false;
+            if (postTaxProfitAvg === null || postTaxProfitAvg < filterSet.postTaxProfitAvg.min) return false;
         }
         if (filterSet.postTaxProfitAvg.max !== null) {
-            if (postTaxProfitAvg === null || postTaxProfitAvg > filterSet.postTaxProfitAvg.max)
-                return false;
+            if (postTaxProfitAvg === null || postTaxProfitAvg > filterSet.postTaxProfitAvg.max) return false;
         }
 
         // Calculate potential profit (avg) using daily volume × post-tax profit (avg)
@@ -210,12 +204,10 @@ export function filteredSorted(
                 ? postTaxProfitAvg * row.dailyVolume
                 : null;
         if (filterSet.potentialProfitAvg.min !== null) {
-            if (potentialProfitAvg === null || potentialProfitAvg < filterSet.potentialProfitAvg.min)
-                return false;
+            if (potentialProfitAvg === null || potentialProfitAvg < filterSet.potentialProfitAvg.min) return false;
         }
         if (filterSet.potentialProfitAvg.max !== null) {
-            if (potentialProfitAvg === null || potentialProfitAvg > filterSet.potentialProfitAvg.max)
-                return false;
+            if (potentialProfitAvg === null || potentialProfitAvg > filterSet.potentialProfitAvg.max) return false;
         }
 
         if (filterSet.dailyLow.min !== null) {
@@ -246,11 +238,19 @@ export function filteredSorted(
         }
 
         if (filterSet.averageSell.min !== null) {
-            if (row.averageSell === null || row.averageSell === undefined || row.averageSell < filterSet.averageSell.min)
+            if (
+                row.averageSell === null ||
+                row.averageSell === undefined ||
+                row.averageSell < filterSet.averageSell.min
+            )
                 return false;
         }
         if (filterSet.averageSell.max !== null) {
-            if (row.averageSell === null || row.averageSell === undefined || row.averageSell > filterSet.averageSell.max)
+            if (
+                row.averageSell === null ||
+                row.averageSell === undefined ||
+                row.averageSell > filterSet.averageSell.max
+            )
                 return false;
         }
 
