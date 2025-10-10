@@ -200,6 +200,20 @@ export function filteredSorted(
         } else if (key === 'postTaxProfit') {
             va = calculatePostTaxProfit(a.buyPrice, a.sellPrice, a.id);
             vb = calculatePostTaxProfit(b.buyPrice, b.sellPrice, b.id);
+        } else if (key === 'postTaxProfitAvg') {
+            va = calculatePostTaxProfit(a.averageBuy ?? null, a.averageSell ?? null, a.id);
+            vb = calculatePostTaxProfit(b.averageBuy ?? null, b.averageSell ?? null, b.id);
+        } else if (key === 'potentialProfitAvg') {
+            const postTaxAvgA = calculatePostTaxProfit(a.averageBuy ?? null, a.averageSell ?? null, a.id);
+            const postTaxAvgB = calculatePostTaxProfit(b.averageBuy ?? null, b.averageSell ?? null, b.id);
+            va =
+                postTaxAvgA !== null && a.dailyVolume !== null && a.dailyVolume !== undefined && a.dailyVolume > 0
+                    ? postTaxAvgA * a.dailyVolume
+                    : null;
+            vb =
+                postTaxAvgB !== null && b.dailyVolume !== null && b.dailyVolume !== undefined && b.dailyVolume > 0
+                    ? postTaxAvgB * b.dailyVolume
+                    : null;
         } else {
             va = (a as any)[key];
             vb = (b as any)[key];

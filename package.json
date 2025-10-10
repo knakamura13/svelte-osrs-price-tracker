@@ -31,16 +31,20 @@
         "autoprefixer": "10.4.20",
         "lucide-svelte": "^0.544.0",
         "postcss": "8.4.41",
-        "prettier-plugin-svelte": "^3.2.6",
         "prettier": "^3.3.3",
+        "prettier-plugin-svelte": "^3.2.6",
         "sass": "^1.80.6",
-        "svelte-check": "^3.8.5",
         "svelte": "^5.0.0",
+        "svelte-check": "^3.8.5",
         "tailwindcss": "3.4.8",
         "terser": "^5.4.0",
         "tslib": "^2.6.3",
+        "tsx": "^4.20.6",
         "typescript": "^5.5.4",
         "vite": "^5.4.6",
         "vitest": "^2.1.8"
+    },
+    "dependencies": {
+        "vite-plugin-tailwind-purgecss": "^0.3.5"
     }
 }
