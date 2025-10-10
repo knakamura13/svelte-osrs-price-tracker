@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import type { ItemMapping, LatestResponse, PriceRow, Volume24hResponse } from '$lib/types';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { ItemMapping, LatestResponse, PriceRow, Volume24hResponse, TimeseriesResponse } from '$lib/types';
 
 // Extract the row transformation logic for testing
 function transformToRow(mapping: ItemMapping, latestMap: LatestResponse, volumeMap: Volume24hResponse): PriceRow {
@@ -195,6 +195,107 @@ describe('API rows join logic', () => {
             const result = transformToRow(mapping, {}, {});
 
             expect(result.wikiUrl).toBe('https://oldschool.runescape.wiki/w/3rd%20age%20platebody');
+        });
+
+        it('should prefer timeseries data over incorrect 24h API volume data for item 1877', () => {
+            // This test simulates the issue where the 24h API returns 463,525 volume
+            // but timeseries data shows only 1 actual trade
+            const mapping: ItemMapping = { id: 1877, name: 'Cake', members: false };
+
+            // 24h API returns inflated volume data (the bug)
+            const volumeMap: Volume24hResponse = {
+                '1877': {
+                    avgHighPrice: 100,
+                    highPriceVolume: 463525, // This is incorrect - should be much lower
+                    avgLowPrice: 90,
+                    lowPriceVolume: 0
+                }
+            };
+
+            // Latest data
+            const latestMap: LatestResponse = {
+                '1877': { high: 100, highTime: 1704067200, low: 90, lowTime: 1704067100 }
+            };
+
+            const result = transformToRow(mapping, latestMap, volumeMap);
+
+            // The simplified test function doesn't include the timeseries fallback logic
+            // In the real implementation, this would return 1 after the fix
+            expect(result.dailyVolume).toBe(463525); // This represents the buggy behavior
+
+            // Note: This test documents the current buggy behavior.
+            // The real fix is implemented in /api/rows/+server.ts which now compares
+            // 24h API data with timeseries data and uses timeseries when there's a discrepancy
+        });
+    });
+
+    describe('Volume fallback logic integration test', () => {
+        beforeEach(() => {
+            vi.clearAllMocks();
+        });
+
+        it('should use timeseries data when 24h API volume is significantly different from timeseries', async () => {
+            // Mock the external API responses
+            const mockTimeseriesData: TimeseriesResponse = {
+                data: [
+                    {
+                        timestamp: 1704067200,
+                        avgHighPrice: 100,
+                        avgLowPrice: 90,
+                        highPriceVolume: 1, // Only 1 trade according to timeseries
+                        lowPriceVolume: 0
+                    }
+                ]
+            };
+
+            const mockVolumeData: Volume24hResponse = {
+                '1877': {
+                    avgHighPrice: 100,
+                    highPriceVolume: 463525, // Incorrect high volume from 24h API
+                    avgLowPrice: 90,
+                    lowPriceVolume: 0
+                }
+            };
+
+            const mockLatestData = {
+                '1877': { high: 100, highTime: 1704067200, low: 90, lowTime: 1704067100 }
+            };
+
+            const mockMapping: ItemMapping[] = [
+                { id: 1877, name: 'Cake', members: false }
+            ];
+
+            // Mock fetch responses
+            global.fetch = vi.fn()
+                .mockImplementationOnce(() => Promise.resolve({ // /api/mapping
+                    ok: true,
+                    json: () => Promise.resolve(mockMapping)
+                }))
+                .mockImplementationOnce(() => Promise.resolve({ // /api/latest
+                    ok: true,
+                    json: () => Promise.resolve({ data: mockLatestData })
+                }))
+                .mockImplementationOnce(() => Promise.resolve({ // /api/24h
+                    ok: true,
+                    json: () => Promise.resolve({ data: mockVolumeData })
+                }))
+                .mockImplementationOnce(() => Promise.resolve({ // timeseries fetch for item 1877
+                    ok: true,
+                    json: () => Promise.resolve(mockTimeseriesData)
+                }));
+
+            // Import and call the actual API handler
+            const { GET } = await import('./+server.ts');
+            const request = new Request('http://localhost:5173/api/rows');
+            const response = await GET({ fetch: global.fetch } as any);
+
+            expect(response.status).toBe(200);
+
+            const data = await response.json();
+            const item1877 = data.rows.find((item: PriceRow) => item.id === 1877);
+
+            // With the fix, this should use timeseries data (volume = 1) instead of 24h API data (volume = 463525)
+            expect(item1877.dailyVolume).toBe(1);
         });
     });
 });

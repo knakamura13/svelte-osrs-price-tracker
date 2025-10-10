@@ -4,5 +4,9 @@ import { purgeCss } from 'vite-plugin-tailwind-purgecss';
 
 export default defineConfig({
     plugins: [sveltekit(), purgeCss()],
-    test: { include: ['tests/**/*.{test,spec}.{js,ts}'], globals: true, environment: 'node' }
+    test: {
+        include: ['tests/**/*.{test,spec}.{js,ts}', 'src/**/*.{test,spec}.{js,ts}'],
+        globals: true,
+        environment: 'node'
+    }
 });

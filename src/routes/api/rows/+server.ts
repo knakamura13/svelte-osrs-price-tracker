@@ -183,14 +183,33 @@ export const GET: RequestHandler = async ({ fetch }) => {
                 }
             }
 
-            // If no volume data from 24h API, fetch from timeseries
+            // Always fetch from timeseries as a validation check
+            // If 24h API gave us volume data, compare it with timeseries to detect discrepancies
+            const timeseriesData = await getTimeseriesData(m.id);
+
+            // If 24h API gave us no volume data, use timeseries
             if (dailyVolume === null) {
-                const timeseriesData = await getTimeseriesData(m.id);
                 if (timeseriesData.dailyVolume !== null) {
                     dailyVolume = timeseriesData.dailyVolume;
                 }
                 if (timeseriesData.dailyMetrics !== null) {
                     dailyMetrics = timeseriesData.dailyMetrics;
+                }
+            } else if (timeseriesData.dailyVolume !== null) {
+                // If both sources have data, compare them to detect potential issues
+                const volumeRatio = timeseriesData.dailyVolume / dailyVolume;
+
+                // If timeseries volume is significantly different from 24h API volume,
+                // prefer timeseries data (which tends to be more accurate for real-time data)
+                // This handles cases where 24h API has stale or incorrect data
+                if (volumeRatio < 0.1 || volumeRatio > 10) {
+                    console.warn(`Volume discrepancy detected for item ${m.id}: 24h API=${dailyVolume}, timeseries=${timeseriesData.dailyVolume}. Using timeseries data.`);
+                    dailyVolume = timeseriesData.dailyVolume;
+
+                    // Also use timeseries metrics if available
+                    if (timeseriesData.dailyMetrics !== null) {
+                        dailyMetrics = timeseriesData.dailyMetrics;
+                    }
                 }
             }
 
