@@ -19,7 +19,7 @@
     } from '$lib/utils/filters';
     import { loadPrefs, savePrefs } from '$lib/utils/preferences';
     import { setupAutoRefreshWithBackoff, calculateBackoff } from '$lib/utils/autoRefresh';
-    import { settingsStore } from '$lib/utils/settings';
+    import { settingsStore, itemsStore } from '$lib/utils/settings';
     import type { PriceRow, Filters, SortKey, FilterStats } from '$lib/types';
 
     // Data prop is now optional since we load data client-side for better UX
@@ -160,6 +160,7 @@
             const json = await res.json();
             const rows = Array.isArray(json?.rows) ? (json.rows as PriceRow[]) : [];
             allRows = rows;
+            itemsStore.set(rows); // Update global items store for header search
             lastUpdated = Date.now();
             lastRefreshTime = Date.now(); // Update throttle timestamp
             failCount = 0; // Reset fail count on success
@@ -340,7 +341,7 @@
 </svelte:head>
 
 <div class="page" id="home">
-    <HeaderControls {lastUpdatedLabel} {backgroundRefreshing} allItems={allRows} />
+    <HeaderControls {lastUpdatedLabel} {backgroundRefreshing} />
 
     <ErrorAlert message={errorMsg} {failCount} {nextRetryIn} autoDisabled={failCount >= 5} />
 

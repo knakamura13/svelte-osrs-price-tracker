@@ -1,16 +1,44 @@
 <script lang="ts">
-    import { createEventDispatcher } from 'svelte';
+    import { onMount } from 'svelte';
     import type { PriceRow } from '$lib/types';
     import { goto } from '$app/navigation';
 
     export let items: PriceRow[] = [];
     export let placeholder: string = 'Search for an item...';
+    export let onSearch: ((query: string) => void) | undefined = undefined;
+    export let onSelect: ((item: PriceRow) => void) | undefined = undefined;
 
     let searchQuery: string = '';
     let showDropdown: boolean = false;
     let searchInput: HTMLInputElement;
+    let loadingItems = false;
 
-    const dispatch = createEventDispatcher();
+    // Load items if not provided
+    async function loadItems() {
+        if (items.length > 0 || loadingItems) return;
+
+        loadingItems = true;
+        try {
+            const response = await fetch('/api/rows');
+            if (response.ok) {
+                const data = await response.json();
+                if (Array.isArray(data?.rows)) {
+                    items = data.rows;
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load items for search:', error);
+        } finally {
+            loadingItems = false;
+        }
+    }
+
+    // Load items when component mounts or when search input is focused and no items are available
+    onMount(() => {
+        if (items.length === 0) {
+            loadItems();
+        }
+    });
 
     // Search function that returns top 10 matches in ascending alphanumeric order
     $: searchResults = searchQuery.trim()
@@ -25,12 +53,16 @@
     function handleInput(event: Event) {
         const target = event.target as HTMLInputElement;
         searchQuery = target.value;
-        dispatch('search', searchQuery);
+        onSearch?.(searchQuery);
     }
 
     function handleFocus() {
         if (searchQuery.trim() && searchResults.length > 0) {
             showDropdown = true;
+        }
+        // Load items if not available when user focuses on search
+        if (items.length === 0 && !loadingItems) {
+            loadItems();
         }
     }
 
@@ -44,7 +76,7 @@
     function selectItem(item: PriceRow) {
         searchQuery = item.name;
         showDropdown = false;
-        dispatch('select', item);
+        onSelect?.(item);
         goto(`/item/${item.id}`);
     }
 
@@ -52,7 +84,7 @@
         searchQuery = '';
         showDropdown = false;
         searchInput?.focus();
-        dispatch('search', '');
+        onSearch?.('');
     }
 
     // Handle keyboard navigation
@@ -71,7 +103,7 @@
         <input
             bind:this={searchInput}
             type="text"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            class="w-full px-3 py-0.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             {placeholder}
             value={searchQuery}
             on:input={handleInput}

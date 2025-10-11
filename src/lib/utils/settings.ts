@@ -1,5 +1,6 @@
 import { writable } from 'svelte/store';
 import type { Settings } from './preferences';
+import type { PriceRow } from '$lib/types';
 
 // Default settings
 const defaultSettings: Settings = {
@@ -48,7 +49,18 @@ function createSettingsStore() {
     };
 }
 
+// Items store for global item data
+function createItemsStore() {
+    const { subscribe, set } = writable<PriceRow[]>([]);
+
+    return {
+        subscribe,
+        set
+    };
+}
+
 export const settingsStore = createSettingsStore();
+export const itemsStore = createItemsStore();
 
 // Initialize dark mode on load - always use dark mode
 if (typeof window !== 'undefined') {
