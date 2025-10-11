@@ -23,7 +23,7 @@ test.describe('Feather item null values issue', () => {
         await expect(page.locator('table')).toBeVisible();
 
         // Search for Feather to filter the table
-        const searchInput = page.locator('#search-input');
+        const searchInput = page.locator('#table-search-input');
         await searchInput.fill('Feather');
         await searchInput.press('Enter');
 

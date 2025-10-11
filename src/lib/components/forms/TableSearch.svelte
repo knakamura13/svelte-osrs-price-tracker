@@ -37,7 +37,7 @@
 
 <div class="relative inline-block w-full lg:w-1/3">
     <input
-        id="search-input"
+        id="table-search-input"
         name="search"
         class="border rounded p-2 w-full pr-10"
         {placeholder}

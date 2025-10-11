@@ -2,7 +2,7 @@
     import PriceTable from '$lib/components/tables/PriceTable.svelte';
     import ColumnsToggle from '$lib/components/forms/ColumnsToggle.svelte';
     import ErrorAlert from '$lib/components/feedback/ErrorAlert.svelte';
-    import SearchBar from '$lib/components/forms/SearchBar.svelte';
+    import TableSearch from '$lib/components/forms/TableSearch.svelte';
     import FiltersPanel from '$lib/components/controls/FiltersPanel.svelte';
     import HeaderControls from '$lib/components/layout/HeaderControls.svelte';
     import LoadingSkeleton from '$lib/components/layout/LoadingSkeleton.svelte';
@@ -234,8 +234,6 @@
         clearInterval(tickTimer);
     });
 
-    // Search updates handled via SearchBar's debounce
-
     // Persist preferences (sort + page size + columns + filters)
     let prefsHydrated = false;
     $: if (prefsHydrated) {
@@ -388,7 +386,7 @@
             onTimeChange={handleTimeChange}
         />
 
-        <SearchBar
+        <TableSearch
             value={search}
             placeholder="Search for an item..."
             onInput={(v) => {
