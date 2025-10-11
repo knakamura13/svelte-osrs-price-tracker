@@ -413,6 +413,7 @@
                 decimalView={settings.decimalView}
                 decimalPlaces={settings.decimalPlaces}
                 {backgroundRefreshing}
+                placeholderMode={backgroundRefreshing}
             />
         {/if}
     </section>

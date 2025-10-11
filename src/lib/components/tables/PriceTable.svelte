@@ -48,6 +48,9 @@
     // Background refresh indicator
     export let backgroundRefreshing: boolean = false;
 
+    // Placeholder mode - shows dashes for price-related columns during background refresh
+    export let placeholderMode: boolean = false;
+
     // Calculate visible column count for colspan
     $: visibleColumnCount = Object.values(columnVisibility).filter(Boolean).length + 1; // +1 for image column
 
@@ -88,6 +91,26 @@
         itemId: number
     ): number | null => {
         return calculatePostTaxProfit(averageBuy ?? null, averageSell ?? null, itemId);
+    };
+
+    // Helper function to determine if a column should show placeholder data during refresh
+    const isPriceRelatedColumn = (key: string): boolean => {
+        const priceRelatedColumns = [
+            'buyPrice',
+            'sellPrice',
+            'margin',
+            'breakEvenPrice',
+            'postTaxProfit',
+            'postTaxProfitAvg',
+            'potentialProfit',
+            'potentialProfitAvg',
+            'dailyVolume',
+            'dailyLow',
+            'dailyHigh',
+            'averageBuy',
+            'averageSell'
+        ];
+        return priceRelatedColumns.includes(key);
     };
 
     // Column configuration for table headers
@@ -266,11 +289,20 @@
         },
         {
             key: 'buyPrice',
-            render: (row: PriceRow) => ({
-                content: row.buyPrice == null ? '—' : formatPrice(row.buyPrice, decimalView, decimalPlaces),
-                title: row.buyPrice == null ? 'No insta-buy price data available for this item' : undefined,
-                class: row.buyPrice == null ? 'cursor-help' : undefined
-            })
+            render: (row: PriceRow) => {
+                if (placeholderMode && isPriceRelatedColumn('buyPrice')) {
+                    return {
+                        content: '—',
+                        title: 'Refreshing price data...',
+                        class: 'cursor-help opacity-60'
+                    };
+                }
+                return {
+                    content: row.buyPrice == null ? '—' : formatPrice(row.buyPrice, decimalView, decimalPlaces),
+                    title: row.buyPrice == null ? 'No insta-buy price data available for this item' : undefined,
+                    class: row.buyPrice == null ? 'cursor-help' : undefined
+                };
+            }
         },
         {
             key: 'buyTime',
@@ -281,11 +313,20 @@
         },
         {
             key: 'sellPrice',
-            render: (row: PriceRow) => ({
-                content: row.sellPrice == null ? '—' : formatPrice(row.sellPrice, decimalView, decimalPlaces),
-                title: row.sellPrice == null ? 'No insta-sell price data available for this item' : undefined,
-                class: row.sellPrice == null ? 'cursor-help' : undefined
-            })
+            render: (row: PriceRow) => {
+                if (placeholderMode && isPriceRelatedColumn('sellPrice')) {
+                    return {
+                        content: '—',
+                        title: 'Refreshing price data...',
+                        class: 'cursor-help opacity-60'
+                    };
+                }
+                return {
+                    content: row.sellPrice == null ? '—' : formatPrice(row.sellPrice, decimalView, decimalPlaces),
+                    title: row.sellPrice == null ? 'No insta-sell price data available for this item' : undefined,
+                    class: row.sellPrice == null ? 'cursor-help' : undefined
+                };
+            }
         },
         {
             key: 'sellTime',
@@ -296,15 +337,31 @@
         },
         {
             key: 'margin',
-            render: (row: PriceRow) => ({
-                content: row.margin == null ? '—' : formatPrice(row.margin, decimalView, decimalPlaces),
-                title: row.margin == null ? 'No margin data available for this item' : undefined,
-                class: row.margin == null ? 'cursor-help' : row.margin < 0 ? 'red-text' : 'green-text'
-            })
+            render: (row: PriceRow) => {
+                if (placeholderMode && isPriceRelatedColumn('margin')) {
+                    return {
+                        content: '—',
+                        title: 'Refreshing price data...',
+                        class: 'cursor-help opacity-60'
+                    };
+                }
+                return {
+                    content: row.margin == null ? '—' : formatPrice(row.margin, decimalView, decimalPlaces),
+                    title: row.margin == null ? 'No margin data available for this item' : undefined,
+                    class: row.margin == null ? 'cursor-help' : row.margin < 0 ? 'red-text' : 'green-text'
+                };
+            }
         },
         {
             key: 'breakEvenPrice',
             render: (row: PriceRow) => {
+                if (placeholderMode && isPriceRelatedColumn('breakEvenPrice')) {
+                    return {
+                        content: '—',
+                        title: 'Refreshing price data...',
+                        class: 'cursor-help opacity-60'
+                    };
+                }
                 const breakEvenPrice = calculateBreakEvenPrice(row.sellPrice, row.id);
                 if (breakEvenPrice == null) {
                     return {
@@ -328,6 +385,13 @@
         {
             key: 'postTaxProfit',
             render: (row: PriceRow) => {
+                if (placeholderMode && isPriceRelatedColumn('postTaxProfit')) {
+                    return {
+                        content: '—',
+                        title: 'Refreshing price data...',
+                        class: 'cursor-help opacity-60'
+                    };
+                }
                 const profitValue = getPostTaxProfitValue(row.buyPrice, row.sellPrice, row.id);
                 if (profitValue == null) {
                     return {
@@ -345,6 +409,13 @@
         {
             key: 'postTaxProfitAvg',
             render: (row: PriceRow) => {
+                if (placeholderMode && isPriceRelatedColumn('postTaxProfitAvg')) {
+                    return {
+                        content: '—',
+                        title: 'Refreshing price data...',
+                        class: 'cursor-help opacity-60'
+                    };
+                }
                 const profitValue = getPostTaxProfitAvgValue(row.averageBuy, row.averageSell, row.id);
                 if (profitValue == null) {
                     return {
@@ -361,16 +432,39 @@
         },
         {
             key: 'potentialProfit',
-            render: (row: PriceRow) => ({
-                content:
-                    row.potentialProfit == null ? '—' : formatPrice(row.potentialProfit, decimalView, decimalPlaces),
-                title: row.potentialProfit == null ? 'No potential profit data available for this item' : undefined,
-                class: row.potentialProfit == null ? 'cursor-help' : row.potentialProfit < 0 ? 'red-text' : 'green-text'
-            })
+            render: (row: PriceRow) => {
+                if (placeholderMode && isPriceRelatedColumn('potentialProfit')) {
+                    return {
+                        content: '—',
+                        title: 'Refreshing price data...',
+                        class: 'cursor-help opacity-60'
+                    };
+                }
+                return {
+                    content:
+                        row.potentialProfit == null
+                            ? '—'
+                            : formatPrice(row.potentialProfit, decimalView, decimalPlaces),
+                    title: row.potentialProfit == null ? 'No potential profit data available for this item' : undefined,
+                    class:
+                        row.potentialProfit == null
+                            ? 'cursor-help'
+                            : row.potentialProfit < 0
+                              ? 'red-text'
+                              : 'green-text'
+                };
+            }
         },
         {
             key: 'potentialProfitAvg',
             render: (row: PriceRow) => {
+                if (placeholderMode && isPriceRelatedColumn('potentialProfitAvg')) {
+                    return {
+                        content: '—',
+                        title: 'Refreshing price data...',
+                        class: 'cursor-help opacity-60'
+                    };
+                }
                 const postTaxProfitAvg = getPostTaxProfitAvgValue(row.averageBuy, row.averageSell, row.id);
                 if (postTaxProfitAvg == null || row.dailyVolume == null) {
                     return {
@@ -389,6 +483,13 @@
         {
             key: 'dailyVolume',
             render: (row: PriceRow) => {
+                if (placeholderMode && isPriceRelatedColumn('dailyVolume')) {
+                    return {
+                        content: '—',
+                        title: 'Refreshing price data...',
+                        class: 'cursor-help opacity-60'
+                    };
+                }
                 if (row.dailyVolume !== null && row.dailyVolume !== undefined && row.dailyVolume > 0) {
                     return { content: formatPrice(row.dailyVolume, decimalView, decimalPlaces) };
                 }
@@ -401,55 +502,91 @@
         },
         {
             key: 'dailyLow',
-            render: (row: PriceRow) => ({
-                content:
-                    row.dailyLow !== null && row.dailyLow !== undefined
-                        ? formatPrice(row.dailyLow, decimalView, decimalPlaces)
-                        : '—',
-                title: !(row.dailyLow !== null && row.dailyLow !== undefined)
-                    ? 'No daily low data available for this item'
-                    : undefined,
-                class: !(row.dailyLow !== null && row.dailyLow !== undefined) ? 'cursor-help' : undefined
-            })
+            render: (row: PriceRow) => {
+                if (placeholderMode && isPriceRelatedColumn('dailyLow')) {
+                    return {
+                        content: '—',
+                        title: 'Refreshing price data...',
+                        class: 'cursor-help opacity-60'
+                    };
+                }
+                return {
+                    content:
+                        row.dailyLow !== null && row.dailyLow !== undefined
+                            ? formatPrice(row.dailyLow, decimalView, decimalPlaces)
+                            : '—',
+                    title: !(row.dailyLow !== null && row.dailyLow !== undefined)
+                        ? 'No daily low data available for this item'
+                        : undefined,
+                    class: !(row.dailyLow !== null && row.dailyLow !== undefined) ? 'cursor-help' : undefined
+                };
+            }
         },
         {
             key: 'dailyHigh',
-            render: (row: PriceRow) => ({
-                content:
-                    row.dailyHigh !== null && row.dailyHigh !== undefined
-                        ? formatPrice(row.dailyHigh, decimalView, decimalPlaces)
-                        : '—',
-                title: !(row.dailyHigh !== null && row.dailyHigh !== undefined)
-                    ? 'No daily high data available for this item'
-                    : undefined,
-                class: !(row.dailyHigh !== null && row.dailyHigh !== undefined) ? 'cursor-help' : undefined
-            })
+            render: (row: PriceRow) => {
+                if (placeholderMode && isPriceRelatedColumn('dailyHigh')) {
+                    return {
+                        content: '—',
+                        title: 'Refreshing price data...',
+                        class: 'cursor-help opacity-60'
+                    };
+                }
+                return {
+                    content:
+                        row.dailyHigh !== null && row.dailyHigh !== undefined
+                            ? formatPrice(row.dailyHigh, decimalView, decimalPlaces)
+                            : '—',
+                    title: !(row.dailyHigh !== null && row.dailyHigh !== undefined)
+                        ? 'No daily high data available for this item'
+                        : undefined,
+                    class: !(row.dailyHigh !== null && row.dailyHigh !== undefined) ? 'cursor-help' : undefined
+                };
+            }
         },
         {
             key: 'averageBuy',
-            render: (row: PriceRow) => ({
-                content:
-                    row.averageBuy !== null && row.averageBuy !== undefined
-                        ? formatPrice(row.averageBuy, decimalView, decimalPlaces)
-                        : '—',
-                title: !(row.averageBuy !== null && row.averageBuy !== undefined)
-                    ? 'No average buy data available for this item'
-                    : undefined,
-                class: !(row.averageBuy !== null && row.averageBuy !== undefined) ? 'cursor-help' : undefined
-            })
+            render: (row: PriceRow) => {
+                if (placeholderMode && isPriceRelatedColumn('averageBuy')) {
+                    return {
+                        content: '—',
+                        title: 'Refreshing price data...',
+                        class: 'cursor-help opacity-60'
+                    };
+                }
+                return {
+                    content:
+                        row.averageBuy !== null && row.averageBuy !== undefined
+                            ? formatPrice(row.averageBuy, decimalView, decimalPlaces)
+                            : '—',
+                    title: !(row.averageBuy !== null && row.averageBuy !== undefined)
+                        ? 'No average buy data available for this item'
+                        : undefined,
+                    class: !(row.averageBuy !== null && row.averageBuy !== undefined) ? 'cursor-help' : undefined
+                };
+            }
         },
         {
             key: 'averageSell',
-            render: (row: PriceRow) => ({
-                content:
-                    row.averageSell !== null && row.averageSell !== undefined
-                        ? formatPrice(row.averageSell, decimalView, decimalPlaces)
-                        : '—',
-                title: !(row.averageSell !== null && row.averageSell !== undefined)
-                    ? 'No average sell data available for this item'
-                    : undefined,
-                class: !(row.averageSell !== null && row.averageSell !== undefined) ? 'cursor-help' : undefined
-            })
+            render: (row: PriceRow) => {
+                if (placeholderMode && isPriceRelatedColumn('averageSell')) {
+                    return {
+                        content: '—',
+                        title: 'Refreshing price data...',
+                        class: 'cursor-help opacity-60'
+                    };
+                }
+                return {
+                    content:
+                        row.averageSell !== null && row.averageSell !== undefined
+                            ? formatPrice(row.averageSell, decimalView, decimalPlaces)
+                            : '—',
+                    title: !(row.averageSell !== null && row.averageSell !== undefined)
+                        ? 'No average sell data available for this item'
+                        : undefined,
+                    class: !(row.averageSell !== null && row.averageSell !== undefined) ? 'cursor-help' : undefined
+                };
+            }
         }
     ];
 </script>
