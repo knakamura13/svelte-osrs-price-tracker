@@ -12,6 +12,8 @@
         <a class="font-bold uppercase tracking-wide hover:underline" href="/">{title}</a>
     </div>
 
+    <!-- TODO: move the ItemSearch to the header -->
+
     <div class="flex items-center">
         <SettingsDropdown />
     </div>

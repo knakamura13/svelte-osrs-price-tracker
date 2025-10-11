@@ -203,7 +203,7 @@ export const GET: RequestHandler = async ({ fetch }) => {
                 // prefer timeseries data (which tends to be more accurate for real-time data)
                 // This handles cases where 24h API has stale or incorrect data
                 if (volumeRatio < 0.1 || volumeRatio > 10) {
-                    console.warn(`Volume discrepancy detected for item ${m.id}: 24h API=${dailyVolume}, timeseries=${timeseriesData.dailyVolume}. Using timeseries data.`);
+                    // console.warn(`Volume discrepancy detected for item ${m.id}: 24h API=${dailyVolume}, timeseries=${timeseriesData.dailyVolume}. Using timeseries data.`);
                     dailyVolume = timeseriesData.dailyVolume;
 
                     // Also use timeseries metrics if available

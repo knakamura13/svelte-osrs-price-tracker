@@ -1,8 +1,11 @@
 <script lang="ts">
     import { Clock } from 'lucide-svelte';
+    import ItemSearch from '$lib/components/forms/ItemSearch.svelte';
+    import type { PriceRow } from '$lib/types';
 
     export let lastUpdatedLabel: string = '—';
     export let backgroundRefreshing: boolean = false;
+    export let allItems: PriceRow[] = [];
 </script>
 
 <section class="intro p-4 flex gap-4 items-end flex-wrap">
@@ -21,5 +24,9 @@
                 {/if}
             </div>
         </div>
+    </div>
+
+    <div class="w-full lg:w-auto">
+        <ItemSearch items={allItems} />
     </div>
 </section>

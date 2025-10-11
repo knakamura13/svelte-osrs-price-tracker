@@ -217,7 +217,7 @@ test.describe('Sorting functionality', () => {
 
     test('should handle sorting with filters applied', async ({ page }) => {
         // Apply a filter first
-        const searchInput = page.getByPlaceholder('Search for an item...');
+        const searchInput = page.locator('#search-input');
         await searchInput.fill('dragon');
         await page.waitForTimeout(1000);
 

@@ -1,1 +1,1 @@
-export const ssr = false;  // Toggle server-side rendering (SSR) site-wide
+export const ssr = false; // Toggle server-side rendering (SSR) site-wide

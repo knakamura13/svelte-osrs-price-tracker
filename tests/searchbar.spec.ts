@@ -9,12 +9,12 @@ test.describe('SearchBar functionality', () => {
     });
 
     test('should render search bar', async ({ page }) => {
-        const searchInput = page.getByPlaceholder('Search for an item...');
+        const searchInput = page.locator('#search-input');
         await expect(searchInput).toBeVisible();
     });
 
     test('should accept text input', async ({ page }) => {
-        const searchInput = page.getByPlaceholder('Search for an item...');
+        const searchInput = page.locator('#search-input');
 
         // Type into the search bar
         await searchInput.fill('dragon');
@@ -24,7 +24,7 @@ test.describe('SearchBar functionality', () => {
     });
 
     test('should filter results when typing - spade test', async ({ page }) => {
-        const searchInput = page.getByPlaceholder('Search for an item...');
+        const searchInput = page.locator('#search-input');
 
         // Wait for table to be visible
         await page.waitForSelector('table', { timeout: 10000 });
@@ -58,7 +58,7 @@ test.describe('SearchBar functionality', () => {
     });
 
     test('should clear and show all results when input is cleared', async ({ page }) => {
-        const searchInput = page.getByPlaceholder('Search for an item...');
+        const searchInput = page.locator('#search-input');
 
         // Wait for table to be visible
         await page.waitForSelector('table', { timeout: 10000 });
@@ -80,7 +80,7 @@ test.describe('SearchBar functionality', () => {
     });
 
     test('should handle rapid typing (debounce test)', async ({ page }) => {
-        const searchInput = page.getByPlaceholder('Search for an item...');
+        const searchInput = page.locator('#search-input');
 
         // Wait for table
         await page.waitForSelector('table', { timeout: 10000 });
@@ -101,7 +101,7 @@ test.describe('SearchBar functionality', () => {
     });
 
     test('should show clear button when input has content', async ({ page }) => {
-        const searchInput = page.getByPlaceholder('Search for an item...');
+        const searchInput = page.locator('#search-input');
 
         // Initially, clear button should not be visible
         await expect(page.locator('[aria-label="Clear search"]')).not.toBeVisible();
@@ -114,7 +114,7 @@ test.describe('SearchBar functionality', () => {
     });
 
     test('should clear input when clear button is clicked', async ({ page }) => {
-        const searchInput = page.getByPlaceholder('Search for an item...');
+        const searchInput = page.locator('#search-input');
 
         // Type into the search bar
         await searchInput.fill('dragon');

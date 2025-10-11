@@ -340,7 +340,7 @@
 </svelte:head>
 
 <div class="page" id="home">
-    <HeaderControls {lastUpdatedLabel} {backgroundRefreshing} />
+    <HeaderControls {lastUpdatedLabel} {backgroundRefreshing} allItems={allRows} />
 
     <ErrorAlert message={errorMsg} {failCount} {nextRetryIn} autoDisabled={failCount >= 5} />
 
