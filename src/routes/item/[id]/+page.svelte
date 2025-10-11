@@ -74,6 +74,12 @@
 
     // Check if low volume
     $: isLowVolume = item.dailyVolume !== null && item.dailyVolume !== undefined && item.dailyVolume < 100;
+
+    // Check if item is a multi-dose potion and calculate price per dose
+    $: potionMatch = item.name.match(/potion\(([234])\)$/i);
+    $: doseNumber = potionMatch ? parseInt(potionMatch[1]) : null;
+    $: pricePerDoseBuy = item.buyPrice && doseNumber ? Math.floor(item.buyPrice / doseNumber) : null;
+    $: pricePerDoseSell = item.sellPrice && doseNumber ? Math.floor(item.sellPrice / doseNumber) : null;
 </script>
 
 <svelte:head>
@@ -160,9 +166,17 @@
                             class="text-lg font-bold text-orange-600 dark:text-orange-400"
                             title={statTitles['insta-buy-price']}
                         >
-                            {item.buyPrice !== null
-                                ? formatPrice(item.buyPrice, settings.decimalView, settings.decimalPlaces)
-                                : '—'}
+                            {#if item.buyPrice !== null}
+                                {formatPrice(item.buyPrice, settings.decimalView, settings.decimalPlaces)}
+                                {#if pricePerDoseBuy !== null}
+                                    <span class="text-sm font-normal text-gray-600 dark:text-gray-400">
+                                        ({formatPrice(pricePerDoseBuy, settings.decimalView, settings.decimalPlaces)} per
+                                        dose)
+                                    </span>
+                                {/if}
+                            {:else}
+                                —
+                            {/if}
                         </div>
                         {#if item.buyTime}
                             <div class="text-xs text-gray-500">
@@ -185,9 +199,17 @@
                             class="text-lg font-bold text-green-600 dark:text-green-400"
                             title={statTitles['insta-sell-price']}
                         >
-                            {item.sellPrice !== null
-                                ? formatPrice(item.sellPrice, settings.decimalView, settings.decimalPlaces)
-                                : '—'}
+                            {#if item.sellPrice !== null}
+                                {formatPrice(item.sellPrice, settings.decimalView, settings.decimalPlaces)}
+                                {#if pricePerDoseSell !== null}
+                                    <span class="text-sm font-normal text-gray-600 dark:text-gray-400">
+                                        ({formatPrice(pricePerDoseSell, settings.decimalView, settings.decimalPlaces)} per
+                                        dose)
+                                    </span>
+                                {/if}
+                            {:else}
+                                —
+                            {/if}
                         </div>
                         {#if item.sellTime}
                             <div class="text-xs text-gray-500">
