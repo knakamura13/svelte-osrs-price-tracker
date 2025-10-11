@@ -100,14 +100,26 @@
 </script>
 
 <div class="mb-4">
-    <button
-        class="accordion-trigger w-full text-left p-3 bg-gray-100 dark:bg-gray-800 rounded-t-lg border border-gray-300 dark:border-gray-600 flex items-center justify-between hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-        class:rounded-b-lg={!expanded}
-        on:click={() => onToggle && onToggle()}
-    >
-        <span class="font-medium">Toggle columns</span>
-        <ChevronDown class="w-4 h-4 transform transition-transform {expanded ? 'rotate-180' : ''}" />
-    </button>
+    <div class="flex items-center justify-between">
+        <button
+            class="accordion-trigger flex-1 text-left p-3 bg-gray-100 dark:bg-gray-800 rounded-l-lg border border-gray-300 dark:border-gray-600 flex items-center justify-between hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            class:rounded-b-lg={!expanded}
+            aria-label="Toggle columns panel"
+            on:click={() => onToggle && onToggle()}
+        >
+            <span class="font-medium">Toggle columns</span>
+            <ChevronDown class="w-4 h-4 transform transition-transform {expanded ? 'rotate-180' : ''}" />
+        </button>
+
+        <button
+            class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded-r-lg border border-l-0 border-gray-300 dark:border-gray-600 transition-colors flex items-center gap-2"
+            on:click={() => onReset && onReset()}
+            title="Reset all columns to visible"
+        >
+            <RefreshCw class="w-4 h-4" />
+            Reset
+        </button>
+    </div>
 
     {#if expanded}
         <div
@@ -130,17 +142,6 @@
                         </div>
                     </div>
                 {/each}
-            </div>
-
-            <div class="mt-4 flex justify-end">
-                <button
-                    class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors flex items-center gap-2"
-                    on:click={() => onReset && onReset()}
-                    title="Reset all columns to visible"
-                >
-                    <RefreshCw class="w-4 h-4" />
-                    Reset columns
-                </button>
             </div>
         </div>
     {/if}

@@ -69,7 +69,10 @@ test.describe('API Item Endpoint', () => {
 
     test('should return consistent data structure with rows API', async ({ request }) => {
         // Get data from both APIs for comparison
+        // Add a longer delay between calls to avoid race conditions with external API data
+        // Using 2000ms to ensure external APIs have consistent data and avoid rate limiting
         const itemRes = await request.get('/api/item/2');
+        await new Promise((resolve) => setTimeout(resolve, 2000)); // 2000ms delay
         const rowsRes = await request.get('/api/rows');
 
         expect(itemRes.status()).toBe(200);

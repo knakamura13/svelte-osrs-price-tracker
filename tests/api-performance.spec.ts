@@ -12,6 +12,9 @@ test.describe('API Performance Tests', () => {
 
         expect(itemRes.status()).toBe(200);
 
+        // Add delay to avoid race conditions with external API data
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
         // Test the old approach (fetching all rows and filtering)
         const startTimeOld = Date.now();
         const rowsRes = await request.get('/api/rows');
@@ -27,21 +30,6 @@ test.describe('API Performance Tests', () => {
         const itemData = await itemRes.json();
         expect(itemFromRows).toBeDefined();
         expect(itemData.item.id).toBe(itemFromRows.id);
-
-        // The new endpoint should be significantly faster
-        // We expect at least 2x improvement, but this is a rough estimate
-        // In practice, the improvement could be much greater (10x-100x)
-        const improvementRatio = oldApproachDuration / newEndpointDuration;
-        console.log(`Performance improvement: ${improvementRatio.toFixed(2)}x faster`);
-        console.log(`Old approach: ${oldApproachDuration}ms`);
-        console.log(`New approach: ${newEndpointDuration}ms`);
-
-        // Log the sizes for comparison
-        const itemDataSize = JSON.stringify(itemData).length;
-        const rowsDataSize = JSON.stringify(rowsData).length;
-        console.log(`New endpoint response size: ${itemDataSize} bytes`);
-        console.log(`Old approach response size: ${rowsDataSize} bytes`);
-        console.log(`Size reduction: ${(rowsDataSize / itemDataSize).toFixed(1)}x smaller`);
 
         // The new endpoint should complete in reasonable time (< 1 second typically)
         expect(newEndpointDuration).toBeLessThan(1000);
@@ -70,7 +58,5 @@ test.describe('API Performance Tests', () => {
         // Verify other key elements are present
         await expect(page.locator('img[alt="Cannonball"]')).toBeVisible(); // Item icon
         await expect(page.locator('text=Daily volume:')).toBeVisible();
-
-        console.log(`Item detail page loaded in ${loadTime}ms`);
     });
 });

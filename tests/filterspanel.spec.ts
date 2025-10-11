@@ -40,7 +40,7 @@ test.describe('FiltersPanel component', () => {
 
     test('should show correct arrow rotation based on expanded state', async ({ page }) => {
         const filtersButton = page.locator('button').filter({ hasText: /Apply filters/ });
-        const arrow = filtersButton.locator('span').last();
+        const arrow = filtersButton.locator('.transform').first();
 
         // Initially collapsed - arrow should point down (no rotation)
         await expect(arrow).toHaveClass(/transform/);
@@ -109,7 +109,7 @@ test.describe('FiltersPanel component', () => {
         expect(timeInputCount).toBeGreaterThan(0);
 
         // Look for the time unit labels that appear next to the inputs
-        const timeLabels = page.locator('span').filter({ hasText: /^(d:|h:|m:|s:)$/ });
+        const timeLabels = page.locator('span').filter({ hasText: /^(d :|h :|m :|s)$/ });
         const timeLabelCount = await timeLabels.count();
         expect(timeLabelCount).toBeGreaterThan(0);
     });

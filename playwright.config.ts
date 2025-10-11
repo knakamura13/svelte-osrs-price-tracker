@@ -13,5 +13,5 @@ export default defineConfig({
     projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
     testDir: './tests',
     testMatch: '*.spec.ts',
-    workers: 10 // Set the default number of workers
+    workers: 20 // Set the default number of workers
 });

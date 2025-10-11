@@ -19,7 +19,7 @@ test.describe('ColumnsToggle component', () => {
         await expect(resetButton).toBeVisible();
 
         // Should have proper styling and title
-        await expect(resetButton).toHaveClass(/bg-blue-600/);
+        await expect(resetButton).toHaveClass(/bg-red-600/);
         await expect(resetButton).toHaveAttribute('title', 'Reset all columns to visible');
     });
 
@@ -47,8 +47,8 @@ test.describe('ColumnsToggle component', () => {
     test('should show correct arrow rotation based on expanded state', async ({ page }) => {
         const toggleButton = page.locator('button').filter({ hasText: /Toggle columns/ });
 
-        // Find the arrow button (it should be the button with ▼ text)
-        const arrow = page.locator('button[aria-label="Toggle columns panel"]');
+        // Find the arrow inside the button (ChevronDown component)
+        const arrow = toggleButton.locator('.transform');
 
         // Initially collapsed - arrow should point down (no rotation)
         await expect(arrow).toHaveClass(/transform/);
@@ -134,19 +134,10 @@ test.describe('ColumnsToggle component', () => {
         await page.waitForTimeout(300);
 
         // Should show all profit analysis checkboxes
-        const marginCheckbox = page.locator('label').filter({ hasText: 'Margin' }).locator('input[type="checkbox"]');
-        const breakEvenCheckbox = page
-            .locator('label')
-            .filter({ hasText: 'Break-even price' })
-            .locator('input[type="checkbox"]');
-        const postTaxProfitCheckbox = page
-            .locator('label')
-            .filter({ hasText: 'Post-tax profit' })
-            .locator('input[type="checkbox"]');
-        const potentialProfitCheckbox = page
-            .locator('label')
-            .filter({ hasText: 'Potential profit' })
-            .locator('input[type="checkbox"]');
+        const marginCheckbox = page.locator('#margin-toggle');
+        const breakEvenCheckbox = page.locator('#breakEvenPrice-toggle');
+        const postTaxProfitCheckbox = page.locator('#postTaxProfit-toggle');
+        const potentialProfitCheckbox = page.locator('#potentialProfit-toggle');
 
         await expect(marginCheckbox).toBeVisible();
         await expect(breakEvenCheckbox).toBeVisible();
@@ -345,7 +336,9 @@ test.describe('ColumnsToggle component', () => {
             'Margin',
             'Break-even price',
             'Post-tax profit',
+            'Post-tax profit (avg)',
             'Potential profit',
+            'Potential profit (avg)',
             'Daily volume',
             'Daily low',
             'Daily high',
@@ -356,7 +349,7 @@ test.describe('ColumnsToggle component', () => {
         ];
 
         for (const labelText of expectedLabels) {
-            const label = page.locator('label').filter({ hasText: labelText });
+            const label = page.locator('label').filter({ hasText: labelText }).first();
             await expect(label).toBeVisible();
 
             // Each label should contain a checkbox

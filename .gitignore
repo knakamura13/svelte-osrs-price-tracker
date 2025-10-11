@@ -6,5 +6,6 @@
 .vercel
 /.svelte-kit
 /build
+/test-results
 node_modules
 vite.config.*
