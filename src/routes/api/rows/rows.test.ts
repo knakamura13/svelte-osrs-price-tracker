@@ -255,32 +255,42 @@ describe('API rows join logic', () => {
                 '1877': { high: 21000, highTime: 1760043807, low: 1000, lowTime: 1757255436 }
             };
 
-            const mockMapping: ItemMapping[] = [
-                { id: 1877, name: 'Ugthanki & onion', members: true }
-            ];
+            const mockMapping: ItemMapping[] = [{ id: 1877, name: 'Ugthanki & onion', members: true }];
 
             // Mock fetch responses
-            global.fetch = vi.fn()
-                .mockImplementationOnce(() => Promise.resolve({ // /api/mapping
-                    ok: true,
-                    json: () => Promise.resolve(mockMapping)
-                }))
-                .mockImplementationOnce(() => Promise.resolve({ // /api/latest
-                    ok: true,
-                    json: () => Promise.resolve({ data: mockLatestData })
-                }))
-                .mockImplementationOnce(() => Promise.resolve({ // /api/24h
-                    ok: true,
-                    json: () => Promise.resolve({ data: mockVolumeData })
-                }))
-                .mockImplementationOnce(() => Promise.resolve({ // timeseries fetch for item 1877
-                    ok: true,
-                    json: () => Promise.resolve(mockTimeseriesData)
-                }));
+            global.fetch = vi
+                .fn()
+                .mockImplementationOnce(() =>
+                    Promise.resolve({
+                        // /api/mapping
+                        ok: true,
+                        json: () => Promise.resolve(mockMapping)
+                    })
+                )
+                .mockImplementationOnce(() =>
+                    Promise.resolve({
+                        // /api/latest
+                        ok: true,
+                        json: () => Promise.resolve({ data: mockLatestData })
+                    })
+                )
+                .mockImplementationOnce(() =>
+                    Promise.resolve({
+                        // /api/24h
+                        ok: true,
+                        json: () => Promise.resolve({ data: mockVolumeData })
+                    })
+                )
+                .mockImplementationOnce(() =>
+                    Promise.resolve({
+                        // timeseries fetch for item 1877
+                        ok: true,
+                        json: () => Promise.resolve(mockTimeseriesData)
+                    })
+                );
 
             // Import and call the actual API handler
-            const { GET } = await import('./+server.ts');
-            const request = new Request('http://localhost:5173/api/rows');
+            const { GET } = await import('./+server');
             const response = await GET({ fetch: global.fetch } as any);
 
             expect(response.status).toBe(200);
@@ -291,6 +301,5 @@ describe('API rows join logic', () => {
             // Both APIs agree, so should use 24h API data
             expect(item1877.dailyVolume).toBe(463525);
         });
-
     });
 });

@@ -43,7 +43,7 @@ export const GET: RequestHandler = async ({ fetch }) => {
     // Helper function to get volume and daily metrics from timeseries data
     async function getTimeseriesData(itemId: number): Promise<{
         dailyVolume: number | null;
-        dailyMetrics: {
+        dailyMetrics?: {
             dailyLow: number | null;
             dailyHigh: number | null;
             averageBuy: number | null;
@@ -92,10 +92,10 @@ export const GET: RequestHandler = async ({ fetch }) => {
         dataPoints: any[],
         itemId: string
     ): {
-        dailyLow?: number | null;
-        dailyHigh?: number | null;
-        averageBuy?: number | null;
-        averageSell?: number | null;
+        dailyLow: number | null;
+        dailyHigh: number | null;
+        averageBuy: number | null;
+        averageSell: number | null;
     } {
         if (dataPoints.length === 0) {
             return { dailyLow: null, dailyHigh: null, averageBuy: null, averageSell: null };
